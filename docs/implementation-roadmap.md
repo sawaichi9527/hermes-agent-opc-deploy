@@ -292,38 +292,58 @@ These remain deferred because the current Hermes Agent CLI did not expose a non-
 
 ## Phase 4 - Stateful OPC loop design
 
-Goals:
+Status: manual OPC design baseline passed / official primitive help probe completed / runtime mutation deferred.
 
-- Evaluate Hermes Kanban, delegation, and persistent goals as official stateful primitives.
-- Define how profiles report progress, block, hand off, and close tasks.
-- Avoid building custom workflow logic before the official primitives are understood.
-
-Planned docs:
+Implemented docs:
 
 ```text
-docs/kanban-opc-evaluation.md
-docs/task-lifecycle-policy.md
-docs/handoff-format.md
-docs/blocking-and-escalation-policy.md
+docs/phase-4-opc-loop-design.md
+docs/opc-manual-runbook.md
+docs/opc-evidence-policy.md
 ```
 
-Questions to answer:
+Locked Phase 4 result:
 
-- Who creates a task?
-- When does secretary pass a request to coordinator?
-- When does coordinator create/assign Kanban tasks?
-- How often should a role heartbeat?
-- What does `blocked` mean?
-- Who can unblock a task?
-- When does coordinator ask the user for clarification?
-- When does consult-subagent second opinion run?
-- When is runes-holder asked to consider sedimentation?
+```text
+Phase 4.1-4.7 OPC Loop Design Review
+PASS / documented / manual-first / official-primitives-first / no enterprise complexity introduced
+
+Phase 4.8 OPC Design Verification Lock
+PASS / local verification completed / documents present / repository layout still valid / no runtime functionality introduced
+
+Phase 4.9 Layout Tracking Cleanup
+PASS / Phase 4 documents tracked by repository layout check / no runtime functionality introduced
+
+Phase 4.10 Official Primitive Help Probe Lock
+PASS / read-only CLI help inventory completed / official primitive syntax captured / no runtime mutation
+```
+
+Official primitive classification:
+
+```text
+chat / -z / --provider / --model: accepted current safe runtime path
+prompt-size: offline bounded-context preflight candidate
+logs: read-only evidence/reference candidate when bounded
+sessions: read-only list/stats/browse candidate; mutation commands deferred
+memory: status-only candidate; setup/off/reset deferred
+kanban: available but mutation/dispatcher/gateway-heavy; documentation-only by default
+```
+
+Deferred unless explicitly approved:
+
+```text
+kanban init/create/dispatch/daemon/watch/swarm/gc
+sessions delete/prune/repair/rename/export
+memory setup/off/reset
+chat --worktree, resume/continue session workflows, or tool-enabled operational runs
+custom orchestration, queues, routers, background schedulers, or profile mutation
+```
 
 Exit criteria:
 
-- The office-loop is no longer just stateless role prompting.
-- There is a durable task lifecycle plan.
-- Blocking and handoff are explicit.
+- The Phase 4 OPC loop remains manual and official-primitive-first.
+- Help probe output is captured before any official primitive is used operationally.
+- No Kanban task, session mutation, memory mutation, profile mutation, daemon, queue, router, or custom workflow engine is introduced.
 
 ## Phase 5 - Simulation trial
 
@@ -412,7 +432,8 @@ Recommended implementation order:
 
 1. Keep `docs/runtime-baseline.md` as the current local runtime source of truth.
 2. Use `bash scripts/check-runtime-baseline.sh` for small sequential runtime regression checks.
-3. Evaluate Phase 4 stateful OPC loop only through documentation and official Hermes primitives first.
-4. Do not start alias wrapper creation, sticky default profile mutation, custom orchestration, queues, or routers.
+3. Keep Phase 4 as a manual official-primitive-first OPC loop baseline.
+4. Use only read-only primitive checks unless the maintainer explicitly approves mutation.
+5. Do not start alias wrapper creation, sticky default profile mutation, custom orchestration, queues, or routers.
 
 Do not start real profile mutation unless explicitly approved.
