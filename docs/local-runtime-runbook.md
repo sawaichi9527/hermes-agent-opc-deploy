@@ -52,13 +52,13 @@ bash scripts/smoke-hermes-runtime-oneshot.sh \
 
 This should be treated as a generation smoke only.
 
-## Sequential regression bundle
+## Sequential baseline check
 
-Run the small runtime baseline bundle:
+Run the small runtime baseline check:
 
 ```bash
 cd ~/workspace/hermes-agent-opc-deploy
-bash scripts/verify-runtime-baseline.sh
+bash scripts/check-runtime-baseline.sh
 ```
 
 The bundle is sequential and personal-use only. It does not use parallel workers.
