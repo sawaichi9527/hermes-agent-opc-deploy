@@ -55,6 +55,7 @@ required_docs=(
   "docs/deploy-reset-policy.md"
   "docs/opc-gap-analysis.md"
   "docs/profile-interaction-loop.md"
+  "docs/profile-language-policy.md"
   "docs/runes-holder.md"
   "docs/secretary-profile.md"
   "docs/simulation-and-deploy-policy.md"
@@ -75,6 +76,7 @@ required_profiles=(
 for profile in "${required_profiles[@]}"; do
   check_dir "profiles/$profile"
   check_file "profiles/$profile/NOTES.md"
+  check_file "profiles/$profile/SOUL.md.template"
 done
 check_file "profiles/README.md"
 
