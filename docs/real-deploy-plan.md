@@ -1,13 +1,13 @@
 # Real Deploy Plan
 
-Status: Phase 3K-FIX.3 drift cleanup planning implemented  
-Scope: real deploy planning, guarded apply verification, taxonomy correction, canonical role readiness, and drift cleanup planning  
+Status: Phase 3K-FIX.4 guarded drift cleanup implemented  
+Scope: real deploy planning, guarded apply verification, taxonomy correction, canonical role readiness, drift cleanup planning, and guarded cleanup implementation  
 Real profile write: executed only through guarded apply  
-Real profile delete: not yet implemented  
+Real profile delete: implemented only through guarded cleanup  
 Restore execution: disabled  
 Target path: `~/.hermes/profiles/`  
 Current real apply result: five OPC-managed generic skeleton directories deployed during Phase 3J  
-Current correction result: canonical Hermes roles are config-driven; drift cleanup planner is read-only
+Current correction result: canonical Hermes roles are config-driven; drift cleanup is guarded and token-gated
 
 ---
 
@@ -19,7 +19,9 @@ The project moved from simulation into guarded real deploy. Phase 3J verified th
 
 Phase 3K-FIX.2 corrected the future deploy path so scripts read canonical roles from a simple config file instead of hard-coded generic role names.
 
-Phase 3K-FIX.3 adds read-only drift cleanup planning for the generic skeleton profiles created during the first guarded apply. It does not delete real profiles.
+Phase 3K-FIX.3 added read-only drift cleanup planning for the generic skeleton profiles created during the first guarded apply.
+
+Phase 3K-FIX.4 adds a guarded cleanup implementation. Default mode remains dry-run. Real deletion requires `--apply --confirm REAL_CLEANUP_DRIFT_PROFILES` and rechecks marker ownership before deleting anything.
 
 The deployment layer must remain simple, personal-use friendly, local, and lightweight for Hermes Agent. It must not become a daemon, enterprise orchestrator, or runtime dependency.
 
@@ -51,7 +53,8 @@ The deployment layer must remain simple, personal-use friendly, local, and light
 | Phase 3K-FIX role taxonomy alignment | PASS / drift identified / Phase 3L blocked |
 | Phase 3K-FIX.1 taxonomy correction plan | PASS / canonical Hermes roles selected / cleanup planned / no real write |
 | Phase 3K-FIX.2 canonical role config and readiness rewrite | PASS / config-driven canonical roles / no real write |
-| Phase 3K-FIX.3 drift cleanup planning | implemented / pending local verification |
+| Phase 3K-FIX.3 drift cleanup planning | PASS / read-only planner / no real delete |
+| Phase 3K-FIX.4 guarded drift cleanup implementation | implemented / pending local verification |
 
 Evidence and policy files:
 
@@ -69,6 +72,7 @@ Evidence and policy files:
 - `docs/taxonomy-correction-plan.md`
 - `docs/verification-phase-3k-fix-2.md`
 - `docs/verification-phase-3k-fix-3.md`
+- `docs/verification-phase-3k-fix-4.md`
 
 Config and scripts:
 
@@ -78,6 +82,7 @@ Config and scripts:
 - `scripts/check-real-deploy-readiness.sh`
 - `scripts/deploy-real-profiles.sh`
 - `scripts/plan-drift-profile-cleanup.sh`
+- `scripts/cleanup-drift-profiles.sh`
 
 ---
 
@@ -160,13 +165,13 @@ source_root=/home/eye/workspace/hermes-agent-opc-deploy/profiles
 role=<role>
 ```
 
-These are governed drift artifacts, not user-authored personal profiles. No cleanup has been executed yet.
+These are governed drift artifacts, not user-authored personal profiles. Cleanup is now implemented but has not been executed unless explicitly run with the cleanup token.
 
 ---
 
 ## Drift Cleanup Planning
 
-Phase 3K-FIX.3 adds a read-only planner:
+Phase 3K-FIX.3 added a read-only planner:
 
 ```text
 scripts/plan-drift-profile-cleanup.sh
@@ -197,13 +202,73 @@ REAL_PROFILE_WRITE=false
 REAL_PROFILE_DELETE=false
 ```
 
-Phase 3K-FIX.3 does not delete profiles and does not implement a cleanup apply command.
+---
+
+## Guarded Drift Cleanup
+
+Phase 3K-FIX.4 adds the guarded cleanup script:
+
+```text
+scripts/cleanup-drift-profiles.sh
+```
+
+Default mode is dry-run:
+
+```bash
+bash scripts/cleanup-drift-profiles.sh
+```
+
+Expected dry-run markers:
+
+```text
+Mode: dry-run
+Real cleanup: DISABLED
+cleanup_action: would delete
+REAL_PROFILE_WRITE=false
+REAL_PROFILE_DELETE=false
+PASS: guarded drift cleanup dry-run completed
+```
+
+Real cleanup requires the cleanup-specific token:
+
+```bash
+bash scripts/cleanup-drift-profiles.sh \
+  --apply \
+  --confirm REAL_CLEANUP_DRIFT_PROFILES
+```
+
+Expected successful cleanup markers:
+
+```text
+Mode: apply
+Real cleanup: GUARDED_CLEANUP_REQUESTED
+DELETED_ROLE=default
+DELETED_ROLE=developer
+DELETED_ROLE=reviewer
+DELETED_ROLE=operator
+DELETED_ROLE=trial
+DELETED_COUNT=5
+REAL_PROFILE_WRITE=false
+REAL_PROFILE_DELETE=true
+PASS: guarded drift cleanup completed
+```
+
+Cleanup must never target canonical roles:
+
+```text
+secretary
+coordinator
+researcher
+writer
+builder
+runes-holder
+```
 
 ---
 
 ## Guarded Apply Boundary
 
-The only implemented write-capable path is:
+The only implemented profile write-capable path is:
 
 ```text
 scripts/deploy-real-profiles.sh --apply --confirm REAL_DEPLOY_PROFILES
@@ -264,14 +329,13 @@ Allowed future restore/reset modes:
 | `remove-opc-managed` | Remove only known OPC-managed files. |
 | `full-reset` | Dangerous. Restore or remove the whole profile tree only with explicit confirmation. |
 
-Phase 3K-FIX.3 does not remove generic skeletons.
+Guarded drift cleanup may remove generic skeletons only when all are true:
 
-Future cleanup must only remove directories that are both:
-
-1. In the drift role set: `default`, `developer`, `reviewer`, `operator`, `trial`.
-2. Marked with `.opc-managed-profile` containing `managed_by=hermes-agent-opc-deploy`.
-3. Planned by `scripts/plan-drift-profile-cleanup.sh` as `CLEANUP_CANDIDATE`.
-4. Confirmed by a future guarded cleanup token.
+1. The role is in the drift role set: `default`, `developer`, `reviewer`, `operator`, `trial`.
+2. The directory is marked with `.opc-managed-profile` containing `managed_by=hermes-agent-opc-deploy`.
+3. The marker source root matches `<repo>/profiles`.
+4. The marker role matches the directory role.
+5. Cleanup is confirmed with `--apply --confirm REAL_CLEANUP_DRIFT_PROFILES`.
 
 ---
 
@@ -316,24 +380,38 @@ PASS / config-driven canonical roles / readiness READY / deploy dry-run PASS / n
 
 ### Phase 3K-FIX.3 Drift Cleanup Planning
 
+```text
+Phase 3K-FIX.3 drift cleanup planning
+PASS / read-only cleanup planner implemented / five OPC-managed drift candidates detected / no real delete / no real write
+```
+
+### Phase 3K-FIX.4 Guarded Drift Cleanup Implementation
+
 Evidence file:
 
 ```text
-docs/verification-phase-3k-fix-3.md
+docs/verification-phase-3k-fix-4.md
 ```
 
-Expected local lock wording after verification:
+Expected local lock wording after dry-run verification:
 
 ```text
-Phase 3K-FIX.3 drift cleanup planning
-PASS / read-only cleanup planner implemented / five OPC-managed drift candidates expected / no real delete / no real write
+Phase 3K-FIX.4 guarded drift cleanup implementation
+PASS / dry-run cleanup PASS / apply requires cleanup token / no real delete during verification
+```
+
+If cleanup execution is also run:
+
+```text
+Phase 3K-FIX.4 guarded drift cleanup execution
+PASS / five OPC-managed drift profiles deleted / planner reports missing / canonical readiness READY
 ```
 
 ---
 
 ## Risk Notes
 
-Real profile deployment can affect Hermes Agent behavior.
+Real profile deployment or cleanup can affect Hermes Agent behavior.
 
 Main risks:
 
@@ -353,16 +431,20 @@ Required controls before future guarded apply or cleanup:
 3. Deploy script dry-run must emit `PREFLIGHT_STATUS=PASS`.
 4. Drift cleanup planner must identify only expected `CLEANUP_CANDIDATE` directories.
 5. Real write must require `--apply --confirm REAL_DEPLOY_PROFILES`.
-6. Real cleanup must require a separate explicit cleanup token.
+6. Real cleanup must require `--apply --confirm REAL_CLEANUP_DRIFT_PROFILES`.
 
 ---
 
 ## Next Phase
 
-Recommended next phase:
+Recommended next phase after dry-run verification:
 
 ```text
-Phase 3K-FIX.4 guarded drift cleanup implementation
+Phase 3K-FIX.5 guarded drift cleanup execution
 ```
 
-Phase 3K-FIX.4 should implement a guarded cleanup command that removes only confirmed OPC-managed drift directories. It must not remove canonical roles or unmarked user-authored profiles.
+If the operator executes guarded cleanup during Phase 3K-FIX.4 verification, the next phase should become:
+
+```text
+Phase 3K-FIX.5 post-cleanup source taxonomy cleanup
+```
