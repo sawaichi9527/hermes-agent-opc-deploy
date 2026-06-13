@@ -54,6 +54,7 @@ required_docs=(
   "docs/pre-production-cleanup-dry-run.md"
   "docs/verification-m4-minimal.md"
   "docs/verification-m5-soul-convention.md"
+  "docs/verification-m6-maintenance-planning.md"
   "docs/local-openai-compatible-provider.md"
   "docs/maintenance-policy.md"
   "docs/migration.md"
