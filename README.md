@@ -1,314 +1,177 @@
 # hermes-agent-opc-deploy
 
-Private deployment companion for using **Hermes Agent official profiles** as an OPC-style role workflow.
+Hermes-native OPC profile set customization repository for the maintainer's personal Hermes Agent setup.
 
-This repository is **not** a fork of Hermes Agent and does **not** define a new runtime. It records deployment notes, profile templates, small usage-layer customizations, and migration guidance for a specific upstream Hermes Agent version.
+This repository does **not** define a new runtime, deployment framework, queue, router, daemon, dispatcher, or orchestration layer. Hermes Agent remains the runtime owner. This repository exists to curate a small set of `SOUL.md` / `NOTES.md` customizations and operating guidance around Hermes Agent's native profile capability.
 
 ## Current compatibility target
 
 - Upstream project: `NousResearch/hermes-agent`
-- Upstream version observed from `pyproject.toml`: `0.16.0`
-- Local validation status: `pending`
+- Upstream version observed locally: `0.16.0`
+- Local profile baseline: `secretary`, `coordinator`, `researcher`, `writer`, `builder`, `runes-holder`
+- Local model baseline: LM Studio / llama.cpp serving `qwen3.6-35b-a3b` class models
 
-Tags in this repository should follow upstream compatibility naming, for example:
-
-```text
-compat-hermes-v0.16.0
-```
-
-The tag means: "this deployment baseline is intended for Hermes Agent v0.16.0". It is not an independent product release version.
-
-## Design position
-
-Hermes Agent remains the runtime owner.
+## Correct project position
 
 ```text
-~/.hermes/
-  Hermes native runtime, native memory, default one-agent profile
-
-~/.hermes/profiles/<profile>/
-  Official Hermes profile state, memory, SOUL.md, skills, sessions, config
-
-~/workspace/<project>/
-  Actual project working tree: code, docs, tests, project artifacts
-
-~/workspace/hermes-runes-md-wiki/wiki/<slug>/
-  Optional durable Markdown knowledge sedimentation layer
+Hermes Agent native profiles first.
+OPC is a six-profile role set, not a parallel multi-agent swarm.
+This repo customizes profile guidance; it does not replace Hermes Agent profile support.
 ```
 
-OPC is treated as a **usage pattern** over official Hermes profiles.
-
-For the maintainer's Lark-first OPC usage, the standard baseline profile set is:
-
-- `secretary`
-- `coordinator`
-- `researcher`
-- `writer`
-- `builder`
-- `runes-holder`
-
-For other users or forks, `secretary` may be treated as an optional extension. For this repository's own deployment target, `secretary` is standard because it protects worker profile purity when Lark becomes the main operating interface.
-
-`secretary` is a user-facing intake and preference-adapter profile. It is not the Lark bot itself and does not replace `coordinator`. See: [`docs/secretary-profile.md`](docs/secretary-profile.md)
-
-Profile language policy is single-template and no locale auto-switch by default:
+The intended profile set is:
 
 ```text
 secretary
-  Traditional Chinese first
+  Lark-facing user interface, user-preference buffer, and OPC entrypoint.
 
-coordinator / researcher / writer / builder / runes-holder
-  English-first canonical role instructions
-  user-facing language follows channel/task policy
+coordinator
+  Sequential task planner and one-profile-at-a-time router.
+
+researcher
+  Evidence comparison and factual verification worker.
+
+writer
+  Drafting, rewriting, report, and presentation worker.
+
+builder
+  Implementation, command, code, deployment, and verification worker.
+
+runes-holder
+  Hermes Runes MD Wiki access/governance specialist through runes shield.
 ```
 
-See: [`docs/profile-language-policy.md`](docs/profile-language-policy.md)
-
-`hermes-runes-md-wiki` is optional. If it is absent or not called by `runes-holder`, Hermes Agent one-agent or multi-profile operation must continue normally.
-
-## Implementation roadmap
-
-The current implementation plan is tracked in:
-
-- [`docs/implementation-roadmap.md`](docs/implementation-roadmap.md)
-
-Immediate next implementation tasks:
+## Runtime flow
 
 ```text
-1. Add repository layout verification.       DONE
-2. Add simulation environment preparation.  DONE
-3. Add simulation layout verification.      DONE
-4. Expand inert profile templates.          DONE
-5. Add simulation deploy / inspect tooling. DONE
-6. Freeze simulation operator runbook.      DONE
-7. Design dry-run real profile plan.
-8. Evaluate Kanban / delegation / goals for stateful OPC office-loop behavior.
+Lark bot
+  -> profile/secretary
+  -> profile/coordinator
+  -> one selected worker profile at a time
+  -> profile/secretary summarizes and replies to the user
 ```
 
-Current Phase 1/2 commands:
+Only `secretary` should be treated as the Lark-facing profile. Worker profiles should not run gateways by default.
 
-```bash
-./scripts/verify-repo-layout.sh
-./scripts/verify-profile-templates.sh
-./scripts/prepare-sim-env.sh
-./scripts/deploy-sim-profiles.sh --force
-./scripts/inspect-sim-profiles.sh --strict
-./scripts/verify-sim-layout.sh --require-profiles
-./scripts/verify-layout.sh
-```
+## Local compute constraint
 
-For the frozen simulation operator procedure, see:
-
-- [`docs/simulation-runbook.md`](docs/simulation-runbook.md)
-
-Real deployment into `~/.hermes/profiles/` is intentionally out of scope until the maintainer explicitly approves it.
-
-## OPC gap tracking
-
-This repository now explicitly tracks the gap between:
+The local model backend is treated as a personal LM Studio / llama.cpp resource, not as a concurrent serving cluster.
 
 ```text
-original OPC concept documents
-vs.
-current Hermes official profiles + personal-use deployment baseline
+OPC policy:
+- one active profile call at a time
+- no parallel worker dispatch
+- compact handoff packets
+- avoid copying full transcripts across profiles
+- summarize before long sessions force compression
 ```
 
-See:
+The profile set may contain six roles, but role separation must not become concurrent model usage.
 
-- [`docs/opc-gap-analysis.md`](docs/opc-gap-analysis.md)
-- [`docs/profile-interaction-loop.md`](docs/profile-interaction-loop.md)
+## Memory and Runes boundary
 
-Current working assumption:
+Hermes Agent native memory and Hermes Agent native Kanban are Hermes-native capabilities. They are not the same as the external `hermes-runes-md-wiki/wiki` governed Markdown knowledge layer.
 
 ```text
-profiles alone provide role separation;
-Kanban/delegation/goals may provide the stateful office-loop primitives;
-this repo should evaluate official Hermes primitives before adding custom workflow logic.
+Hermes native memory
+  profile-local continuity and assistant memory; each profile may use its own native memory.
+
+Hermes native Kanban
+  Hermes Agent task/workflow primitive; not equivalent to Runes Wiki.
+
+Hermes Runes MD Wiki
+  external governed Markdown source-of-truth; accessed through runes-holder and runes shield.
 ```
 
-## Model routing position
+`runes-holder` is not the gatekeeper for other profiles' native memory. It may use its own native memory to learn `hermes-runes-md-wiki/wiki/_system/` guidance and runes shield procedures.
 
-The current inference baseline is local-first:
+`runes-holder` may retrieve Runes Wiki derived context for other profiles, but it does not guarantee final truth. The requesting profile is responsible for validating data against appropriate sources such as Hermes native memory, Runes Wiki, third-party RAG, Obsidian notes, repository evidence, command output, official documentation, or web search.
+
+Governed writes to `hermes-runes-md-wiki/wiki` require secretary-mediated user approval before `runes-holder` invokes runes shield.
+
+## Profile language policy
 
 ```text
-LAN LM Studio -> Qwen3.6-35B-A3B -> Hermes Agent official profiles
+SOUL.md authoring:
+- secretary: Traditional Chinese / English mixed; personal preference allowed.
+- runes-holder: Traditional Chinese / English mixed; Runes governance context allowed.
+- coordinator / researcher / writer / builder: English-first role definitions for precision.
+
+Runtime inter-profile communication:
+- Traditional Chinese first for handoff packets, summaries, user context, and next-action notes.
+- Keep exact technical terms, commands, paths, filenames, API names, error messages, and source identifiers in their original language.
 ```
 
-The active Phase 3L local provider baseline uses the OpenAI-compatible provider path:
+## Repository layout
+
+Mainline content:
 
 ```text
-~/.hermes/profiles/<profile>/.env
-  OPENAI_API_BASE=http://127.0.0.1:1234/v1
-  OPENAI_API_KEY=lm-studio
-
-~/.hermes/profiles/<profile>/config.yaml
-  model.provider: openai
-  model.name: <model-id-returned-by-/v1/models>
+README.md
+docs/implementation-roadmap.md
+docs/phase-6-hermes-native-profile-alignment.md
+profiles/<profile>/SOUL.md.template
+profiles/<profile>/NOTES.md
+scripts/verify-repo-layout.sh
+scripts/verify-profile-templates.sh
+archive/validation-history/
 ```
 
-The local backend is treated as LM Studio / llama.cpp server for personal use, not a vLLM-style concurrent serving backend. Runtime smoke must stay single-request and sequential.
+Historical validation material from earlier simulation/runtime phases is being moved under `archive/validation-history/` and should not drive the main workflow anymore.
 
-See:
-
-- [`docs/local-openai-compatible-provider.md`](docs/local-openai-compatible-provider.md)
-
-Future external model APIs should be treated as optional consultation capability, not as a reason to duplicate every base profile.
-
-The default future path is **consult subagent first, official consult profile later only if proven necessary**:
+## Current implementation route
 
 ```text
-normal work
-  -> local official profiles
-  -> local LM Studio / Qwen3.6-35B-A3B
+M1 Hermes-native OPC Scope Reset
+  Reframe the repository, archive old validation material, and simplify required checks.
 
-rare escalation
-  -> temporary consult subagent / external model second opinion
-  -> advisory result returned to the base profile or coordinator
+M2 OPC profile set policy docs
+  Add the focused design documents for profile flow, local compute, and runes-holder boundaries.
 
-only after repeated real use
-  -> consider official consult-researcher / consult-writer / consult-builder profiles
+M3 Six-profile SOUL.md template rewrite
+  Update all six profile templates with the corrected runtime, language, and Runes boundaries.
+
+M4 Minimal verification
+  Run only repository layout and profile template checks; no simulation-first workflow.
+
+M5 SOUL.md behavior tuning
+  Tune profile behavior after the mainline is clean.
+
+M6 Pre-production profile cleanup
+  Backup and selectively clear unneeded native memory/session history before real use.
 ```
 
-Avoid `senior-*` naming for this use case because it implies hierarchy. If a permanent advisory role is eventually needed, prefer `consult-*`.
+## Minimal validation
 
-See:
-
-- [`docs/model-routing-policy.md`](docs/model-routing-policy.md)
-- [`docs/consult-subagent-upgrade-policy.md`](docs/consult-subagent-upgrade-policy.md)
-
-## Development safety rule
-
-Do not deploy templates into the real Hermes profile directory until the maintainer explicitly approves deployment.
-
-During repository development, use documentation and templates first. When file-level testing is needed, use the repository-local simulation path:
-
-```text
-~/workspace/hermes-agent-opc-deploy/simulate_env/.hermes/
-```
-
-The real Hermes home remains untouched during design work:
-
-```text
-~/.hermes/
-~/.hermes/profiles/
-```
-
-Future deployment scripts must support both states:
-
-- OPC profiles are not deployed yet.
-- OPC profiles already exist and may contain local changes.
-
-Profile initialization should prefer official Hermes Agent commands first, then apply small customizations after the official files are created.
-
-See:
-
-- [`docs/simulation-and-deploy-policy.md`](docs/simulation-and-deploy-policy.md)
-- [`docs/deploy-reset-policy.md`](docs/deploy-reset-policy.md)
-
-## Reset and clean-install policy
-
-Future real deploy scripts must preserve existing Hermes state by default, unless the maintainer explicitly selects a clean-install style reset.
-
-The reset policy separates:
-
-```text
---reset-sessions
---reset-kanban
---reset-memory
---reset-history
---reset-all
---clean-install
-```
-
-Current Phase 1/2 scripts only implement these ideas against the simulation path:
-
-```text
-simulate_env/.hermes/
-```
-
-They must not clear real `~/.hermes/` history, memory, Kanban, sessions, or profile files.
-
-## Local checkout
-
-Expected local path:
-
-```text
-~/workspace/hermes-agent-opc-deploy
-```
-
-After repository updates, validate locally with:
+After repository updates:
 
 ```bash
 cd ~/workspace/hermes-agent-opc-deploy
 git pull
-./scripts/verify-repo-layout.sh
-./scripts/verify-profile-templates.sh
-./scripts/prepare-sim-env.sh
-./scripts/deploy-sim-profiles.sh --force
-./scripts/inspect-sim-profiles.sh --strict
-./scripts/verify-sim-layout.sh --require-profiles
-./scripts/verify-layout.sh
+bash scripts/verify-repo-layout.sh
+bash scripts/verify-profile-templates.sh
 git status --short
 ```
 
-Optional Phase 3L local provider endpoint smoke, when LM Studio / llama.cpp server is loaded and idle:
+Optional Hermes-native profile existence check:
 
 ```bash
-bash scripts/smoke-local-provider-sequential.sh
+hermes profile show secretary
+hermes profile show coordinator
+hermes profile show researcher
+hermes profile show writer
+hermes profile show builder
+hermes profile show runes-holder
 ```
 
-Optional generation smoke, still sequential and single-request only:
+Optional secretary gateway check, only when validating Lark-facing runtime behavior:
 
 ```bash
-bash scripts/smoke-local-provider-sequential.sh --chat
+hermes -p secretary gateway status
 ```
 
-If the repository is not cloned yet:
+## Safety rule
 
-```bash
-mkdir -p ~/workspace
-cd ~/workspace
-git clone git@github.com:sawaichi9527/hermes-agent-opc-deploy.git
-cd hermes-agent-opc-deploy
-./scripts/verify-layout.sh
-```
+This repository must not contain real `.env` files, API keys, tokens, passwords, credentials, Hermes runtime session databases, profile cache/log dumps, copied Hermes Agent source code, or copied `hermes-runes-md-wiki` content.
 
-## Maintenance policy
-
-Default update flow:
-
-1. Update this GitHub repository directly when possible.
-2. The user pulls the repository locally at `~/workspace/hermes-agent-opc-deploy` and validates.
-3. Ask the user to run patch scripts only when GitHub connector limitations prevent direct edits.
-4. For unusually large files, generate complete downloadable files, have the user save them to `~/Downloads`, and provide exact copy / commit / push commands.
-
-Keep the repository personal-use oriented. Avoid enterprise-scale features that make the system harder to operate than Hermes Agent itself.
-
-See: [`docs/maintenance-policy.md`](docs/maintenance-policy.md)
-
-## Repository scope
-
-This repository may contain:
-
-- profile `SOUL.md` templates
-- profile memory templates
-- deployment notes for the current Hermes version
-- migration checklists
-- project rule templates such as `HERMES.md`
-- small helper scripts that do not replace Hermes Agent
-
-This repository must not contain:
-
-- real `.env` files
-- API keys, tokens, passwords, or credentials
-- Hermes runtime session databases
-- profile cache/log dumps
-- large project artifacts
-- copied Hermes Agent source code
-- `hermes-runes-md-wiki` content itself
-
-## First baseline
-
-Start from the official Hermes profile mechanism. Do not introduce a parallel `~/.hermes/opc/profiles` runtime.
-
-Use this repository as the deployment memory for how to create, configure, and migrate official Hermes profiles for OPC-style work.
+Real profile mutation, profile cleanup, native memory reset, session reset, Kanban reset, and Lark cutover require explicit maintainer approval.
