@@ -53,6 +53,8 @@ required_docs=(
   "docs/phase-3l5-local-model-name-cleanup.md"
   "docs/phase-3m-runtime-readiness.md"
   "docs/phase-3n-profile-invocation.md"
+  "docs/runtime-baseline.md"
+  "docs/local-runtime-runbook.md"
   "docs/maintenance-policy.md"
   "docs/migration.md"
   "docs/model-routing-policy.md"
@@ -98,6 +100,8 @@ required_scripts=(
   "scripts/smoke-local-provider-sequential.sh"
   "scripts/set-local-model-name.sh"
   "scripts/check-hermes-runtime-readiness.sh"
+  "scripts/smoke-hermes-runtime-oneshot.sh"
+  "scripts/check-runtime-baseline.sh"
 )
 for path in "${required_scripts[@]}"; do
   check_file "$path"
