@@ -1,12 +1,12 @@
 # Real Deploy Plan
 
-Status: Phase 3K-FIX taxonomy drift identified  
+Status: Phase 3K-FIX.1 taxonomy correction plan documented  
 Scope: real deploy planning, guarded apply verification, and taxonomy correction  
 Real profile write: executed only through guarded apply  
 Restore execution: disabled  
 Target path: `~/.hermes/profiles/`  
 Current real apply result: five OPC-managed generic skeleton directories deployed  
-Current correction result: Phase 3L content sync is blocked until role taxonomy alignment
+Current correction result: canonical Hermes roles selected; Phase 3L content sync remains blocked
 
 ---
 
@@ -14,7 +14,7 @@ Current correction result: Phase 3L content sync is blocked until role taxonomy 
 
 This plan defines the controlled real deployment path for OPC Hermes Agent profiles.
 
-The project has moved from simulation into staged real-deploy preparation, then through the first guarded real apply. Phase 3K later revealed a role taxonomy drift: the generic deployment roles used for pipeline validation are not the same as the existing Hermes profile taxonomy documented in `profiles/README.md`.
+The project moved from simulation into staged real-deploy preparation, then through the first guarded real apply. Phase 3K later revealed a role taxonomy drift: the generic deployment roles used for pipeline validation are not the same as the existing Hermes profile taxonomy documented in `profiles/README.md`.
 
 The deployment path must remain simple, personal-use friendly, and lightweight for Hermes Agent. It should help the user operate local profiles safely without becoming a second platform or runtime dependency.
 
@@ -44,6 +44,7 @@ The deployment path must remain simple, personal-use friendly, and lightweight f
 | Phase 3J first real guarded apply | PASS / real write executed |
 | Phase 3K role profile content hardening | DRIFT DETECTED |
 | Phase 3K-FIX role taxonomy alignment | PASS / drift identified / Phase 3L blocked |
+| Phase 3K-FIX.1 taxonomy correction plan | PASS / canonical Hermes roles selected / cleanup planned / no real write |
 
 Evidence and policy files:
 
@@ -58,6 +59,7 @@ Evidence and policy files:
 - `docs/verification-phase-3j.md`
 - `docs/verification-phase-3k.md`
 - `docs/verification-phase-3k-fix.md`
+- `docs/taxonomy-correction-plan.md`
 
 Read-only planning / verification scripts:
 
@@ -68,6 +70,33 @@ Read-only planning / verification scripts:
 Guarded apply script:
 
 - `scripts/deploy-real-profiles.sh`
+
+---
+
+## Canonical Role Decision
+
+Phase 3K-FIX.1 selects the existing Hermes maintainer role taxonomy as the canonical future deploy role set:
+
+```text
+secretary
+coordinator
+researcher
+writer
+builder
+runes-holder
+```
+
+The earlier generic OPC deploy roles are now classified as drift artifacts:
+
+```text
+default
+developer
+reviewer
+operator
+trial
+```
+
+This means Phase 3L content sync remains blocked. The next implementation work should rewrite readiness/deploy expectations around the canonical Hermes roles before any additional real apply.
 
 ---
 
@@ -83,7 +112,7 @@ profiles/operator/
 profiles/trial/
 ```
 
-These generic roles were introduced during Phase 3A through Phase 3K to validate the guarded deploy pipeline. They are not the same as the existing Hermes profile taxonomy already documented in `profiles/README.md`, which is closer to:
+These generic roles were introduced during Phase 3A through Phase 3K to validate the guarded deploy pipeline. They are not the same as the existing Hermes profile taxonomy already documented in `profiles/README.md`:
 
 ```text
 secretary
@@ -145,7 +174,7 @@ Guarded apply requires:
 --apply --confirm REAL_DEPLOY_PROFILES
 ```
 
-Normal smoke, planning, restore planning, and readiness checks must remain read-only and emit:
+Normal smoke, planning, restore planning, readiness checks, and taxonomy correction must remain read-only and emit:
 
 ```text
 REAL_PROFILE_WRITE=false
@@ -230,9 +259,9 @@ The backup policy stays file-based and local. No database-backed backup index is
 
 ---
 
-## Restore / Reset Policy
+## Restore / Reset / Cleanup Policy
 
-Restore and reset must be explicit and human-triggered.
+Restore, reset, and cleanup must be explicit and human-triggered.
 
 Allowed future restore/reset modes:
 
@@ -245,7 +274,12 @@ Allowed future restore/reset modes:
 
 Phase 3F only plans restore. It does not implement real restore.
 
-Phase 3K-FIX does not remove the generic skeletons. Any cleanup must be added as a separate explicit, human-triggered phase.
+Phase 3K-FIX.1 does not remove the generic skeletons. Any cleanup must be added as a separate explicit, human-triggered phase.
+
+Future cleanup must only remove directories that are both:
+
+1. In the drift role set: `default`, `developer`, `reviewer`, `operator`, `trial`.
+2. Marked with `.opc-managed-profile` containing `managed_by=hermes-agent-opc-deploy`.
 
 ---
 
@@ -307,6 +341,8 @@ Phase 3H profile source root completion
 PASS / canonical profiles source root complete / readiness READY / no real write
 ```
 
+Note: Phase 3H used the generic source root that was later classified as drift. Its pipeline result remains useful, but the role taxonomy must be corrected before further real apply.
+
 ### Phase 3I Operator Confirmation
 
 ```text
@@ -320,6 +356,8 @@ PASS / readiness READY locked / operator confirmation checklist documented / no 
 Phase 3J first real guarded apply
 PASS / guarded token accepted / backup created / five role profiles applied / managed markers present / post-apply readiness READY
 ```
+
+Note: Phase 3J applied the generic role skeletons that were later classified as drift. The apply mechanism is verified, but the role taxonomy must be corrected before future content sync.
 
 ### Phase 3K Role Profile Content Hardening
 
@@ -341,6 +379,21 @@ Lock wording:
 ```text
 Phase 3K-FIX role taxonomy alignment
 PASS / drift identified / generic role skeletons confirmed OPC-managed / Phase 3L blocked until taxonomy alignment
+```
+
+### Phase 3K-FIX.1 Taxonomy Correction Plan
+
+Evidence file:
+
+```text
+docs/taxonomy-correction-plan.md
+```
+
+Lock wording:
+
+```text
+Phase 3K-FIX.1 taxonomy correction plan
+PASS / canonical Hermes roles selected / generic OPC roles marked drift / cleanup planned / no real write
 ```
 
 ---
@@ -370,6 +423,7 @@ Required controls before future guarded apply:
 7. Real write requires explicit `--apply --confirm REAL_DEPLOY_PROFILES`.
 8. Existing unmarked destination role directories remain protected.
 9. Restore planning remains available before further apply operations.
+10. Managed drift cleanup is explicit and human-triggered.
 
 ---
 
@@ -406,13 +460,13 @@ Do not continue Phase 3L content sync yet.
 Recommended next phase:
 
 ```text
-Phase 3K-FIX.1 taxonomy correction plan
+Phase 3K-FIX.2 canonical role config and readiness rewrite
 ```
 
 Goal:
 
-- choose canonical role taxonomy
-- decide whether generic role skeletons should be removed, retained, or migrated
-- update readiness and deploy scripts to use the canonical role set
-- keep real cleanup explicit and human-triggered
+- add a plain canonical role config, such as `config/profile-roles.txt`
+- update readiness/deploy scripts to read canonical roles
+- create repo-local canonical role directories
+- keep generic drift role cleanup separate and human-triggered
 - avoid adding enterprise-grade profile management complexity
