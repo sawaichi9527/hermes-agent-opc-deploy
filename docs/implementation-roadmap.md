@@ -236,41 +236,59 @@ Exit criteria:
 - `verify-sim-layout.sh --require-profiles` passes.
 - `verify-layout.sh` still reports real Hermes as base-pass / undeployed unless maintainer approved real deployment.
 
-## Phase 3 - Official-profile initialization design
+## Phase 3 - Official-profile initialization design and local runtime baseline
 
-Goals:
+Status: runtime baseline passed / profile-bound mutation deferred.
+
+Original design goals:
 
 - Design deployment around official Hermes profile commands.
 - Avoid manually inventing missing profile files.
 - Support both undeployed and already-deployed states.
 - Support preserve-state and clean-install style deployment choices.
 
-Planned docs/scripts:
+Runtime baseline result:
 
 ```text
-docs/profile-deployment-design.md
-scripts/plan-deploy-profiles.sh
-scripts/deploy-profiles.sh   # later, after maintainer approval only
+Phase 3L Local OpenAI-compatible Provider
+PASS / six profiles configured / /models reachable / secretary chat smoke verified
+
+Phase 3M Hermes Runtime Readiness
+PASS / Hermes command discovered / lmstudio provider alias identified / hermes -z exact marker returned
+
+Phase 3N Profile-specific Invocation Behavior
+PASS / no built-in non-mutating --profile selector found / explicit provider-model override accepted
+
+Phase 3O-3T Local Runtime Baseline
+PASS / documented / sequential smoke verified / no enterprise complexity introduced
 ```
 
-Policy:
+Current safe runtime path:
 
-- `plan-deploy-profiles.sh` should be read-only and report what would happen.
-- `deploy-profiles.sh` must not be introduced as an active mutating script until the maintainer explicitly says real deployment may begin.
-- Any real deployment script should:
-  - detect existing profiles;
-  - avoid overwriting local modifications silently;
-  - create backups or diffs before changes;
-  - preserve existing Hermes state by default;
-  - support explicit reset flags for clean-install style deployment;
-  - prefer official Hermes profile creation commands first;
-  - apply templates only after official initialization.
+```bash
+hermes -z "..." \
+  --provider lmstudio \
+  --model qwen3.6-35b-a3b-uncensored-heretic-native-mtp-preserved@q5_k_m
+```
 
-Exit criteria:
+Current baseline docs/scripts:
 
-- There is a clear dry-run plan before any mutation.
-- Existing profile safety rules are documented before implementation.
-- Reset/clean-install behavior is backed up and opt-in.
+```text
+docs/runtime-baseline.md
+docs/local-runtime-runbook.md
+scripts/smoke-hermes-runtime-oneshot.sh
+scripts/check-runtime-baseline.sh
+```
+
+Deferred profile-mutation work:
+
+```text
+hermes profile use secretary
+hermes profile alias secretary
+profile-bound one-shot execution
+```
+
+These remain deferred because the current Hermes Agent CLI did not expose a non-mutating `--profile` or `-p` selector, and alias/sticky-default operations would mutate local runtime state.
 
 ## Phase 4 - Stateful OPC loop design
 
@@ -392,9 +410,9 @@ Exit criteria:
 
 Recommended implementation order:
 
-1. Review frozen Phase 2 simulation runbook.
-2. Add `docs/profile-deployment-design.md`.
-3. Add a read-only `scripts/plan-deploy-profiles.sh`.
-4. Add Kanban/office-loop evaluation docs.
+1. Keep `docs/runtime-baseline.md` as the current local runtime source of truth.
+2. Use `bash scripts/check-runtime-baseline.sh` for small sequential runtime regression checks.
+3. Evaluate Phase 4 stateful OPC loop only through documentation and official Hermes primitives first.
+4. Do not start alias wrapper creation, sticky default profile mutation, custom orchestration, queues, or routers.
 
-Do not start real profile deployment yet.
+Do not start real profile mutation unless explicitly approved.
