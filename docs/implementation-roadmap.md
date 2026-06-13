@@ -92,7 +92,7 @@ Exit criteria:
 
 ## Phase 1 - Repository structure and static validation
 
-Status: started.
+Status: passed baseline.
 
 Goals:
 
@@ -124,7 +124,8 @@ Responsibilities:
 
 - `verify-sim-layout.sh`
   - Check simulated Hermes root and simulated profile directory root.
-  - Verify expected profile names as optional until simulation deploy is implemented.
+  - Verify expected profile names as optional before simulation deploy.
+  - Verify expected profile names as required after simulation deploy when `--require-profiles` is used.
   - Confirm `simulate_env/*` is not tracked by git.
 
 Recommended Phase 1 validation flow:
@@ -143,16 +144,19 @@ Exit criteria:
 - Simulation can be prepared and verified repeatedly.
 - `git status --short` stays clean after verification.
 
-## Phase 2 - Profile template content
+## Phase 2 - Profile template content and simulation baseline
 
-Status: started.
+Status: passed baseline / frozen for simulation.
 
 Goals:
 
-- Draft maintainer baseline profile templates without deploying them.
+- Draft maintainer baseline profile templates without deploying them to real Hermes.
 - Keep templates role-pure and minimal.
 - Avoid overfitting to one project.
 - Apply the profile language policy consistently.
+- Deploy templates into repository-local simulation only.
+- Inspect deployed simulation files and prove they match repository templates.
+- Freeze the simulation operator runbook before real deployment planning.
 
 Template areas:
 
@@ -170,6 +174,15 @@ Initial files per profile template:
 ```text
 NOTES.md
 SOUL.md.template
+```
+
+Implemented Phase 2 scripts and docs:
+
+```text
+scripts/verify-profile-templates.sh
+scripts/deploy-sim-profiles.sh
+scripts/inspect-sim-profiles.sh
+docs/simulation-runbook.md
 ```
 
 Later candidate files per profile template:
@@ -199,12 +212,29 @@ Content rules:
 - `builder` should own implementation, debugging, testing, and delivery notes.
 - `runes-holder` should own sedimentation advice, not direct uncontrolled memory writes.
 
+Frozen Phase 2 validation flow:
+
+```bash
+./scripts/verify-repo-layout.sh
+./scripts/verify-profile-templates.sh
+./scripts/prepare-sim-env.sh
+./scripts/deploy-sim-profiles.sh --force
+./scripts/inspect-sim-profiles.sh --strict
+./scripts/verify-sim-layout.sh --require-profiles
+./scripts/verify-layout.sh
+git status --short
+```
+
 Exit criteria:
 
 - Each profile has a clear role contract.
 - Cross-profile contamination risks are explicitly documented.
-- Templates are deployable later but remain inert in this phase.
+- Templates are deployable into simulation but remain undeployed to real Hermes.
 - `verify-repo-layout.sh` passes with all SOUL templates present.
+- `verify-profile-templates.sh` passes.
+- `inspect-sim-profiles.sh --strict` confirms deployed simulation SOUL files match templates.
+- `verify-sim-layout.sh --require-profiles` passes.
+- `verify-layout.sh` still reports real Hermes as base-pass / undeployed unless maintainer approved real deployment.
 
 ## Phase 3 - Official-profile initialization design
 
@@ -362,10 +392,9 @@ Exit criteria:
 
 Recommended implementation order:
 
-1. Run Phase 1/2 validation locally.
-2. Fix any shell or layout issues found by the scripts.
-3. Review the first `SOUL.md.template` files for profile purity.
-4. Add `docs/profile-deployment-design.md`.
-5. Add Kanban/office-loop evaluation docs.
+1. Review frozen Phase 2 simulation runbook.
+2. Add `docs/profile-deployment-design.md`.
+3. Add a read-only `scripts/plan-deploy-profiles.sh`.
+4. Add Kanban/office-loop evaluation docs.
 
 Do not start real profile deployment yet.
