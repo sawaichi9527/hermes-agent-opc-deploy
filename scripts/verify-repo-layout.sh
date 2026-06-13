@@ -64,6 +64,7 @@ required_docs=(
   "docs/phase-4-14-memory-status-probe.md"
   "docs/phase-4-15-final-consolidation.md"
   "docs/phase-5-simulation-trial.md"
+  "docs/phase-6-hermes-native-profile-alignment.md"
   "docs/maintenance-policy.md"
   "docs/migration.md"
   "docs/model-routing-policy.md"
