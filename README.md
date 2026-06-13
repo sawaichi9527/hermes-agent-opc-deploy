@@ -46,6 +46,19 @@ OPC is treated as a **usage pattern** over official Hermes profiles:
 
 `hermes-runes-md-wiki` is optional. If it is absent or not called by `runes-holder`, Hermes Agent one-agent or multi-profile operation must continue normally.
 
+## Maintenance policy
+
+Default update flow:
+
+1. Update this GitHub repository directly when possible.
+2. The user pulls the repository locally and validates.
+3. Ask the user to run patch scripts only when GitHub connector limitations prevent direct edits.
+4. For unusually large files, generate complete downloadable files and provide the target path for manual upload/overwrite.
+
+Keep the repository personal-use oriented. Avoid enterprise-scale features that make the system harder to operate than Hermes Agent itself.
+
+See: [`docs/maintenance-policy.md`](docs/maintenance-policy.md)
+
 ## Repository scope
 
 This repository may contain:
