@@ -216,11 +216,16 @@ SOUL.md: exists
 
 The local API remains OpenAI-compatible at the HTTP protocol level, but the Hermes Agent runtime provider alias is `lmstudio`, not `openai`. Future Hermes runtime probes must use `--provider lmstudio` or the active Hermes profile/default configuration rather than `--provider openai`.
 
-## Follow-up
+## Phase 3M.3b Hermes runtime request probe lock
 
-The next step is Phase 3M.3b single-profile Hermes runtime request probe.
+```text
+Phase 3M.3b Single-profile Hermes Runtime Request Probe
+Status: PASS
+Result: Hermes CLI oneshot reached lmstudio provider and returned exact marker
+Boundary: one request / no daemon / no concurrency / no load test / no profile mutation / no external fallback
+```
 
-Phase 3M.3b should use the discovered provider alias and remain bounded to one profile and one request. The preferred first probe is:
+Maintainer verification ran:
 
 ```bash
 hermes -z "Reply with exactly: hermes-runtime-ok" \
@@ -228,6 +233,24 @@ hermes -z "Reply with exactly: hermes-runtime-ok" \
   --model qwen3.6-35b-a3b-uncensored-heretic-native-mtp-preserved@q5_k_m
 ```
 
-If the direct provider/model override succeeds, a later profile-specific probe may validate whether `hermes profile use secretary` or another profile invocation path is appropriate. Do not mutate the sticky default profile unless the maintainer explicitly approves it.
+Observed result:
+
+```text
+hermes-runtime-ok
+```
+
+This proves the minimal Hermes CLI runtime path:
+
+```text
+Hermes CLI -> lmstudio provider alias -> local OpenAI-compatible /v1 backend -> configured local model -> response returned to CLI
+```
+
+The request used an explicit provider/model override and did not mutate the sticky default profile. It did not start a daemon, did not run concurrent requests, did not load test the backend, and did not use external fallback.
+
+## Follow-up
+
+Phase 3M is now locked for minimal Hermes runtime readiness purposes.
+
+A later phase may validate profile-specific invocation behavior, such as whether `hermes profile use secretary` or another non-mutating profile invocation path is appropriate. Do not mutate the sticky default profile unless the maintainer explicitly approves it.
 
 Do not expand this phase into routing, queues, concurrency, daemon management, load testing, throughput benchmarking, or external API fallback.
