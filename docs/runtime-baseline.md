@@ -120,9 +120,18 @@ Hermes CLI oneshot smoke
 
 It deliberately does not run the optional local provider `--chat` smoke by default because that would add additional model requests. Use the dedicated script when a generation smoke is needed.
 
-## Phase 3T documentation / roadmap lock
+## Phase 3T documentation lock
 
-Phase 3T updates the roadmap and README to point at this baseline and the runbook.
+Phase 3T locks this baseline in documentation and makes the repository layout check track the new docs/scripts.
+
+Tracked files:
+
+```text
+docs/runtime-baseline.md
+docs/local-runtime-runbook.md
+scripts/smoke-hermes-runtime-oneshot.sh
+scripts/check-runtime-baseline.sh
+```
 
 Locked result:
 
