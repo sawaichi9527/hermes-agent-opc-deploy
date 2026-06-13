@@ -54,6 +54,7 @@ required_docs=(
   "docs/pre-production-cleanup-dry-run.md"
   "docs/pre-production-profile-deployment.md"
   "docs/profile-deployment-dry-run.md"
+  "docs/real-profile-backup-and-secretary-apply.md"
   "docs/verification-m4-minimal.md"
   "docs/verification-m5-soul-convention.md"
   "docs/verification-m6-maintenance-planning.md"
@@ -94,6 +95,8 @@ required_scripts=(
   "scripts/verify-profile-templates.sh"
   "scripts/inspect-profile-runtime-state.sh"
   "scripts/dry-run-profile-deployment.sh"
+  "scripts/backup-hermes-profiles.sh"
+  "scripts/apply-secretary-soul-template.sh"
 )
 for path in "${required_scripts[@]}"; do
   check_file "$path"
