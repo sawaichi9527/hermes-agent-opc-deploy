@@ -5,6 +5,7 @@ PROFILES_ROOT="${HERMES_PROFILES_ROOT:-$HOME/.hermes/profiles}"
 SMOKE_DELAY_SEC="${SMOKE_DELAY_SEC:-2}"
 RUN_CHAT=0
 CHAT_MAX_TOKENS="${CHAT_MAX_TOKENS:-32}"
+CHAT_SHOW_PREVIEW="${CHAT_SHOW_PREVIEW:-0}"
 SINGLE_PROFILE=""
 PROFILE_LIST_ENV="${PROFILE_LIST:-}"
 
@@ -25,7 +26,7 @@ Usage:
 Default behavior:
   - Sequential only.
   - Checks ~/.hermes/profiles/<profile>/.env and config.yaml.
-  - Calls /v1/models once per profile.
+  - Calls /v1/models once per selected profile.
   - Does not trigger text generation.
 
 Options:
@@ -41,6 +42,7 @@ Environment:
                          Example: PROFILE_LIST=secretary
   SMOKE_DELAY_SEC        Default: 2
   CHAT_MAX_TOKENS        Default: 32
+  CHAT_SHOW_PREVIEW      Default: 0. Set to 1 to print a truncated response preview.
 
 Concurrency rule:
   This script intentionally does not use background jobs, xargs -P, GNU parallel,
@@ -278,8 +280,9 @@ if not isinstance(msg, dict):
 
 # OpenAI-compatible servers usually place answer text in message.content.
 # Some llama.cpp / LM Studio model stacks, especially Qwen reasoning models,
-# may expose output in reasoning_content instead. This smoke test is only
-# validating local runtime reachability, so accept either field for extraction.
+# may expose output in reasoning_content instead. This smoke test validates
+# local runtime reachability; exact instruction-following is a quality signal,
+# not a hard requirement for endpoint smoke.
 candidates = [
     msg.get("content"),
     msg.get("reasoning_content"),
@@ -420,7 +423,9 @@ for profile in "${profiles[@]}"; do
     chat_tmp="$(mktemp)"
     payload_tmp="$(mktemp)"
     python3 - "$model_name" "$CHAT_MAX_TOKENS" >"$payload_tmp" <<'PY'
-import json, sys
+import json
+import sys
+
 model = sys.argv[1]
 max_tokens = int(sys.argv[2])
 payload = {
@@ -442,8 +447,14 @@ PY
       text="$(json_get_chat_text "$chat_tmp" || true)"
       if [ "$text" = "local-openai-compatible-ok" ]; then
         pass "$profile chat completion exact marker"
+      elif [ -n "$text" ]; then
+        pass "$profile chat completion returned non-empty text; extracted_text_chars=${#text}"
+        warn "$profile chat completion exact marker not matched; treating as runtime PASS and instruction-following signal"
+        if [ "$CHAT_SHOW_PREVIEW" = "1" ]; then
+          warn "$profile chat completion preview: ${text:0:120}"
+        fi
       else
-        warn "$profile chat completion returned unexpected text: ${text:0:120}"
+        fail "$profile chat completion returned empty extractable text"
       fi
     else
       fail "$profile chat completion request failed"
