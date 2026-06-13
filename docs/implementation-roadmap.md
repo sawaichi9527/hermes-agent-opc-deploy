@@ -407,7 +407,13 @@ parallel multi-agent execution
 
 ## M7 - Pre-production profile deployment decision planning
 
-Status: implemented / deployment decision plan added / dry-run diff tooling added / pending local verification.
+Status: PASS / deployment decision plan documented / dry-run diff tooling verified / all six runtime SOUL files differ from repo templates / no runtime mutation executed.
+
+Verification lock:
+
+```text
+docs/verification-m7-profile-deployment-planning.md
+```
 
 M7 prepares the decision path for applying repository `SOUL.md.template` files to real Hermes runtime profile `SOUL.md` files. M7 does not apply profile changes by itself.
 
@@ -417,6 +423,7 @@ Deliverables:
 docs/pre-production-profile-deployment.md
 docs/profile-deployment-dry-run.md
 scripts/dry-run-profile-deployment.sh
+docs/verification-m7-profile-deployment-planning.md
 ```
 
 M7.1 Deployment decision matrix:
@@ -458,11 +465,44 @@ Documented post-apply checks such as hermes profile show <profile>.
 Secretary gateway status and Lark cutover remain separate explicit maintainer-approved actions.
 ```
 
+M7.6 verification result:
+
+```text
+verify-repo-layout.sh: PASS / repository layout is valid
+verify-profile-templates.sh: PASS / profile templates satisfy baseline static checks
+bash -n scripts/dry-run-profile-deployment.sh: PASS
+dry-run-profile-deployment.sh: PASS / all six profiles inspected read-only
+PROFILE=secretary dry-run: PASS / secretary inspected read-only
+SHOW_DIFF=1 PROFILE=secretary: PASS / secretary unified diff displayed read-only
+git status --short: clean working tree
+```
+
+M7.6 dry-run finding:
+
+```text
+secretary: DIFFERENT
+coordinator: DIFFERENT
+researcher: DIFFERENT
+writer: DIFFERENT
+builder: DIFFERENT
+runes-holder: DIFFERENT
+```
+
+The secretary diff confirmed the runtime `SOUL.md` is still the old minimal Phase 3K-FIX.13 runtime file, while the repository template is the newer expanded OPC convention form.
+
+Deployment implication:
+
+```text
+M8 should not assume runtime profiles are already aligned.
+M8 should backup first, then apply the secretary profile first as a controlled target before deciding whether to apply the remaining worker profiles.
+```
+
 Not part of M7 implementation:
 
 ```text
 real ~/.hermes profile overwrite
 profile install/update
+runtime backup creation
 gateway start/restart
 native memory deletion
 session deletion
