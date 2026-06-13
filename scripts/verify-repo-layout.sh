@@ -106,8 +106,17 @@ done
 
 printf '\n== Forbidden tracked runtime/secrets check ==\n'
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  # Trackable environment templates are allowed as documentation/configuration examples.
+  # Real local runtime env files remain forbidden, including `.env`, `.env.local`,
+  # `.env.production`, and other non-template `.env.*` files.
   forbidden_regex='(^|/)(\.env($|\.)|secrets/|credentials/|sessions/|logs/|cache/|state/|simulate_env/)|\.(db|sqlite|sqlite3)(-|$|\.)|\.db-(wal|shm)$|\.sqlite-(wal|shm)$|\.sqlite3-(wal|shm)$'
-  mapfile -t forbidden_files < <(git ls-files | grep -E "$forbidden_regex" || true)
+  allowed_env_template_regex='(^|/)\.env\.template$'
+  mapfile -t forbidden_files < <(
+    git ls-files \
+      | grep -E "$forbidden_regex" \
+      | grep -Ev "$allowed_env_template_regex" \
+      || true
+  )
   if [ "${#forbidden_files[@]}" -eq 0 ]; then
     pass "no forbidden tracked runtime/secrets files"
   else
