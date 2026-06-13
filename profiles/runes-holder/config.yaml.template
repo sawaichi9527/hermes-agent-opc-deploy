@@ -1,0 +1,11 @@
+# Hermes profile config template for runes-holder
+# Phase 3K-FIX.13 native profile template source alignment
+# Copy to config.yaml locally only after reviewing provider/model settings.
+
+profile:
+  name: runes-holder
+  role: runes-holder
+  description: "Preserves governed memory, source-of-truth boundaries, drift prevention, and continuity."
+
+# Provider/model settings are intentionally omitted here.
+# Configure locally with `hermes -p runes-holder model` or `hermes -p runes-holder setup`.
