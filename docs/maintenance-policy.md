@@ -4,16 +4,18 @@ This repository is maintained as a lightweight personal-use companion around ups
 
 ## Operating model
 
-Default contribution flow:
+Default maintenance flow:
 
 1. Update this GitHub repository directly when the connector can perform the change safely.
-2. The user pulls the repository locally into `~/workspace/hermes-agent-opc-deploy` and validates the result.
-3. Only ask the user to run patch scripts when GitHub connector limitations prevent direct edits.
-4. For unusually large files where chat code blocks may be unreliable, generate the full file as a downloadable artifact and provide the target repository path for manual upload/overwrite.
+2. The maintainer pulls the repository locally into `~/workspace/hermes-agent-opc-deploy` and validates the result.
+3. Only ask the maintainer to run patch scripts when GitHub connector limitations prevent direct edits.
+4. For unusually large files where chat code blocks may be unreliable, generate the full file as a downloadable artifact and provide the target repository path for manual upload or overwrite.
+
+This flow is for the repository maintainer's development and debugging workflow. It is not a requirement for general users who only want to fork or study the repository.
 
 ## Local working copy
 
-The expected local checkout path is:
+The expected maintainer checkout path is:
 
 ```text
 ~/workspace/hermes-agent-opc-deploy
@@ -24,9 +26,11 @@ Normal validation flow after direct GitHub updates:
 ```bash
 cd ~/workspace/hermes-agent-opc-deploy
 git pull
-./scripts/verify-layout.sh
+bash scripts/verify-layout.sh
 git status --short
 ```
+
+Use `bash scripts/verify-layout.sh` instead of direct execution because files created through GitHub's contents API may not preserve the executable bit.
 
 If the local clone does not exist yet:
 
@@ -35,7 +39,7 @@ mkdir -p ~/workspace
 cd ~/workspace
 git clone git@github.com:sawaichi9527/hermes-agent-opc-deploy.git
 cd hermes-agent-opc-deploy
-./scripts/verify-layout.sh
+bash scripts/verify-layout.sh
 ```
 
 HTTPS clone may be used instead when SSH is not configured.
@@ -47,9 +51,9 @@ Use this only when direct GitHub edits or chat patch blocks are not reliable, su
 Fallback convention:
 
 1. Generate a complete replacement file as a downloadable artifact.
-2. The user downloads it to `~/Downloads`.
+2. The maintainer downloads it to `~/Downloads`.
 3. The assistant provides the exact target path under `~/workspace/hermes-agent-opc-deploy`.
-4. The user copies the file into place, verifies, commits, and pushes.
+4. The maintainer copies the file into place, verifies, commits, and pushes.
 
 Example copy and commit flow:
 
@@ -58,7 +62,7 @@ cd ~/workspace/hermes-agent-opc-deploy
 
 cp ~/Downloads/<downloaded-file> <target/path/in/repo>
 
-./scripts/verify-layout.sh
+bash scripts/verify-layout.sh
 git status --short
 git diff -- <target/path/in/repo>
 
@@ -67,7 +71,7 @@ git commit -m "Update <target description>"
 git push
 ```
 
-The assistant should avoid asking the user to manually copy many small files when direct GitHub updates are available.
+The assistant should avoid asking the maintainer to manually copy many small files when direct GitHub updates are available.
 
 ## Scope control
 
@@ -109,20 +113,8 @@ Hermes Agent must continue to work in both modes even if this repository is abse
 
 The optional runes-holder and hermes-runes-md-wiki path are extra knowledge sedimentation aids only.
 
-## Secrets rule
+## Sensitive local data rule
 
-Never commit real secrets or live runtime state.
+Never commit live local runtime state or machine-specific private material.
 
-Do not commit:
-
-- `.env`
-- API keys
-- tokens
-- passwords
-- state databases
-- sessions
-- logs
-- caches
-- large artifacts
-
-Use template files with safe placeholder values only.
+Do not commit real local credentials, profile session databases, cache dumps, logs, or large artifacts. Use template files with safe placeholder values only.
