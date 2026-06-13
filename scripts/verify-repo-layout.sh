@@ -58,6 +58,7 @@ required_docs=(
   "docs/phase-4-opc-loop-design.md"
   "docs/opc-manual-runbook.md"
   "docs/opc-evidence-policy.md"
+  "docs/phase-4-11-prompt-size-preflight.md"
   "docs/maintenance-policy.md"
   "docs/migration.md"
   "docs/model-routing-policy.md"
