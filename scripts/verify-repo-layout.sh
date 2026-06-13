@@ -50,6 +50,8 @@ required_docs=(
   "docs/runes-holder-boundary.md"
   "docs/hermes-native-profile-usage.md"
   "docs/soul-template-convention.md"
+  "docs/pre-production-profile-maintenance.md"
+  "docs/pre-production-cleanup-dry-run.md"
   "docs/verification-m4-minimal.md"
   "docs/verification-m5-soul-convention.md"
   "docs/local-openai-compatible-provider.md"
@@ -86,6 +88,7 @@ required_scripts=(
   "scripts/verify-layout.sh"
   "scripts/verify-repo-layout.sh"
   "scripts/verify-profile-templates.sh"
+  "scripts/inspect-profile-runtime-state.sh"
 )
 for path in "${required_scripts[@]}"; do
   check_file "$path"
