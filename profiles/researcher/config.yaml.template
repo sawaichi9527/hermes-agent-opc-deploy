@@ -1,0 +1,11 @@
+# Hermes profile config template for researcher
+# Phase 3K-FIX.13 native profile template source alignment
+# Copy to config.yaml locally only after reviewing provider/model settings.
+
+profile:
+  name: researcher
+  role: researcher
+  description: "Inspects source, documentation, runtime behavior, and command evidence."
+
+# Provider/model settings are intentionally omitted here.
+# Configure locally with `hermes -p researcher model` or `hermes -p researcher setup`.
