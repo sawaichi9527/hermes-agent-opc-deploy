@@ -78,18 +78,28 @@ Immediate next implementation tasks:
 1. Add repository layout verification.       DONE
 2. Add simulation environment preparation.  DONE
 3. Add simulation layout verification.      DONE
-4. Expand inert profile templates.          STARTED
-5. Design dry-run profile deployment.
-6. Evaluate Kanban / delegation / goals for stateful OPC office-loop behavior.
+4. Expand inert profile templates.          DONE
+5. Add simulation deploy / inspect tooling. DONE
+6. Freeze simulation operator runbook.      DONE
+7. Design dry-run real profile plan.
+8. Evaluate Kanban / delegation / goals for stateful OPC office-loop behavior.
 ```
 
 Current Phase 1/2 commands:
 
 ```bash
-bash scripts/verify-repo-layout.sh
-bash scripts/prepare-sim-env.sh
-bash scripts/verify-sim-layout.sh
+./scripts/verify-repo-layout.sh
+./scripts/verify-profile-templates.sh
+./scripts/prepare-sim-env.sh
+./scripts/deploy-sim-profiles.sh --force
+./scripts/inspect-sim-profiles.sh --strict
+./scripts/verify-sim-layout.sh --require-profiles
+./scripts/verify-layout.sh
 ```
+
+For the frozen simulation operator procedure, see:
+
+- [`docs/simulation-runbook.md`](docs/simulation-runbook.md)
 
 Real deployment into `~/.hermes/profiles/` is intentionally out of scope until the maintainer explicitly approves it.
 
@@ -192,7 +202,7 @@ The reset policy separates:
 --clean-install
 ```
 
-Current Phase 1 scripts only implement these ideas against the simulation path:
+Current Phase 1/2 scripts only implement these ideas against the simulation path:
 
 ```text
 simulate_env/.hermes/
@@ -213,9 +223,12 @@ After repository updates, validate locally with:
 ```bash
 cd ~/workspace/hermes-agent-opc-deploy
 git pull
-bash scripts/verify-repo-layout.sh
-bash scripts/prepare-sim-env.sh
-bash scripts/verify-sim-layout.sh
+./scripts/verify-repo-layout.sh
+./scripts/verify-profile-templates.sh
+./scripts/prepare-sim-env.sh
+./scripts/deploy-sim-profiles.sh --force
+./scripts/inspect-sim-profiles.sh --strict
+./scripts/verify-sim-layout.sh --require-profiles
 ./scripts/verify-layout.sh
 git status --short
 ```
