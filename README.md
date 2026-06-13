@@ -62,12 +62,20 @@ The current implementation plan is tracked in:
 Immediate next implementation tasks:
 
 ```text
-1. Add repository layout verification.
-2. Add simulation environment preparation.
-3. Add simulation layout verification.
+1. Add repository layout verification.       DONE
+2. Add simulation environment preparation.  DONE
+3. Add simulation layout verification.      DONE
 4. Expand inert profile templates.
 5. Design dry-run profile deployment.
 6. Evaluate Kanban / delegation / goals for stateful OPC office-loop behavior.
+```
+
+Current Phase 1 commands:
+
+```bash
+bash scripts/verify-repo-layout.sh
+bash scripts/prepare-sim-env.sh
+bash scripts/verify-sim-layout.sh
 ```
 
 Real deployment into `~/.hermes/profiles/` is intentionally out of scope until the maintainer explicitly approves it.
@@ -151,7 +159,33 @@ Future deployment scripts must support both states:
 
 Profile initialization should prefer official Hermes Agent commands first, then apply small customizations after the official files are created.
 
-See: [`docs/simulation-and-deploy-policy.md`](docs/simulation-and-deploy-policy.md)
+See:
+
+- [`docs/simulation-and-deploy-policy.md`](docs/simulation-and-deploy-policy.md)
+- [`docs/deploy-reset-policy.md`](docs/deploy-reset-policy.md)
+
+## Reset and clean-install policy
+
+Future real deploy scripts must preserve existing Hermes state by default, unless the maintainer explicitly selects a clean-install style reset.
+
+The reset policy separates:
+
+```text
+--reset-sessions
+--reset-kanban
+--reset-memory
+--reset-history
+--reset-all
+--clean-install
+```
+
+Current Phase 1 scripts only implement these ideas against the simulation path:
+
+```text
+simulate_env/.hermes/
+```
+
+They must not clear real `~/.hermes/` history, memory, Kanban, sessions, or profile files.
 
 ## Local checkout
 
@@ -166,6 +200,9 @@ After repository updates, validate locally with:
 ```bash
 cd ~/workspace/hermes-agent-opc-deploy
 git pull
+bash scripts/verify-repo-layout.sh
+bash scripts/prepare-sim-env.sh
+bash scripts/verify-sim-layout.sh
 ./scripts/verify-layout.sh
 git status --short
 ```
