@@ -102,7 +102,7 @@ reject_pattern "profiles/writer/SOUL.md.template" 'primary researcher|primary im
 
 require_pattern "profiles/builder/SOUL.md.template" 'implement|debug|test|verify|shell|code|實作|測試' 'builder implementation role'
 require_pattern "profiles/builder/SOUL.md.template" 'dry-run|backup|approval|confirm|simulation|模擬|批准' 'builder safety rule'
-reject_pattern "profiles/builder/SOUL.md.template" 'write runes directly|own long-term memory' 'builder direct memory ownership'
+require_pattern "profiles/builder/SOUL.md.template" 'does not decide durable memory|do not own long-term memory|do not write runes directly|flag.*runes candidate' 'builder memory ownership boundary'
 
 require_pattern "profiles/runes-holder/SOUL.md.template" 'runes|hermes-runes-md-wiki|sediment|govern|沉澱|治理' 'runes governance role'
 require_pattern "profiles/runes-holder/SOUL.md.template" 'not required|optional|not a dependency|不依賴|不是必要' 'runes optionality boundary'
