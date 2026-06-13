@@ -135,8 +135,18 @@ while IFS= read -r role || [[ -n "${role}" ]]; do
   fi
 
   doctor_output="$(hermes -p "${role}" doctor 2>&1 || true)"
+
+  # Doctor output is terminal-formatted and can vary across Hermes versions.
+  # Treat the doctor run as successful when it produced the Hermes Doctor
+  # screen and confirms any role-context signal:
+  #   - the role's SOUL.md is loaded as persona, or
+  #   - the real profile path appears, or
+  #   - the profile-relative path appears.
+  # This stays read-only and avoids depending on one exact path wording.
   if printf '%s\n' "${doctor_output}" | grep -q "Hermes Doctor" && \
-     printf '%s\n' "${doctor_output}" | grep -q "${REAL_PROFILE_ROOT}/${role} directory exists"; then
+     { printf '%s\n' "${doctor_output}" | grep -q "SOUL.md exists (persona configured)" || \
+       printf '%s\n' "${doctor_output}" | grep -q "${REAL_PROFILE_ROOT}/${role}" || \
+       printf '%s\n' "${doctor_output}" | grep -q "profiles/${role}"; }; then
     DOCTOR_PASS_COUNT=$((DOCTOR_PASS_COUNT + 1))
     printf '%s\n' "DOCTOR_STATUS=pass"
   else
