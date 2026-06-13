@@ -90,20 +90,52 @@ Treat warnings as failures:
 bash scripts/check-hermes-runtime-readiness.sh --strict
 ```
 
-## Expected Phase 3M.1 result
-
-After Phase 3L.5, the expected non-strict result is:
+## Phase 3M.1 verification lock
 
 ```text
-PASS Hermes runtime readiness preflight completed
+Phase 3M.1 Hermes Runtime Readiness Preflight
+Status: PASS
+Result: read-only / six profiles checked / local provider config present / Hermes command discovered / warnings=0
+Boundary: no runtime mutation / no chat request / no daemon / no concurrency / no load test
 ```
 
-Warnings may still be acceptable if they only represent non-blocking local facts, such as a missing command discovery result before the exact Hermes CLI invocation is confirmed.
+Maintainer verification confirmed:
+
+```text
+repository layout check: PASS
+Hermes root exists: PASS
+Hermes root SOUL.md exists: PASS
+profile root exists: PASS
+Hermes command found: hermes
+secretary readiness: PASS
+coordinator readiness: PASS
+researcher readiness: PASS
+writer readiness: PASS
+builder readiness: PASS
+runes-holder readiness: PASS
+summary: PASS Hermes runtime readiness preflight completed; warnings=0
+```
+
+All six real local profiles had the expected runtime prerequisites:
+
+```text
+profile directory exists
+SOUL.md exists
+config.yaml exists
+.env exists
+.env permission 600
+OPENAI_API_BASE present and ends with /v1
+OPENAI_API_KEY present
+model.provider present
+model.name present
+```
+
+No secrets were printed or tracked. The check remained read-only and did not send any model request.
 
 ## Follow-up
 
-If Phase 3M.1 passes, the next step should be Phase 3M.2 minimal Hermes command probe.
+The next step is Phase 3M.2 minimal Hermes command probe.
 
-Phase 3M.2 must first identify the installed Hermes command and supported syntax without assuming command names. It should remain read-only or single-request only until the maintainer explicitly approves any runtime mutation.
+Phase 3M.2 must use the discovered `hermes` command and first identify supported command/help/profile syntax before attempting any model-backed request. It should remain read-only where possible, or single-request only after explicit maintainer approval.
 
 Do not expand this phase into routing, queues, concurrency, daemon management, load testing, or external API fallback.
