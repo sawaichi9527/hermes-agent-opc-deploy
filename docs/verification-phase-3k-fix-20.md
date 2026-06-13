@@ -1,16 +1,16 @@
-# Phase 3K-FIX.20 Local-only Config/Env Provisioning Guarded Execution Implementation
+# Phase 3K-FIX.20 Local-only Config/Env Provisioning Guarded Execution
 
-Status: PREPARED  
-Result: guarded local provisioning script implemented / dry-run available / local guarded apply pending / no remote real write / no secret write
+Status: PASS  
+Result: guarded provisioning token accepted / six `.env` placeholders created / six `config.yaml` files created / create-only boundary preserved / no secret write / no gateway start / no chat
 
 ## Scope
 
-Phase 3K-FIX.20 implements the guarded local-only provisioning script for missing native Hermes profile local files:
+Phase 3K-FIX.20 executed the guarded local-only provisioning script for missing native Hermes profile local files:
 
 - `~/.hermes/profiles/<role>/.env`
 - `~/.hermes/profiles/<role>/config.yaml`
 
-The implementation is intentionally guarded and create-only.
+The provisioning remained local-only and create-only.
 
 ## Implemented Script
 
@@ -24,7 +24,9 @@ scripts/provision-local-profile-config-env.sh
 REAL_PROVISION_LOCAL_CONFIG_ENV
 ```
 
-## Default Mode
+## Default Mode Verified
+
+The default mode remains dry-run:
 
 ```text
 Mode: dry-run
@@ -37,65 +39,7 @@ GATEWAY_START=false
 CHAT_SMOKE=false
 ```
 
-## Apply Mode
-
-Apply mode requires:
-
-```bash
-bash scripts/provision-local-profile-config-env.sh \
-  --apply \
-  --confirm REAL_PROVISION_LOCAL_CONFIG_ENV
-```
-
-Apply mode is allowed to create only files that are missing:
-
-```text
-.env
-config.yaml
-```
-
-from repo-owned templates:
-
-```text
-.env.template
-config.yaml.template
-```
-
-## Strict Create-only Rule
-
-The script must not overwrite existing local files.
-
-Protected existing files:
-
-```text
-~/.hermes/profiles/<role>/.env
-~/.hermes/profiles/<role>/config.yaml
-```
-
-If either exists, the script reports it as protected and skips it.
-
-## Secret Policy
-
-`.env` created by this script is a placeholder/template-derived local file only.
-
-It must not contain real tokens committed to the repo. Real secrets must still be manually edited locally after provisioning.
-
-## Runtime Non-actions
-
-Phase 3K-FIX.20 does not:
-
-- start gateway
-- run chat
-- run model calls
-- run `hermes setup`
-- clone default profile secrets
-- write repo files from local execution
-- overwrite local `.env`
-- overwrite local `config.yaml`
-
-## Expected Pre-apply Dry-run Evidence
-
-Before local apply, expected dry-run markers are:
+Dry-run evidence:
 
 ```text
 Status: PHASE 3K-FIX.20 LOCAL-ONLY CONFIG/ENV GUARDED PROVISIONING
@@ -118,16 +62,48 @@ CHAT_SMOKE=false
 PASS: local-only config/env guarded provisioning dry-run completed
 ```
 
-## Expected Apply Evidence
+## Apply Command Executed
 
-After guarded apply on the current clean profile state, expected markers are:
+The user executed:
+
+```bash
+bash scripts/provision-local-profile-config-env.sh \
+  --apply \
+  --confirm REAL_PROVISION_LOCAL_CONFIG_ENV
+```
+
+Apply mode reported:
 
 ```text
 Mode: apply
 Real provisioning: GUARDED_APPLY_REQUESTED
+REAL_PROFILE_WRITE=true
+REAL_PROFILE_DELETE=false
+SECRET_WRITE=false
+CONFIG_WRITE=true
+ENV_WRITE=true
+GATEWAY_START=false
+CHAT_SMOKE=false
+```
+
+## Apply Evidence
+
+The guarded apply created local-only placeholder/config files for all six canonical profiles:
+
+```text
+ROLE_COUNT=6
+SOURCE_ENV_TEMPLATE_MISSING_COUNT=0
+SOURCE_CONFIG_TEMPLATE_MISSING_COUNT=0
+MISSING_DESTINATION_COUNT=0
+ENV_CREATE_CANDIDATE_COUNT=6
+CONFIG_CREATE_CANDIDATE_COUNT=6
 ENV_CREATED_COUNT=6
 CONFIG_CREATED_COUNT=6
+LOCAL_PROVISIONING_WRITE_CANDIDATE_COUNT=12
 LOCAL_PROVISIONING_CREATED_COUNT=12
+ENV_EXISTING_PROTECTED_COUNT=0
+CONFIG_EXISTING_PROTECTED_COUNT=0
+BLOCKED_COUNT=0
 REAL_PROFILE_WRITE=true
 REAL_PROFILE_DELETE=false
 SECRET_WRITE=false
@@ -138,30 +114,102 @@ CHAT_SMOKE=false
 PASS: local-only config/env guarded provisioning completed
 ```
 
-## Post-apply Expected State
-
-After apply:
+Per-role created outputs:
 
 ```text
-MISSING_ENV_COUNT=0
-MISSING_CONFIG_COUNT=0
-MISSING_PROFILE_YAML_COUNT=0
-READINESS_STATUS=READY
+CREATED_LOCAL_ENV role=secretary path=.env
+CREATED_LOCAL_CONFIG role=secretary path=config.yaml
+CREATED_LOCAL_ENV role=coordinator path=.env
+CREATED_LOCAL_CONFIG role=coordinator path=config.yaml
+CREATED_LOCAL_ENV role=researcher path=.env
+CREATED_LOCAL_CONFIG role=researcher path=config.yaml
+CREATED_LOCAL_ENV role=writer path=.env
+CREATED_LOCAL_CONFIG role=writer path=config.yaml
+CREATED_LOCAL_ENV role=builder path=.env
+CREATED_LOCAL_CONFIG role=builder path=config.yaml
+CREATED_LOCAL_ENV role=runes-holder path=.env
+CREATED_LOCAL_CONFIG role=runes-holder path=config.yaml
 ```
 
-The `SECRET_WRITE=false` marker remains true because no real secret is written; only placeholder/template-derived `.env` files are created.
+## Local-only Protection Evidence
+
+For each role, the script reported protected runtime paths as no-touch:
+
+```text
+LOCAL_ONLY_PROTECTED path=memories/ status=no_touch
+LOCAL_ONLY_PROTECTED path=sessions/ status=no_touch
+LOCAL_ONLY_PROTECTED path=logs/ status=no_touch
+LOCAL_ONLY_PROTECTED path=skills/ status=no_touch
+LOCAL_ONLY_PROTECTED path=cron/ status=no_touch
+LOCAL_ONLY_PROTECTED path=state.db* status=no_touch
+LOCAL_ONLY_PROTECTED path=auth.json status=no_touch
+LOCAL_ONLY_PROTECTED path=gateway_state.json status=no_touch
+```
+
+## Secret Policy
+
+`SECRET_WRITE=false` remains the governing marker.
+
+Created `.env` files are placeholder/template-derived local files only. They do not prove real tokens are configured. Real API tokens remain local-only manual edits outside git.
+
+## Post-apply Verification
+
+Post-apply provisioning planner result:
+
+```text
+ROLE_COUNT=6
+MISSING_ENV_COUNT=0
+MISSING_CONFIG_COUNT=0
+LOCAL_PROVISIONING_CANDIDATE_COUNT=0
+REAL_PROFILE_WRITE=false
+SECRET_WRITE=false
+CONFIG_WRITE=false
+ENV_WRITE=false
+```
+
+Post-apply native profile schema result:
+
+```text
+ROLE_COUNT=6
+MISSING_CONFIG_COUNT=0
+MISSING_ENV_COUNT=0
+MISSING_PROFILE_YAML_COUNT=0
+REAL_PROFILE_WRITE=false
+REAL_PROFILE_DELETE=false
+SECRET_WRITE=false
+```
+
+Readiness remained green:
+
+```text
+ROLE_COUNT=6
+SOURCE_STATUS=complete
+DESTINATION_STATUS=pass
+RESTORE_PLANNER_STATUS=pass
+READINESS_STATUS=READY
+REAL_PROFILE_WRITE=false
+REAL_RESTORE_WRITE=false
+```
+
+## Runtime Non-actions
+
+Phase 3K-FIX.20 did not:
+
+- start gateway
+- run chat
+- run model calls
+- clone default profile secrets
+- overwrite existing local `.env`
+- overwrite existing local `config.yaml`
+- write repo files from local execution
 
 ## Final Lock
 
-Current lock before local apply:
-
 ```text
-Phase 3K-FIX.20 local-only config/env provisioning guarded execution implementation
-PREPARED / guarded provisioning script implemented / dry-run available / local guarded apply pending / no remote real write / no secret write
+Phase 3K-FIX.20 local-only config/env provisioning guarded execution
+PASS / guarded provisioning token accepted / six .env placeholders created / six config.yaml files created / create-only boundary preserved / no secret write / no gateway start / no chat / readiness READY
 ```
-
-After user-local apply succeeds, this file should be updated to final execution PASS.
 
 ## Next Step
 
-Phase 3K-FIX.20 local guarded apply execution evidence lock
+Phase 3K-FIX.21 local-only secret manual fill plan / runtime readiness review
