@@ -51,6 +51,7 @@ required_docs=(
   "docs/hermes-native-profile-usage.md"
   "docs/soul-template-convention.md"
   "docs/verification-m4-minimal.md"
+  "docs/verification-m5-soul-convention.md"
   "docs/local-openai-compatible-provider.md"
   "docs/maintenance-policy.md"
   "docs/migration.md"
