@@ -76,8 +76,7 @@ for profile in "${profiles[@]}"; do
 
   reject_pattern "$template" 'API[_ -]?KEY|TOKEN|PASSWORD|SECRET|sk-[A-Za-z0-9]' 'real secret placeholders or values'
   reject_pattern "$template" 'rm -rf[[:space:]]+/' 'dangerous shell command'
-  reject_pattern "$template" 'directly modify[^
-]*(~/.hermes|/home/eye/.hermes)' 'direct real Hermes mutation instruction'
+  reject_pattern "$template" 'directly modify.*(~/.hermes|/home/eye/.hermes)' 'direct real Hermes mutation instruction'
 done
 
 echo
