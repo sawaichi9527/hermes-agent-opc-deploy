@@ -1,11 +1,12 @@
 # Real Deploy Plan
 
-Status: Phase 3J first real guarded apply locked  
-Scope: planning, dry-run, guarded apply, verification, restore planning, readiness gating, source-root completion, operator confirmation, and first real guarded apply  
+Status: Phase 3K role profile content documented  
+Scope: planning, dry-run, guarded apply, verification, restore planning, readiness gating, source-root completion, operator confirmation, first real guarded apply, and role content hardening  
 Real profile write: executed only through guarded apply  
 Restore execution: disabled  
 Target path: `~/.hermes/profiles/`  
-Current real apply result: five managed role profile directories deployed
+Current real apply result: five managed role profile directories deployed  
+Current source content result: five role README profiles added under repo-local `profiles/`
 
 ---
 
@@ -25,6 +26,7 @@ The project has moved from simulation into staged real-deploy preparation and th
 - Phase 3H: canonical repo-local profile source root completion
 - Phase 3I: first real guarded apply planning / operator confirmation
 - Phase 3J: first real guarded apply verification lock
+- Phase 3K: role profile content hardening
 
 The deployment path must remain simple, personal-use friendly, and lightweight for Hermes Agent. It should help the user operate local profiles safely without becoming a second platform or runtime dependency.
 
@@ -52,6 +54,7 @@ The deployment path must remain simple, personal-use friendly, and lightweight f
 | Phase 3H profile source root completion | PASS / readiness READY |
 | Phase 3I first real guarded apply planning / operator confirmation | PASS / no real write |
 | Phase 3J first real guarded apply | PASS / real write executed |
+| Phase 3K role profile content hardening | pending local verification |
 
 Evidence and policy files:
 
@@ -64,6 +67,7 @@ Evidence and policy files:
 - `docs/verification-phase-3h.md`
 - `docs/verification-phase-3i.md`
 - `docs/verification-phase-3j.md`
+- `docs/verification-phase-3k.md`
 
 Read-only planning / verification scripts:
 
@@ -148,13 +152,34 @@ Canonical source root after Phase 3H:
 
     profiles/
 
-After Phase 3H and Phase 3J verification:
+After Phase 3H, Phase 3J, and Phase 3K:
 
     SOURCE_STATUS=complete
     SOURCE_ROOT=/home/eye/workspace/hermes-agent-opc-deploy/profiles
     READINESS_STATUS=READY
 
-The current source root content is intentionally minimal. It contains deployable role directory skeletons using `.gitkeep`. Phase 3J proves the guarded apply path, not final role-specific profile content completeness.
+Phase 3K adds small role README profiles to this source root. Phase 3K does not automatically sync those README files into real `~/.hermes/profiles/`; that is reserved for a later guarded apply phase.
+
+---
+
+## Source Content After Phase 3K
+
+Phase 3K adds readable role profile content under:
+
+    profiles/default/README.md
+    profiles/developer/README.md
+    profiles/reviewer/README.md
+    profiles/operator/README.md
+    profiles/trial/README.md
+
+The content documents:
+
+- role purpose
+- operating boundary
+- intended use
+- governance notes
+
+The content remains intentionally small and local. It does not introduce runtime services, enterprise orchestration, remote telemetry, databases, queues, or schedulers.
 
 ---
 
@@ -302,6 +327,17 @@ Lock wording:
     Phase 3J first real guarded apply
     PASS / guarded token accepted / backup created / five role profiles applied / managed markers present / post-apply readiness READY
 
+### Phase 3K Role Profile Content Hardening
+
+Evidence file:
+
+    docs/verification-phase-3k.md
+
+Lock wording after local verification:
+
+    Phase 3K role profile content hardening
+    PASS / five role README profiles added / source root remains READY / no real write
+
 ---
 
 ## Risk Notes
@@ -315,7 +351,7 @@ Main risks:
 3. Incorrect profile layout may make Hermes fail to load a profile.
 4. Future upstream Hermes changes may make local OPC templates stale.
 5. Reset without backup could permanently lose local profile customization.
-6. Skeleton profile directories do not yet provide final role-specific behavior.
+6. Source content changes are not active in real profiles until a guarded apply syncs them.
 
 Required controls for future guarded apply remain:
 
@@ -358,22 +394,20 @@ The deployment layer should help the user operate Hermes Agent safely. It should
 
 ---
 
-## Phase 3J Acceptance Criteria
+## Phase 3K Acceptance Criteria
 
-Phase 3J is PASS only if:
+Phase 3K is PASS only if:
 
-1. Guarded apply was executed only with `--apply --confirm REAL_DEPLOY_PROFILES`.
-2. Source root was `~/workspace/hermes-agent-opc-deploy/profiles`.
-3. Source status was complete.
-4. Preflight status was PASS.
-5. Backup path was created.
-6. All five roles were applied.
-7. All five role directories contain `.opc-managed-profile`.
-8. Post-apply readiness reports READY.
-9. Post-apply dry-run remains non-writing.
-10. Git working tree remains clean.
-
-All criteria are met.
+1. `profiles/default/README.md` exists.
+2. `profiles/developer/README.md` exists.
+3. `profiles/reviewer/README.md` exists.
+4. `profiles/operator/README.md` exists.
+5. `profiles/trial/README.md` exists.
+6. `docs/verification-phase-3k.md` exists.
+7. Readiness checker still reports `READINESS_STATUS=READY`.
+8. Readiness checker still emits `REAL_PROFILE_WRITE=false`.
+9. No real guarded apply is executed in Phase 3K.
+10. Git working tree remains clean after pull and verification.
 
 ---
 
@@ -381,8 +415,12 @@ All criteria are met.
 
 Recommended next phase:
 
-    Phase 3K role profile content hardening
+    Phase 3L second guarded apply / profile content sync
 
-Phase 3K should add actual role profile content under `profiles/<role>/` while keeping the same guarded apply and backup-before-write controls.
+Phase 3L may sync the Phase 3K role README content into real `~/.hermes/profiles/` through guarded apply.
 
-Phase 3K should avoid enterprise-grade complexity and keep the profile content small, readable, local, and easy to inspect.
+It must still require:
+
+    --apply --confirm REAL_DEPLOY_PROFILES
+
+and must create a backup before writing.
