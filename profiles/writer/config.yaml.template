@@ -1,0 +1,11 @@
+# Hermes profile config template for writer
+# Phase 3K-FIX.13 native profile template source alignment
+# Copy to config.yaml locally only after reviewing provider/model settings.
+
+profile:
+  name: writer
+  role: writer
+  description: "Writes precise documentation, verification records, implementation notes, and status summaries."
+
+# Provider/model settings are intentionally omitted here.
+# Configure locally with `hermes -p writer model` or `hermes -p writer setup`.
