@@ -320,9 +320,15 @@ Lark cutover
 parallel multi-agent execution
 ```
 
-## M6 - Pre-production profile cleanup
+## M6 - Pre-production profile maintenance planning
 
-Status: implemented / planning docs and read-only inspector added / pending local verification.
+Status: PASS / read-only inventory verified / cleanup policy documented / dry-run plan documented / no runtime cleanup executed.
+
+Verification lock:
+
+```text
+docs/verification-m6-maintenance-planning.md
+```
 
 M6 is a pre-production maintenance planning stage. It creates the safety procedure and inspection tooling for future runtime cleanup, but it does not clean the real runtime by itself.
 
@@ -332,6 +338,7 @@ Deliverables:
 docs/pre-production-profile-maintenance.md
 docs/pre-production-cleanup-dry-run.md
 scripts/inspect-profile-runtime-state.sh
+docs/verification-m6-maintenance-planning.md
 ```
 
 M6.1 Pre-production Runtime Inventory:
@@ -340,6 +347,7 @@ M6.1 Pre-production Runtime Inventory:
 Added scripts/inspect-profile-runtime-state.sh.
 The script is read-only and reports metadata only.
 It does not print .env contents, token values, session contents, native memory contents, database contents, or cache contents.
+The maintainer ran the inspector against /home/eye/.hermes and confirmed all six OPC profile directories exist.
 ```
 
 M6.2 Backup Policy:
@@ -355,6 +363,7 @@ M6.3 Cleanup Classification:
 Documented preserve / cleanup-candidate-after-backup / defer classifications.
 Preserve identity/config/secrets/profile files by default.
 Defer unknown state, unclear native memory, unknown databases, and secret-bearing/private runtime data.
+Read-only inventory classified profile caches/logs/sessions as review-only cleanup candidates after backup.
 ```
 
 M6.4 Dry-run Cleanup Plan:
@@ -371,19 +380,14 @@ Manual apply remains deliberately non-scripted in M6.
 Real cleanup requires reviewed inventory, external backup, exact target list, explicit maintainer approval, reviewed commands, and rollback path.
 ```
 
-Default M6 verification:
+M6.6 verification result:
 
-```bash
-bash scripts/verify-repo-layout.sh
-bash scripts/verify-profile-templates.sh
-bash -n scripts/inspect-profile-runtime-state.sh
-git status --short
-```
-
-Optional runtime inventory, only when the maintainer wants read-only inspection:
-
-```bash
-bash scripts/inspect-profile-runtime-state.sh
+```text
+verify-repo-layout.sh: PASS / repository layout is valid
+verify-profile-templates.sh: PASS / profile templates satisfy baseline static checks
+bash -n scripts/inspect-profile-runtime-state.sh: PASS
+inspect-profile-runtime-state.sh: PASS / read-only runtime inventory completed
+git status --short: clean working tree
 ```
 
 Not part of M6 implementation:
