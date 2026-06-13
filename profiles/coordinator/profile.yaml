@@ -1,0 +1,8 @@
+name: coordinator
+role: coordinator
+status: phase-3k-fix-13-native-template-source
+description: "Coordinates phase sequencing, handoffs, dependencies, and verification gates for Hermes Agent OPC work."
+description_auto: false
+opc_managed: true
+secret_policy: no-secrets-in-repo
+runtime_status: template-source-only
