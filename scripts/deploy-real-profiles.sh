@@ -8,18 +8,11 @@ TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 PLANNED_BACKUP_DIR="${BACKUP_ROOT}/${TIMESTAMP}"
 CONFIRM_TOKEN="REAL_DEPLOY_PROFILES"
 MANAGED_MARKER=".opc-managed-profile"
+ROLE_CONFIG="${REPO_ROOT}/config/profile-roles.txt"
 
 MODE="dry-run"
 SOURCE_ROOT=""
 CONFIRM_VALUE=""
-
-ROLES=(
-  default
-  developer
-  reviewer
-  operator
-  trial
-)
 
 CANDIDATE_SOURCE_ROOTS=(
   "${REPO_ROOT}/profiles"
@@ -30,14 +23,14 @@ CANDIDATE_SOURCE_ROOTS=(
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/deploy-real-profiles.sh [--dry-run] [--source-root PATH]
-       scripts/deploy-real-profiles.sh --apply --confirm REAL_DEPLOY_PROFILES [--source-root PATH]
+Usage: scripts/deploy-real-profiles.sh [--dry-run] [--source-root PATH] [--role-config PATH]
+       scripts/deploy-real-profiles.sh --apply --confirm REAL_DEPLOY_PROFILES [--source-root PATH] [--role-config PATH]
 
-Phase 3E guarded apply implementation draft.
+Phase 3K-FIX.2 canonical-role guarded apply script.
 
-Default mode is dry-run. Dry-run prints the selected source root, destination
-root, backup path, preflight result, and copy map without creating or modifying
-real ~/.hermes/profiles/ files.
+Default mode is dry-run. Dry-run prints the selected source root, role config,
+destination root, backup path, preflight result, and copy map without creating
+or modifying real ~/.hermes/profiles/ files.
 
 Guarded apply is allowed only with the exact confirmation token:
 
@@ -48,9 +41,10 @@ Options:
   --apply             Enable guarded real profile deployment.
   --confirm TOKEN     Required for --apply. Must equal REAL_DEPLOY_PROFILES.
   --source-root PATH  Use a specific source root instead of auto-selection.
+  --role-config PATH  Read role names from a specific config file.
   --help              Show this help message.
 
-Unsupported in Phase 3E:
+Unsupported:
   --write
   --execute
   --reset
@@ -66,6 +60,24 @@ fail() {
 
 is_apply() {
   [ "${MODE}" = "apply" ]
+}
+
+load_roles() {
+  local config_path="$1"
+  local line
+  ROLES=()
+
+  [ -f "${config_path}" ] || fail "role config not found: ${config_path}"
+
+  while IFS= read -r line || [ -n "${line}" ]; do
+    line="${line%%#*}"
+    line="${line#"${line%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
+    [ -n "${line}" ] || continue
+    ROLES+=("${line}")
+  done < "${config_path}"
+
+  [ "${#ROLES[@]}" -gt 0 ] || fail "role config contains no roles: ${config_path}"
 }
 
 role_dir_count() {
@@ -133,17 +145,18 @@ while [ "$#" -gt 0 ]; do
       shift
       ;;
     --confirm)
-      if [ "$#" -lt 2 ]; then
-        fail "--confirm requires a token. Expected: ${CONFIRM_TOKEN}"
-      fi
+      [ "$#" -ge 2 ] || fail "--confirm requires a token. Expected: ${CONFIRM_TOKEN}"
       CONFIRM_VALUE="$2"
       shift 2
       ;;
     --source-root)
-      if [ "$#" -lt 2 ]; then
-        fail "--source-root requires a path."
-      fi
+      [ "$#" -ge 2 ] || fail "--source-root requires a path."
       SOURCE_ROOT="$2"
+      shift 2
+      ;;
+    --role-config)
+      [ "$#" -ge 2 ] || fail "--role-config requires a path."
+      ROLE_CONFIG="$2"
       shift 2
       ;;
     --help|-h)
@@ -151,7 +164,7 @@ while [ "$#" -gt 0 ]; do
       exit 0
       ;;
     --write|--execute|--reset|--restore)
-      fail "unsupported write/reset mode in Phase 3E: $1"
+      fail "unsupported write/reset mode: $1"
       ;;
     *)
       echo "ERROR: unknown option: $1" >&2
@@ -160,6 +173,8 @@ while [ "$#" -gt 0 ]; do
       ;;
   esac
 done
+
+load_roles "${ROLE_CONFIG}"
 
 if is_apply && [ "${CONFIRM_VALUE}" != "${CONFIRM_TOKEN}" ]; then
   fail "guarded apply requires: --confirm ${CONFIRM_TOKEN}"
@@ -175,10 +190,11 @@ print_header() {
   cat <<HEADER
 == OPC Hermes Real Profile Deploy ==
 
-Status: PHASE 3E GUARDED APPLY DRAFT
+Status: PHASE 3K-FIX.2 CANONICAL ROLE GUARDED APPLY
 Mode: ${MODE}
 Real deploy: $(is_apply && echo "GUARDED_APPLY_REQUESTED" || echo "DISABLED")
 Repo root: ${REPO_ROOT}
+Role config: ${ROLE_CONFIG}
 Selected source root: ${SELECTED_SOURCE_ROOT}
 Real profile root: ${REAL_PROFILE_ROOT}
 Backup root: ${BACKUP_ROOT}
@@ -195,8 +211,19 @@ print_safety_boundary() {
 - Guarded apply requires --apply --confirm ${CONFIRM_TOKEN}.
 - Backup-before-write is mandatory for guarded apply.
 - Existing unmarked destination role directories are protected.
+- Role list is loaded from ${ROLE_CONFIG}.
 - Hermes Agent does not depend on this script at runtime.
 SAFETY
+}
+
+print_roles() {
+  echo
+  echo "== Canonical Roles =="
+  printf 'ROLE_COUNT=%s\n' "${#ROLES[@]}"
+  local role
+  for role in "${ROLES[@]}"; do
+    echo "ROLE=${role}"
+  done
 }
 
 print_existing_real_profiles() {
@@ -237,7 +264,7 @@ print_selected_source() {
       echo "SOURCE_STATUS=complete"
     elif [ -d "${SELECTED_SOURCE_ROOT}" ]; then
       echo "SOURCE_STATUS=partial"
-      echo "WARNING: selected source root exists but does not contain all required roles."
+      echo "WARNING: selected source root exists but does not contain all required canonical roles."
     else
       echo "SOURCE_STATUS=missing"
       echo "WARNING: selected source root does not exist."
@@ -281,18 +308,19 @@ preflight_check() {
 
   [ "${EUID}" -ne 0 ] || fail "refusing to run as root. Use the normal user account."
   [ "${REAL_PROFILE_ROOT}" = "${HOME}/.hermes/profiles" ] || fail "unexpected destination root: ${REAL_PROFILE_ROOT}"
+  [ -f "${ROLE_CONFIG}" ] || fail "missing role config: ${ROLE_CONFIG}"
   [ -f "${REPO_ROOT}/docs/guarded-apply-contract.md" ] || fail "missing docs/guarded-apply-contract.md"
   [ -f "${REPO_ROOT}/docs/verification-phase-3c.md" ] || fail "missing docs/verification-phase-3c.md"
   [ -f "${REPO_ROOT}/docs/real-deploy-plan.md" ] || fail "missing docs/real-deploy-plan.md"
   [ -n "${SELECTED_SOURCE_ROOT}" ] || fail "no source root selected"
-  source_has_all_roles "${SELECTED_SOURCE_ROOT}" || fail "selected source root does not contain all required role directories: ${SELECTED_SOURCE_ROOT}"
+  source_has_all_roles "${SELECTED_SOURCE_ROOT}" || fail "selected source root does not contain all required canonical role directories: ${SELECTED_SOURCE_ROOT}"
   [ ! -e "${PLANNED_BACKUP_DIR}" ] || fail "planned backup path already exists: ${PLANNED_BACKUP_DIR}"
 
   for role in "${ROLES[@]}"; do
     dst_path="${REAL_PROFILE_ROOT}/${role}"
     marker_path="${dst_path}/${MANAGED_MARKER}"
     if [ -e "${dst_path}" ] && [ ! -f "${marker_path}" ]; then
-      fail "destination role exists without managed marker; refusing overwrite: ${dst_path}"
+      fail "destination canonical role exists without managed marker; refusing overwrite: ${dst_path}"
     fi
   done
 }
@@ -327,7 +355,7 @@ write_marker() {
   local dst_path="$2"
   cat > "${dst_path}/${MANAGED_MARKER}" <<MARKER
 managed_by=hermes-agent-opc-deploy
-phase=3E
+phase=3K-FIX.2
 deployed_at=${TIMESTAMP}
 source_root=${SELECTED_SOURCE_ROOT}
 role=${role}
@@ -359,6 +387,7 @@ apply_profiles() {
 
 print_header
 print_safety_boundary
+print_roles
 print_existing_real_profiles
 print_candidate_sources
 print_selected_source
@@ -368,7 +397,7 @@ if is_apply; then
   print_preflight
   apply_profiles
   echo
-  echo "== Phase 3E Result =="
+  echo "== Phase 3K-FIX.2 Result =="
   echo "PASS: guarded real deploy completed"
   echo "REAL_PROFILE_WRITE=true"
 else
@@ -387,18 +416,11 @@ else
   else
     cat /tmp/hermes-opc-deploy-preflight.$$ || true
     rm -f /tmp/hermes-opc-deploy-preflight.$$
-    echo "PREFLIGHT_STATUS=BLOCKED_FOR_APPLY"
+    echo "PREFLIGHT_STATUS=BLOCKED"
   fi
 
   echo
-  echo "== Simplicity Boundary =="
-  echo "- Personal/local usage only."
-  echo "- Plain shell + Markdown only."
-  echo "- No daemon, database, background reconciler, remote telemetry, or enterprise orchestration."
-  echo "- No runtime burden added to Hermes Agent."
-
-  echo
-  echo "== Phase 3E Result =="
+  echo "== Phase 3K-FIX.2 Result =="
   echo "PASS: guarded deploy dry-run completed"
   echo "REAL_PROFILE_WRITE=false"
 fi
