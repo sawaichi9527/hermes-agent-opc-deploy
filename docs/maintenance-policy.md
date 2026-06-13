@@ -7,9 +7,67 @@ This repository is maintained as a lightweight personal-use companion around ups
 Default contribution flow:
 
 1. Update this GitHub repository directly when the connector can perform the change safely.
-2. The user pulls the repository locally and validates the result.
+2. The user pulls the repository locally into `~/workspace/hermes-agent-opc-deploy` and validates the result.
 3. Only ask the user to run patch scripts when GitHub connector limitations prevent direct edits.
 4. For unusually large files where chat code blocks may be unreliable, generate the full file as a downloadable artifact and provide the target repository path for manual upload/overwrite.
+
+## Local working copy
+
+The expected local checkout path is:
+
+```text
+~/workspace/hermes-agent-opc-deploy
+```
+
+Normal validation flow after direct GitHub updates:
+
+```bash
+cd ~/workspace/hermes-agent-opc-deploy
+git pull
+./scripts/verify-layout.sh
+git status --short
+```
+
+If the local clone does not exist yet:
+
+```bash
+mkdir -p ~/workspace
+cd ~/workspace
+git clone git@github.com:sawaichi9527/hermes-agent-opc-deploy.git
+cd hermes-agent-opc-deploy
+./scripts/verify-layout.sh
+```
+
+HTTPS clone may be used instead when SSH is not configured.
+
+## Artifact handoff fallback
+
+Use this only when direct GitHub edits or chat patch blocks are not reliable, such as very large files or connector limits.
+
+Fallback convention:
+
+1. Generate a complete replacement file as a downloadable artifact.
+2. The user downloads it to `~/Downloads`.
+3. The assistant provides the exact target path under `~/workspace/hermes-agent-opc-deploy`.
+4. The user copies the file into place, verifies, commits, and pushes.
+
+Example copy and commit flow:
+
+```bash
+cd ~/workspace/hermes-agent-opc-deploy
+
+cp ~/Downloads/<downloaded-file> <target/path/in/repo>
+
+./scripts/verify-layout.sh
+git status --short
+git diff -- <target/path/in/repo>
+
+git add <target/path/in/repo>
+git commit -m "Update <target description>"
+git push
+```
+
+The assistant should avoid asking the user to manually copy many small files when direct GitHub updates are available.
 
 ## Scope control
 
