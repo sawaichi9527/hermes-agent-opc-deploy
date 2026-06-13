@@ -4,171 +4,173 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-fail_count=0
+ISSUES=0
 
-pass() {
-  printf 'PASS %s\n' "$1"
-}
-
-miss() {
-  printf 'MISS %s\n' "$1"
-  fail_count=$((fail_count + 1))
-}
-
-fail() {
-  printf 'FAIL %s\n' "$1"
-  fail_count=$((fail_count + 1))
+print_header() {
+  printf '\n== %s ==\n' "$1"
 }
 
 check_file() {
   local path="$1"
   if [ -f "$path" ]; then
-    pass "file $path"
+    printf 'PASS file %s\n' "$path"
   else
-    miss "file $path"
+    printf 'MISS file %s\n' "$path"
+    ISSUES=$((ISSUES + 1))
   fi
 }
 
 check_dir() {
   local path="$1"
   if [ -d "$path" ]; then
-    pass "dir  $path"
+    printf 'PASS dir  %s\n' "$path"
   else
-    miss "dir  $path"
+    printf 'MISS dir  %s\n' "$path"
+    ISSUES=$((ISSUES + 1))
   fi
 }
 
-printf 'Repository root: %s\n\n' "$ROOT"
-
-printf '== Required mainline documentation ==\n'
-required_docs=(
-  "README.md"
-  "docs/implementation-roadmap.md"
-  "docs/roadmap-m8-status-sync.md"
-  "docs/secretary-only-behavior-smoke.md"
-  "docs/verification-m9-secretary-smoke-partial.md"
-  "docs/phase-6-hermes-native-profile-alignment.md"
-  "docs/opc-profile-set-design.md"
-  "docs/local-compute-policy.md"
-  "docs/runes-holder-boundary.md"
-  "docs/hermes-native-profile-usage.md"
-  "docs/soul-template-convention.md"
-  "docs/pre-production-profile-maintenance.md"
-  "docs/pre-production-cleanup-dry-run.md"
-  "docs/pre-production-profile-deployment.md"
-  "docs/profile-deployment-dry-run.md"
-  "docs/real-profile-backup-and-secretary-apply.md"
-  "docs/verification-m4-minimal.md"
-  "docs/verification-m5-soul-convention.md"
-  "docs/verification-m6-maintenance-planning.md"
-  "docs/verification-m7-profile-deployment-planning.md"
-  "docs/verification-m8-secretary-apply.md"
-  "docs/local-openai-compatible-provider.md"
-  "docs/maintenance-policy.md"
-  "docs/migration.md"
-  "docs/model-routing-policy.md"
-  "docs/profile-language-policy.md"
-  "docs/runes-holder.md"
-  "docs/secretary-profile.md"
-  "archive/validation-history/README.md"
-)
-for path in "${required_docs[@]}"; do
+check_syntax() {
+  local path="$1"
   check_file "$path"
+  if [ -f "$path" ]; then
+    if bash -n "$path"; then
+      printf 'PASS syntax %s\n' "$path"
+    else
+      printf 'FAIL syntax %s\n' "$path"
+      ISSUES=$((ISSUES + 1))
+    fi
+  fi
+}
+
+check_forbidden() {
+  local found=0
+
+  while IFS= read -r path; do
+    case "$path" in
+      profiles/*/.env.template)
+        ;;
+
+      *.env|*.env.*|*/.env|*/.env.*|*.secret|*.secrets|*secrets*|*token*|*TOKEN*|*password*|*PASSWORD*)
+        printf 'FAIL forbidden tracked path %s\n' "$path"
+        found=1
+        ;;
+    esac
+  done < <(git ls-files)
+
+  if [ "$found" -eq 0 ]; then
+    printf 'PASS no forbidden tracked runtime/secrets files\n'
+  else
+    ISSUES=$((ISSUES + 1))
+  fi
+}
+
+print_header "Repository root"
+printf '%s\n' "$ROOT"
+
+print_header "Required mainline documentation"
+for f in \
+  README.md \
+  docs/implementation-roadmap.md \
+  docs/opc-profile-set-design.md \
+  docs/local-compute-policy.md \
+  docs/runes-holder-boundary.md \
+  docs/hermes-native-profile-usage.md \
+  docs/soul-template-convention.md \
+  docs/local-openai-compatible-provider.md \
+  docs/maintenance-policy.md \
+  docs/migration.md \
+  docs/model-routing-policy.md \
+  docs/profile-language-policy.md \
+  docs/runes-holder.md \
+  docs/secretary-profile.md \
+  docs/verification-m12-native-opc-runtime-baseline.md \
+  archive/validation-history/README.md
+do
+  check_file "$f"
 done
 
-printf '\n== Required profile template notes ==\n'
-required_profiles=(
-  "secretary"
-  "coordinator"
-  "researcher"
-  "writer"
-  "builder"
-  "runes-holder"
-)
-for profile in "${required_profiles[@]}"; do
-  check_dir "profiles/$profile"
-  check_file "profiles/$profile/NOTES.md"
-  check_file "profiles/$profile/SOUL.md.template"
+print_header "Required profile template notes"
+for p in secretary coordinator researcher writer builder runes-holder; do
+  check_dir "profiles/$p"
+  check_file "profiles/$p/NOTES.md"
+  check_file "profiles/$p/SOUL.md.template"
+  check_file "profiles/$p/profile.yaml"
+  check_file "profiles/$p/README.md"
 done
 check_file "profiles/README.md"
 
-printf '\n== Required mainline scripts ==\n'
-required_scripts=(
-  "scripts/verify-layout.sh"
-  "scripts/verify-repo-layout.sh"
-  "scripts/verify-profile-templates.sh"
-  "scripts/inspect-profile-runtime-state.sh"
-  "scripts/dry-run-profile-deployment.sh"
-  "scripts/backup-hermes-profiles.sh"
-  "scripts/apply-secretary-soul-template.sh"
-  "scripts/smoke-secretary-profile-local.sh"
-  "scripts/diagnose-secretary-local-smoke.sh"
-)
-for path in "${required_scripts[@]}"; do
-  check_file "$path"
-  if [ -f "$path" ]; then
-    if bash -n "$path"; then
-      pass "syntax $path"
+print_header "Required current mainline scripts"
+for s in \
+  scripts/verify-layout.sh \
+  scripts/verify-repo-layout.sh \
+  scripts/verify-profile-templates.sh \
+  scripts/verify-m12-native-opc-runtime-baseline.sh \
+  scripts/apply-secretary-runtime-doc-overlay.sh \
+  scripts/apply-coordinator-runtime-doc-overlay.sh \
+  scripts/apply-researcher-runtime-doc-overlay.sh \
+  scripts/apply-writer-runtime-doc-overlay.sh \
+  scripts/apply-builder-runtime-doc-overlay.sh \
+  scripts/apply-runes-holder-runtime-doc-overlay.sh \
+  scripts/create-coordinator-profile-clone.sh \
+  scripts/create-researcher-profile-clone.sh \
+  scripts/create-writer-profile-clone.sh \
+  scripts/create-builder-profile-clone.sh \
+  scripts/create-runes-holder-profile-clone.sh
+do
+  check_syntax "$s"
+done
+
+print_header "Optional historical / regression scripts"
+for s in \
+  scripts/prepare-sim-env.sh \
+  scripts/deploy-sim-profiles.sh \
+  scripts/inspect-sim-profiles.sh \
+  scripts/verify-sim-layout.sh \
+  scripts/smoke-local-provider-sequential.sh \
+  scripts/set-local-model-name.sh \
+  scripts/check-hermes-runtime-readiness.sh \
+  scripts/smoke-hermes-runtime-oneshot.sh \
+  scripts/check-runtime-baseline.sh \
+  scripts/backup-hermes-profiles.sh \
+  scripts/check-native-profile-runtime-smoke.sh \
+  scripts/check-native-profile-schema.sh \
+  scripts/check-native-profile-source-templates.sh \
+  scripts/inspect-profile-runtime-state.sh \
+  scripts/cleanup-drift-profiles.sh \
+  scripts/plan-drift-profile-cleanup.sh \
+  scripts/plan-repo-drift-source-cleanup.sh
+do
+  if [ -f "$s" ]; then
+    printf 'PASS optional file %s\n' "$s"
+    if bash -n "$s"; then
+      printf 'PASS optional syntax %s\n' "$s"
     else
-      fail "syntax $path"
+      printf 'FAIL optional syntax %s\n' "$s"
+      ISSUES=$((ISSUES + 1))
     fi
+  else
+    printf 'SKIP optional missing %s\n' "$s"
   fi
 done
 
-printf '\n== Optional historical / regression scripts ==\n'
-optional_scripts=(
-  "scripts/prepare-sim-env.sh"
-  "scripts/deploy-sim-profiles.sh"
-  "scripts/inspect-sim-profiles.sh"
-  "scripts/verify-sim-layout.sh"
-  "scripts/smoke-local-provider-sequential.sh"
-  "scripts/set-local-model-name.sh"
-  "scripts/check-hermes-runtime-readiness.sh"
-  "scripts/smoke-hermes-runtime-oneshot.sh"
-  "scripts/check-runtime-baseline.sh"
-)
-for path in "${optional_scripts[@]}"; do
-  if [ -f "$path" ]; then
-    pass "optional file $path"
-    if bash -n "$path"; then
-      pass "optional syntax $path"
-    else
-      fail "optional syntax $path"
-    fi
-  else
-    printf 'SKIP optional file %s\n' "$path"
-  fi
-done
-
-printf '\n== Forbidden tracked runtime/secrets check ==\n'
-if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  # Trackable environment templates are allowed as documentation/configuration examples.
-  # Real local runtime env files remain forbidden, including `.env`, `.env.local`,
-  # `.env.production`, and other non-template `.env.*` files.
-  forbidden_regex='(^|/)(\.env($|\.)|secrets/|credentials/|sessions/|logs/|cache/|state/|simulate_env/)|\.(db|sqlite|sqlite3)(-|$|\.)|\.db-(wal|shm)$|\.sqlite-(wal|shm)$|\.sqlite3-(wal|shm)$'
-  allowed_env_template_regex='(^|/)\.env\.template$'
-  mapfile -t forbidden_files < <(
-    git ls-files \
-      | grep -E "$forbidden_regex" \
-      | grep -Ev "$allowed_env_template_regex" \
-      || true
-  )
-  if [ "${#forbidden_files[@]}" -eq 0 ]; then
-    pass "no forbidden tracked runtime/secrets files"
-  else
-    for path in "${forbidden_files[@]}"; do
-      fail "forbidden tracked file $path"
-    done
-  fi
+print_header "M13 archive staging"
+if find archive/pre-delete -maxdepth 3 -type f -name MANIFEST.md 2>/dev/null | grep -q .; then
+  find archive/pre-delete -maxdepth 3 -type f -name MANIFEST.md | sort | while read -r f; do
+    printf 'PASS archive manifest %s\n' "$f"
+  done
 else
-  printf 'SKIP not inside git work tree\n'
+  printf 'MISS archive/pre-delete/*/MANIFEST.md\n'
+  ISSUES=$((ISSUES + 1))
 fi
 
-printf '\n== Summary ==\n'
-if [ "$fail_count" -eq 0 ]; then
+print_header "Forbidden tracked runtime/secrets check"
+check_forbidden
+
+print_header "Summary"
+if [ "$ISSUES" -eq 0 ]; then
   printf 'PASS repository layout is valid.\n'
-  exit 0
+else
+  printf 'FAIL repository layout has %s issue(s).\n' "$ISSUES"
+  exit 1
 fi
-
-printf 'FAIL repository layout has %s issue(s).\n' "$fail_count"
-exit 1
