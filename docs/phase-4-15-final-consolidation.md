@@ -1,17 +1,17 @@
-# Phase 4.15 final consolidation preparation
+# Phase 4 final consolidation lock
 
-This document prepares the Phase 4 final consolidation lock for the maintainer's personal Hermes Agent OPC deployment.
+This document records the Phase 4 final consolidation lock for the maintainer's personal Hermes Agent OPC deployment.
 
-Phase 4 should close only after the remaining read-only probes are locally verified.
+Phase 4 is now closed as a manual, official-primitive-first OPC baseline.
 
-## Planned final result
+## Locked final result
 
 ```text
 Phase 4 Final Consolidation Lock
-PENDING / awaiting Phase 4.13 and Phase 4.14 local verification
+PASS / manual OPC loop baseline closed / official read-only primitives verified / no runtime mutation introduced
 ```
 
-## Phase 4 close target
+## Closed Phase 4 scope
 
 ```text
 Phase 4.1-4.7: manual OPC design baseline
@@ -25,19 +25,34 @@ Phase 4.14: memory status-only probe
 Phase 4.15: final consolidation lock
 ```
 
-## Scope
-
-The final Phase 4 lock must remain documentation-only and official-primitive-first.
-
-## Exit criteria
+## Final evidence summary
 
 ```text
-Phase 4.13 is locally verified or explicitly deferred.
-Phase 4.14 is locally verified or explicitly deferred.
-Repository layout remains PASS.
-Forbidden tracked runtime/secrets check remains PASS.
+prompt-size: PASS / offline JSON budget report produced
+logs: PASS / available logs listed and bounded default log view printed
+sessions: PASS / recent sessions listed and store statistics printed
+memory: PASS / built-in-only status confirmed
+repository layout: PASS
+forbidden tracked runtime/secrets check: PASS
 ```
 
-## Follow-up
+## Boundary retained
 
-After local verification of Phase 4.13 and Phase 4.14, this file can be updated from PENDING to PASS.
+```text
+manual / guided OPC loop only
+official Hermes primitives first
+single request or bounded read-only command by default
+no custom daemon
+no queue or router
+no background scheduler
+no profile mutation by default
+no alias wrapper creation by default
+no external memory provider activation
+no Kanban task workflow by default
+```
+
+## Result
+
+Phase 4 is complete.
+
+The next phase should not mutate real Hermes profiles unless the maintainer explicitly approves the move into the simulation or deployment phase.
