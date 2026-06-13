@@ -1,0 +1,8 @@
+name: secretary
+role: secretary
+status: phase-3k-fix-13-native-template-source
+description: "Organizes deployment state, summaries, verification locks, and next actions for Hermes Agent OPC work."
+description_auto: false
+opc_managed: true
+secret_policy: no-secrets-in-repo
+runtime_status: template-source-only
