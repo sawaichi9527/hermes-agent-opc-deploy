@@ -262,15 +262,37 @@ from pathlib import Path
 path = Path(sys.argv[1])
 try:
     data = json.loads(path.read_text(encoding="utf-8"))
-    choices = data.get("choices") or []
-    if not choices:
-        print("")
-        sys.exit(0)
-    msg = choices[0].get("message") or {}
-    print((msg.get("content") or "").strip())
 except Exception:
     print("")
     sys.exit(1)
+
+choices = data.get("choices") or [] if isinstance(data, dict) else []
+if not choices or not isinstance(choices[0], dict):
+    print("")
+    sys.exit(0)
+
+choice = choices[0]
+msg = choice.get("message") or {}
+if not isinstance(msg, dict):
+    msg = {}
+
+# OpenAI-compatible servers usually place answer text in message.content.
+# Some llama.cpp / LM Studio model stacks, especially Qwen reasoning models,
+# may expose output in reasoning_content instead. This smoke test is only
+# validating local runtime reachability, so accept either field for extraction.
+candidates = [
+    msg.get("content"),
+    msg.get("reasoning_content"),
+    msg.get("reasoning"),
+    choice.get("text"),
+]
+
+for value in candidates:
+    if isinstance(value, str) and value.strip():
+        print(value.strip())
+        sys.exit(0)
+
+print("")
 PY
 }
 
