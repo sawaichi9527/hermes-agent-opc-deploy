@@ -23,6 +23,7 @@ simulation path, safe for repository development
 6. Evaluate Hermes official Kanban / delegation / persistent-goal primitives before adding custom workflow logic.
 7. Keep `hermes-runes-md-wiki` optional and agent-agnostic.
 8. Do not store real secrets, runtime session databases, or profile cache/log dumps in this repository.
+9. Preserve real Hermes state by default; clean-install style reset must be explicit and backed up.
 
 ## Current target baseline profiles
 
@@ -64,6 +65,7 @@ Goals:
 - Record the secretary baseline decision.
 - Record consult-subagent-first policy.
 - Record simulation-first deployment safety.
+- Record deploy reset / clean-install policy.
 - Record OPC gap analysis versus the original OPC concept documents.
 - Record the profile interaction loop problem and likely Hermes official primitives to evaluate.
 
@@ -74,6 +76,7 @@ Deliverables:
 - `docs/model-routing-policy.md`
 - `docs/consult-subagent-upgrade-policy.md`
 - `docs/simulation-and-deploy-policy.md`
+- `docs/deploy-reset-policy.md`
 - `docs/opc-gap-analysis.md`
 - `docs/profile-interaction-loop.md`
 
@@ -81,10 +84,11 @@ Exit criteria:
 
 - The baseline roles and non-goals are clear.
 - No one should confuse Lark bot, secretary, coordinator, Hermes runtime, or runes wiki.
+- Future reset behavior is explicit before any real deploy script exists.
 
 ## Phase 1 - Repository structure and static validation
 
-Status: current next implementation phase.
+Status: started.
 
 Goals:
 
@@ -92,7 +96,7 @@ Goals:
 - Separate repository-layout validation from real Hermes-home validation.
 - Add a simulation environment scaffold that can be created and reset safely.
 
-Planned scripts:
+Implemented scripts:
 
 ```text
 scripts/verify-repo-layout.sh
@@ -104,16 +108,30 @@ Responsibilities:
 
 - `verify-repo-layout.sh`
   - Check required docs, profile notes, script files, and template directories.
+  - Check shell syntax for repository scripts.
   - Check that no forbidden runtime files are accidentally committed.
 
 - `prepare-sim-env.sh`
   - Create `simulate_env/.hermes/`.
-  - Optionally copy only safe non-secret sample files from the real `~/.hermes` after explicit command-line flags.
+  - Create a placeholder simulated `SOUL.md` by default.
+  - Optionally copy only safe non-secret baseline files from the real `~/.hermes` after explicit command-line flags.
   - Never copy `.env`, runtime DBs, caches, logs, sessions, or secrets by default.
+  - Support simulation reset flags such as `--reset-history` and `--reset-all` against the simulation path only.
 
 - `verify-sim-layout.sh`
-  - Check simulated Hermes root and simulated profile directories.
-  - Verify expected profile names without touching real `~/.hermes`.
+  - Check simulated Hermes root and simulated profile directory root.
+  - Verify expected profile names as optional until simulation deploy is implemented.
+  - Confirm `simulate_env/*` is not tracked by git.
+
+Recommended Phase 1 validation flow:
+
+```bash
+bash scripts/verify-repo-layout.sh
+bash scripts/prepare-sim-env.sh
+bash scripts/verify-sim-layout.sh
+./scripts/verify-layout.sh
+git status --short
+```
 
 Exit criteria:
 
@@ -171,6 +189,7 @@ Goals:
 - Design deployment around official Hermes profile commands.
 - Avoid manually inventing missing profile files.
 - Support both undeployed and already-deployed states.
+- Support preserve-state and clean-install style deployment choices.
 
 Planned docs/scripts:
 
@@ -188,6 +207,8 @@ Policy:
   - detect existing profiles;
   - avoid overwriting local modifications silently;
   - create backups or diffs before changes;
+  - preserve existing Hermes state by default;
+  - support explicit reset flags for clean-install style deployment;
   - prefer official Hermes profile creation commands first;
   - apply templates only after official initialization.
 
@@ -195,6 +216,7 @@ Exit criteria:
 
 - There is a clear dry-run plan before any mutation.
 - Existing profile safety rules are documented before implementation.
+- Reset/clean-install behavior is backed up and opt-in.
 
 ## Phase 4 - Stateful OPC loop design
 
@@ -265,6 +287,7 @@ Goals:
 - Apply profile templates carefully.
 - Verify real profile layout.
 - Keep backups or diffs for any modified files.
+- Let the maintainer choose whether to preserve or reset existing Hermes history/memory state.
 
 Planned command flow, subject to future verification:
 
@@ -315,11 +338,10 @@ Exit criteria:
 
 Recommended implementation order:
 
-1. Add `scripts/verify-repo-layout.sh`.
-2. Add `scripts/prepare-sim-env.sh`.
-3. Add `scripts/verify-sim-layout.sh`.
-4. Expand profile template directories with inert template files.
-5. Add `docs/profile-deployment-design.md`.
-6. Add Kanban/office-loop evaluation docs.
+1. Run Phase 1 validation locally.
+2. Fix any shell or layout issues found by the new scripts.
+3. Expand profile template directories with inert template files.
+4. Add `docs/profile-deployment-design.md`.
+5. Add Kanban/office-loop evaluation docs.
 
 Do not start real profile deployment yet.
