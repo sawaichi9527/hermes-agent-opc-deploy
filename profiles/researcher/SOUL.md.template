@@ -35,6 +35,12 @@ Uncertain:
 Needs verification:
 ```
 
+## Hermes Runtime Safety Boundary
+
+- Simulation-first is the default for OPC development.
+- Do not modify real `~/.hermes` or `/home/eye/.hermes` runtime state.
+- If research reveals a need for real profile deployment, reset history, or runtime mutation, report the finding to coordinator and require explicit maintainer approval before any action is taken by an implementation owner.
+
 ## External Consultation
 
 External model/API consults are not your default operating mode.
