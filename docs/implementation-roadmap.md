@@ -292,7 +292,7 @@ These remain deferred because the current Hermes Agent CLI did not expose a non-
 
 ## Phase 4 - Stateful OPC loop design
 
-Status: manual OPC design baseline passed / official primitive help probe completed / runtime mutation deferred.
+Status: manual OPC design baseline passed / official primitive help probe completed / prompt-size preflight prepared / runtime mutation deferred.
 
 Implemented docs:
 
@@ -316,17 +316,26 @@ PASS / Phase 4 documents tracked by repository layout check / no runtime functio
 
 Phase 4.10 Official Primitive Help Probe Lock
 PASS / read-only CLI help inventory completed / official primitive syntax captured / no runtime mutation
+
+Phase 4.11 Offline Prompt-size Preflight
+PENDING / prepared / awaiting maintainer local verification
 ```
 
 Official primitive classification:
 
 ```text
 chat / -z / --provider / --model: accepted current safe runtime path
-prompt-size: offline bounded-context preflight candidate
+prompt-size: offline bounded-context preflight candidate; first safe official primitive smoke candidate
 logs: read-only evidence/reference candidate when bounded
 sessions: read-only list/stats/browse candidate; mutation commands deferred
 memory: status-only candidate; setup/off/reset deferred
 kanban: available but mutation/dispatcher/gateway-heavy; documentation-only by default
+```
+
+Prepared Phase 4.11 command:
+
+```bash
+hermes prompt-size --json
 ```
 
 Deferred unless explicitly approved:
@@ -343,6 +352,7 @@ Exit criteria:
 
 - The Phase 4 OPC loop remains manual and official-primitive-first.
 - Help probe output is captured before any official primitive is used operationally.
+- Prompt-size preflight must be locally verified before it is marked PASS.
 - No Kanban task, session mutation, memory mutation, profile mutation, daemon, queue, router, or custom workflow engine is introduced.
 
 ## Phase 5 - Simulation trial
@@ -409,22 +419,15 @@ Goals:
 - Record which assumptions work and which fail.
 - Tune templates and routing policy based on actual use.
 
-Observation targets:
+Initial trial boundaries:
 
-- Secretary intake quality.
-- Coordinator routing quality.
-- Researcher evidence discipline.
-- Writer structure quality.
-- Builder implementation quality.
-- Runes-holder sedimentation usefulness.
-- Frequency of consult-subagent second opinions.
-- Need, or lack of need, for permanent consult profiles.
-- Kanban/task-loop usefulness.
-
-Exit criteria:
-
-- The first real baseline is usable without creating more burden than it removes.
-- Any next customizations are based on observed friction, not hypothetical complexity.
+```text
+single maintainer
+manual approval before profile mutation
+no automatic memory writes
+no external escalation unless explicitly requested
+no background worker until official Hermes primitives are proven safe for this use case
+```
 
 ## Immediate next tasks
 
@@ -432,8 +435,8 @@ Recommended implementation order:
 
 1. Keep `docs/runtime-baseline.md` as the current local runtime source of truth.
 2. Use `bash scripts/check-runtime-baseline.sh` for small sequential runtime regression checks.
-3. Keep Phase 4 as a manual official-primitive-first OPC loop baseline.
-4. Use only read-only primitive checks unless the maintainer explicitly approves mutation.
+3. Run and record Phase 4.11 `hermes prompt-size --json` as the first offline official-primitive preflight.
+4. Evaluate Phase 4 stateful OPC loop only through documentation and official Hermes primitives first.
 5. Do not start alias wrapper creation, sticky default profile mutation, custom orchestration, queues, or routers.
 
 Do not start real profile mutation unless explicitly approved.
