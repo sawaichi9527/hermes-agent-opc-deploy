@@ -1,7 +1,7 @@
 # Real Deploy Plan
 
-Status: Phase 3C dry-run verification locked  
-Scope: planning, dry-run, and verification lock only  
+Status: Phase 3D guarded apply contract documented  
+Scope: planning, dry-run, verification lock, and guarded apply contract only  
 Real profile write: disabled  
 Target path: `~/.hermes/profiles/`  
 Current guarantee: real `~/.hermes/profiles/` remains untouched
@@ -14,8 +14,8 @@ This plan defines the future real deployment path for OPC Hermes Agent
 profiles.
 
 The project has moved from Phase 3A read-only planning into Phase 3B dry-run
-implementation, and Phase 3C now locks the verification evidence before any
-guarded apply design begins.
+implementation, Phase 3C verification lock, and Phase 3D guarded apply contract
+planning.
 
 The real deployment path must remain simple, personal-use friendly, and
 lightweight for Hermes Agent. It should help the user operate local profiles
@@ -38,20 +38,26 @@ safely without becoming a second platform or runtime dependency.
 | Phase 3A real deploy read-only planning | PASS |
 | Phase 3B real deploy dry-run implementation | PASS |
 | Phase 3C dry-run verification lock / docs alignment | PASS |
+| Phase 3D real deploy guarded apply planning | PASS |
 | Real `~/.hermes/profiles/` untouched | PASS |
 
 Phase 3C verification evidence is recorded in:
 
 - `docs/verification-phase-3c.md`
 
+Phase 3D guarded apply contract is recorded in:
+
+- `docs/guarded-apply-contract.md`
+
 ---
 
 ## Phase 3 Boundary
 
-Phase 3 may add repo-local planning, dry-run, and verification files.
+Phase 3 may add repo-local planning, dry-run, verification, and guarded apply
+contract files.
 
 Phase 3 must not create, modify, or delete real Hermes profile files until a
-future guarded apply contract is explicitly designed, reviewed, and accepted.
+future guarded apply implementation is explicitly reviewed and accepted.
 
 Still prohibited in the current locked state:
 
@@ -59,7 +65,7 @@ Still prohibited in the current locked state:
 - copying files into real `~/.hermes/profiles/`
 - deleting or resetting real Hermes profile files
 - modifying real Hermes runtime state
-- creating backup directories as a side effect of dry-run
+- creating backup directories as a side effect of dry-run or planning
 - introducing daemon, service, database, queue, or enterprise orchestration
 - making Hermes Agent depend on this deployment layer at runtime
 
@@ -154,7 +160,8 @@ Lock wording:
 
 ## Phase 3B Dry-run Script
 
-`scripts/deploy-real-profiles.sh` is dry-run only in Phase 3B.
+`scripts/deploy-real-profiles.sh` is dry-run only in Phase 3B and remains
+non-writing after Phase 3D.
 
 Verified dry-run output includes:
 
@@ -169,6 +176,36 @@ Lock wording:
 
     Phase 3B real deploy dry-run implementation
     PASS / dry-run only / write modes rejected / real ~/.hermes/profiles untouched / executable bit fixed
+
+---
+
+## Phase 3D Guarded Apply Contract
+
+`docs/guarded-apply-contract.md` defines the contract for a future guarded
+real deployment mode.
+
+It documents:
+
+- future apply confirmation token
+- required preflight checks
+- deterministic source root selection
+- backup-before-write contract
+- managed marker and ownership policy
+- copy contract
+- rollback and restore policy
+- Phase 3E acceptance gate
+
+Phase 3D does not enable real write. `scripts/deploy-real-profiles.sh --apply`
+must remain rejected until a later implementation phase explicitly changes it.
+
+Recommended future apply form:
+
+    ./scripts/deploy-real-profiles.sh --apply --confirm REAL_DEPLOY_PROFILES
+
+Recommended lock wording:
+
+    Phase 3D real deploy guarded apply planning
+    PASS / guarded apply contract documented / no real write / Phase 3E gate defined
 
 ---
 
@@ -236,12 +273,14 @@ Required controls before any future real write:
 2. Phase 3A read-only planning remains PASS.
 3. Phase 3B dry-run remains PASS.
 4. Phase 3C verification lock remains PASS.
-5. Real `~/.hermes/profiles/` is inspected before any write.
-6. The selected source root is printed.
-7. The destination root is printed.
-8. The backup path is printed.
-9. Dry-run remains the default behavior.
-10. Real write requires explicit confirmation.
+5. Phase 3D guarded apply contract remains PASS.
+6. Real `~/.hermes/profiles/` is inspected before any write.
+7. The selected source root is printed.
+8. The destination root is printed.
+9. The backup path is printed.
+10. Dry-run remains the default behavior.
+11. Real write requires explicit confirmation.
+12. Existing unmarked profile directories are protected.
 
 ---
 
@@ -274,23 +313,27 @@ should not become a second platform that Hermes Agent must depend on.
 
 ---
 
-## Phase 3C Acceptance Criteria
+## Phase 3D Acceptance Criteria
 
-Phase 3C is PASS only if:
+Phase 3D is PASS only if:
 
-1. `docs/verification-phase-3c.md` exists.
+1. `docs/guarded-apply-contract.md` exists.
 2. Phase 3A remains PASS.
 3. Phase 3B remains PASS.
-4. `scripts/deploy-real-profiles.sh` remains executable.
-5. The dry-run script emits `REAL_PROFILE_WRITE=false`.
-6. Explicit write mode such as `--apply` is rejected.
-7. No real `~/.hermes/profiles/` write is introduced.
-8. The next phase remains guarded apply planning, not immediate real deploy.
+4. Phase 3C remains PASS.
+5. Guarded apply confirmation token is documented.
+6. Backup-before-write contract is documented.
+7. Source root selection rule is documented.
+8. Managed marker and ownership policy is documented.
+9. Rollback and restore policy is documented.
+10. Phase 3E acceptance gate is documented.
+11. `scripts/deploy-real-profiles.sh --apply` remains rejected.
+12. No real `~/.hermes/profiles/` write is introduced.
 
 Recommended lock wording:
 
-    Phase 3C dry-run verification lock / docs alignment
-    PASS / Phase 3A+3B evidence locked / real ~/.hermes/profiles untouched / no real write
+    Phase 3D real deploy guarded apply planning
+    PASS / guarded apply contract documented / no real write / Phase 3E gate defined
 
 ---
 
@@ -298,9 +341,8 @@ Recommended lock wording:
 
 The next recommended phase is:
 
-    Phase 3D real deploy guarded apply planning
+    Phase 3E guarded apply implementation draft
 
-Phase 3D should design the guard rails for a future apply mode, but should not
-turn real deployment on by default. The apply contract, backup behavior,
-confirmation flow, and reset boundary must be documented and reviewed before
-any real `~/.hermes/profiles/` write is allowed.
+Phase 3E may begin implementing the guarded apply contract, but the default
+behavior must remain dry-run. Real write must require the explicit confirmation
+token and must perform backup-before-write.
