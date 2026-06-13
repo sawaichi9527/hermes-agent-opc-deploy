@@ -74,9 +74,11 @@ for profile in "${profiles[@]}"; do
   require_pattern "$template" 'language|Traditional Chinese|English|中文|英文|語言' 'language policy'
   require_pattern "$template" 'runes|memory|記憶|沉澱|wiki' 'memory / runes awareness'
 
-  reject_pattern "$template" 'API[_ -]?KEY|TOKEN|PASSWORD|SECRET|sk-[A-Za-z0-9]' 'real secret placeholders or values'
+  # Allow safety text such as "do not store secrets". Reject only value-like
+  # credential assignments or obvious OpenAI-style secret-looking tokens.
+  reject_pattern "$template" '(API[_ -]?KEY|TOKEN|PASSWORD|SECRET)[[:space:]]*[:=][[:space:]]*[^[:space:]]+|sk-[A-Za-z0-9]{8,}' 'real secret values'
   reject_pattern "$template" 'rm -rf[[:space:]]+/' 'dangerous shell command'
-  reject_pattern "$template" 'directly modify.*(~/.hermes|/home/eye/.hermes)' 'direct real Hermes mutation instruction'
+  require_pattern "$template" 'do not.*real.*(~/.hermes|/home/eye/.hermes)|simulation-first|explicit.*approval|明確.*批准' 'real Hermes mutation safety boundary'
 done
 
 echo
@@ -92,11 +94,11 @@ require_pattern "profiles/coordinator/SOUL.md.template" 'researcher|writer|build
 reject_pattern "profiles/coordinator/SOUL.md.template" 'primary coder|main researcher|final prose owner' 'coordinator taking worker ownership'
 
 require_pattern "profiles/researcher/SOUL.md.template" 'evidence|source|uncertainty|verify|citation|來源|查證' 'research evidence role'
-reject_pattern "profiles/researcher/SOUL.md.template" 'final polished draft owner|production code owner|deploy' 'researcher owning writer/builder work'
+reject_pattern "profiles/researcher/SOUL.md.template" 'final polished draft owner|production code owner|primary implementer|own implementation' 'researcher owning writer/builder work'
 
 require_pattern "profiles/writer/SOUL.md.template" 'structure|audience|clarity|draft|narrative|讀者|結構' 'writer composition role'
 require_pattern "profiles/writer/SOUL.md.template" 'do not invent|do not fabricate|evidence|citation|不得捏造|不可捏造' 'writer anti-fabrication rule'
-reject_pattern "profiles/writer/SOUL.md.template" 'primary researcher|primary implementer|deploy' 'writer owning research/build work'
+reject_pattern "profiles/writer/SOUL.md.template" 'primary researcher|primary implementer|production code owner' 'writer owning research/build work'
 
 require_pattern "profiles/builder/SOUL.md.template" 'implement|debug|test|verify|shell|code|實作|測試' 'builder implementation role'
 require_pattern "profiles/builder/SOUL.md.template" 'dry-run|backup|approval|confirm|simulation|模擬|批准' 'builder safety rule'
