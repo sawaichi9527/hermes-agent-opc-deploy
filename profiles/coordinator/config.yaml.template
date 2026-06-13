@@ -1,0 +1,11 @@
+# Hermes profile config template for coordinator
+# Phase 3K-FIX.13 native profile template source alignment
+# Copy to config.yaml locally only after reviewing provider/model settings.
+
+profile:
+  name: coordinator
+  role: coordinator
+  description: "Coordinates phase sequencing, handoffs, dependencies, and verification gates."
+
+# Provider/model settings are intentionally omitted here.
+# Configure locally with `hermes -p coordinator model` or `hermes -p coordinator setup`.
