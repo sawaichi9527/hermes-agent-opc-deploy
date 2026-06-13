@@ -48,6 +48,7 @@ required_docs=(
   "docs/deployment.md"
   "docs/developer-local-workflow.md"
   "docs/implementation-roadmap.md"
+  "docs/local-openai-compatible-provider.md"
   "docs/maintenance-policy.md"
   "docs/migration.md"
   "docs/model-routing-policy.md"
@@ -90,6 +91,7 @@ required_scripts=(
   "scripts/deploy-sim-profiles.sh"
   "scripts/inspect-sim-profiles.sh"
   "scripts/verify-sim-layout.sh"
+  "scripts/smoke-local-provider-sequential.sh"
 )
 for path in "${required_scripts[@]}"; do
   check_file "$path"
