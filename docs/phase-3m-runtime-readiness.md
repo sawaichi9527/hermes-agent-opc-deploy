@@ -132,10 +132,54 @@ model.name present
 
 No secrets were printed or tracked. The check remained read-only and did not send any model request.
 
+## Phase 3M.2 verification lock
+
+```text
+Phase 3M.2 Minimal Hermes Command Probe
+Status: PASS
+Result: CLI help/version/profile syntax identified / unsupported commands ruled out
+Boundary: command discovery only / no model request / no profile mutation / no daemon / no concurrency / no load test
+```
+
+Maintainer verification confirmed:
+
+```text
+hermes --help: PASS
+hermes --version: PASS
+hermes version: PASS
+hermes profile --help: PASS
+hermes profiles --help: invalid command, confirmed unsupported
+hermes run --help: invalid command, confirmed unsupported
+```
+
+Observed Hermes runtime version:
+
+```text
+Hermes Agent v0.16.0 (2026.6.5)
+upstream 7d183f64
+Project: /home/eye/.hermes/hermes-agent
+Python: 3.11.15
+OpenAI SDK: 2.24.0
+```
+
+Relevant command syntax discovered:
+
+```text
+hermes --oneshot PROMPT
+hermes -z PROMPT
+hermes --model MODEL
+hermes --provider PROVIDER
+hermes chat
+hermes chat -q "Hello"
+hermes profile {list,use,create,delete,describe,show,alias,rename,export,import,install,update,info}
+```
+
+The singular `hermes profile` command is supported. The plural `hermes profiles` command is not supported. There is no `hermes run` command in this runtime. Future runtime probes must not assume either `hermes profiles` or `hermes run`.
+
 ## Follow-up
 
-The next step is Phase 3M.2 minimal Hermes command probe.
+The next step is Phase 3M.3 single-profile Hermes runtime probe.
 
-Phase 3M.2 must use the discovered `hermes` command and first identify supported command/help/profile syntax before attempting any model-backed request. It should remain read-only where possible, or single-request only after explicit maintainer approval.
+Phase 3M.3 should use the discovered Hermes CLI syntax and remain bounded to one profile and one request. The preferred probe candidates are `hermes -z` / `hermes --oneshot` or `hermes chat -q`, depending on which command can be constrained most safely for a single-profile secretary check.
 
-Do not expand this phase into routing, queues, concurrency, daemon management, load testing, or external API fallback.
+Do not expand this phase into routing, queues, concurrency, daemon management, load testing, throughput benchmarking, or external API fallback.
