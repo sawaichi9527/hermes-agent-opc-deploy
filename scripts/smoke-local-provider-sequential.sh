@@ -148,23 +148,44 @@ PY
 }
 
 json_get_model_count() {
-  python3 - <<'PY'
-import json, sys
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
 try:
-    data = json.load(sys.stdin)
-    items = data.get("data", [])
-    print(len(items) if isinstance(items, list) else 0)
+    data = json.loads(path.read_text(encoding="utf-8"))
 except Exception:
     print("parse-error")
     sys.exit(1)
+
+items = None
+if isinstance(data, dict):
+    items = data.get("data")
+elif isinstance(data, list):
+    items = data
+
+if isinstance(items, list):
+    print(len(items))
+elif isinstance(items, dict):
+    print(len(items))
+else:
+    print("unknown-shape")
 PY
 }
 
 json_get_chat_text() {
-  python3 - <<'PY'
-import json, sys
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
 try:
-    data = json.load(sys.stdin)
+    data = json.loads(path.read_text(encoding="utf-8"))
     choices = data.get("choices") or []
     if not choices:
         print("")
@@ -269,7 +290,7 @@ for profile in "${profiles[@]}"; do
   if curl -fsS --max-time 30 \
       -H "Authorization: Bearer $api_key" \
       "$models_url" >"$models_tmp"; then
-    count="$(json_get_model_count <"$models_tmp" || true)"
+    count="$(json_get_model_count "$models_tmp" || true)"
     pass "$profile /models reachable; model_count=$count"
   else
     fail "$profile /models request failed: $models_url"
@@ -311,7 +332,7 @@ PY
         -H "Authorization: Bearer $api_key" \
         -d "@$payload_tmp" \
         "${base_url%/}/chat/completions" >"$chat_tmp"; then
-      text="$(json_get_chat_text <"$chat_tmp" || true)"
+      text="$(json_get_chat_text "$chat_tmp" || true)"
       if [ "$text" = "local-openai-compatible-ok" ]; then
         pass "$profile chat completion exact marker"
       else
