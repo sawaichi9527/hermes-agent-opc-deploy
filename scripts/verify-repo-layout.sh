@@ -49,6 +49,7 @@ required_docs=(
   "docs/local-compute-policy.md"
   "docs/runes-holder-boundary.md"
   "docs/hermes-native-profile-usage.md"
+  "docs/soul-template-convention.md"
   "docs/verification-m4-minimal.md"
   "docs/local-openai-compatible-provider.md"
   "docs/maintenance-policy.md"
