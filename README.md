@@ -44,6 +44,12 @@ OPC is treated as a **usage pattern** over official Hermes profiles:
 - `builder`
 - `runes-holder`
 
+If Lark becomes the main operating interface after OPC-style profile usage is enabled, an optional sixth profile may be introduced:
+
+- `secretary`
+
+`secretary` is a user-facing intake and preference-adapter profile. It is not the Lark bot itself and does not replace `coordinator`. See: [`docs/secretary-profile.md`](docs/secretary-profile.md)
+
 `hermes-runes-md-wiki` is optional. If it is absent or not called by `runes-holder`, Hermes Agent one-agent or multi-profile operation must continue normally.
 
 ## Development safety rule
