@@ -59,6 +59,7 @@ required_docs=(
   "docs/runes-holder.md"
   "docs/secretary-profile.md"
   "docs/simulation-and-deploy-policy.md"
+  "docs/simulation-runbook.md"
 )
 for path in "${required_docs[@]}"; do
   check_file "$path"
