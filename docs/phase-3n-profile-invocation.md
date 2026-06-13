@@ -66,13 +66,16 @@ Top-level hermes help did not show --profile or -p.
 
 Therefore, Phase 3N.1 did not find a safe non-mutating CLI flag for selecting `secretary` directly. Future work must not assume a `--profile` or `-p` flag exists.
 
-## Follow-up
+## Phase 3N.2 profile alias / wrapper discovery lock
 
-The next step is Phase 3N.2 profile alias / wrapper discovery.
+```text
+Phase 3N.2 Profile Alias Wrapper Discovery
+Status: PASS
+Result: alias command syntax identified / secretary is not a distribution / no non-mutating wrapper path proven yet
+Boundary: read-only discovery / no model request / no profile mutation / no daemon / no concurrency / no load test
+```
 
-Phase 3N.2 should inspect whether `hermes profile alias` can create or reveal profile-specific wrapper scripts, and whether those wrappers can run a single request without mutating the sticky default profile.
-
-Suggested read-only probes:
+Maintainer verification ran:
 
 ```bash
 hermes profile alias --help
@@ -80,4 +83,44 @@ hermes profile info secretary || true
 hermes profile show secretary
 ```
 
-Do not run `hermes profile use secretary` unless explicitly approved, because it changes the sticky default profile.
+Observed alias syntax:
+
+```text
+hermes profile alias [--remove] [--name NAME] profile_name
+```
+
+Important findings:
+
+```text
+hermes profile alias can manage wrapper scripts, but it is not a read-only profile selector.
+Creating or removing an alias is a local filesystem mutation and should not be part of read-only smoke validation.
+secretary is not a distribution: Profile 'secretary' is not a distribution (no distribution.yaml).
+hermes profile show secretary remains a safe read-only inspection path.
+```
+
+Observed secretary profile remained valid:
+
+```text
+Profile: secretary
+Path: /home/eye/.hermes/profiles/secretary
+Model: qwen3.6-35b-a3b-uncensored-heretic-native-mtp-preserved@q5_k_m (lmstudio)
+Gateway: stopped
+.env: exists
+SOUL.md: exists
+```
+
+Phase 3N.2 did not prove a built-in non-mutating CLI selector for `secretary`. At this point, the already verified Phase 3M path using explicit provider/model overrides is the safe single-request runtime path.
+
+## Follow-up
+
+Phase 3N should not use `hermes profile use secretary` unless the maintainer explicitly approves sticky default mutation.
+
+Possible future options:
+
+```text
+A. Accept explicit --provider lmstudio + --model MODEL override as the safe non-mutating runtime path.
+B. Explicitly approve a one-time alias wrapper creation test, then inspect the generated wrapper before using it.
+C. Defer profile-bound single-request execution until Hermes exposes a non-mutating --profile-like selector.
+```
+
+Recommended next step is Phase 3N.3 decision lock: either accept explicit provider/model override as sufficient for this personal deployment stage, or intentionally test alias wrapper creation as a local mutation with maintainer approval.
