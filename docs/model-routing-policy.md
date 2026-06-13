@@ -26,19 +26,55 @@ model provider
   = which inference backend the profile uses
 ```
 
-Do not create duplicate profiles only because a different model provider is available.
+Do not create duplicate official profiles only because a different model provider is available.
 
 ## Preferred default
 
-The first choice is to let the original worker profiles call the configured model backend when the task is within their normal responsibility:
+The first choice is to let the normal maintainer baseline profiles use the local model backend:
 
 ```text
+secretary
+coordinator
 researcher
 writer
 builder
+runes-holder
 ```
 
 These profiles may use local LM Studio by default. If Hermes Agent official profile configuration supports switching provider/model cleanly, use official configuration rather than introducing a parallel routing layer.
+
+For normal personal tasks, the local profile set plus local Qwen3.6-35B-A3B should be enough.
+
+## Consult capability should start as subagent-like work
+
+For the maintainer baseline, `consult-*` should not start as permanent official Hermes profiles.
+
+Treat external model consultation as **subagent-like, ephemeral second opinion work** first:
+
+```text
+base profile owns the task
+  -> coordinator decides consultation is justified
+  -> external consult call runs as temporary second opinion
+  -> result returns as advisory evidence
+  -> base profile/coordinator remains responsible for final merge
+```
+
+This keeps the system simple because most work still uses local profiles and local compute.
+
+The consult worker should not keep long-term role memory at first. It should receive a narrow task brief, return a structured advisory result, and end.
+
+## Why subagent-like consult first
+
+Using official profiles for every external consult role too early creates unnecessary maintenance burden:
+
+- duplicated `SOUL.md` files;
+- duplicated memory rules;
+- duplicated provider-specific config;
+- unclear authority between base and consult roles;
+- higher chance of role drift;
+- more migration work when Hermes Agent changes upstream profile behavior.
+
+A temporary consult task is enough for most cases because external APIs are expected to be rare escalation paths, not the daily runtime.
 
 ## When not to create consult-* profiles
 
@@ -55,32 +91,32 @@ senior-builder
 
 Do not add them only because an external API exists.
 
-Too many provider-specific profiles can create maintenance burden:
+Also avoid `senior-*` naming for this use case because it implies hierarchy. The goal is not to replace the base local profiles.
 
-- duplicated SOUL.md files;
-- duplicated memory rules;
-- unclear authority between base and consult profiles;
-- higher chance of role drift;
-- more migration work when Hermes Agent changes upstream profile behavior.
+## When consult-* profiles may make sense later
 
-## When consult-* profiles may make sense
+A separate official `consult-*` profile may become useful only when the role is not just a different model backend, but a stable, repeated decision function.
 
-A separate consult profile may be useful when the role is not just a different model backend, but a different decision function.
-
-Examples:
+Possible future examples:
 
 ```text
 consult-researcher
-  External second-opinion reviewer for disputed facts, weak evidence, or high-uncertainty topics.
+  Repeated external second-opinion reviewer for disputed facts, weak evidence, or high-uncertainty topics.
 
 consult-writer
-  External style or audience-fit reviewer for important drafts, not the normal first writer.
+  Repeated external style or audience-fit reviewer for important drafts, not the normal first writer.
 
 consult-builder
-  External design/code-review advisor for risky implementation plans, not the normal implementer.
+  Repeated external design/code-review advisor for risky implementation plans, not the normal implementer.
 ```
 
-In this pattern, `consult-*` profiles are advisors. They should not own the primary task flow.
+Promote a consult capability to an official profile only if all of these are true:
+
+- it is used often enough to justify maintaining profile files;
+- it has stable responsibilities beyond one-off model access;
+- it needs its own `SOUL.md`, memory rules, or skills;
+- its authority remains advisory rather than primary;
+- it does not make normal local-profile operation harder.
 
 ## Preferred escalation pattern
 
@@ -89,7 +125,8 @@ Start simple:
 ```text
 secretary
   -> coordinator
-  -> researcher / writer / builder
+  -> researcher / writer / builder / runes-holder
+  -> local LM Studio / Qwen3.6-35B-A3B
 ```
 
 Escalate only when needed:
@@ -97,15 +134,16 @@ Escalate only when needed:
 ```text
 secretary
   -> coordinator
-  -> researcher / writer / builder
-  -> consult-researcher / consult-writer / consult-builder when risk or uncertainty justifies it
+  -> base local profile
+  -> temporary consult subagent / external model second opinion
+  -> coordinator merges advisory result
 ```
 
-The coordinator should decide when to ask for external consultation, based on a small set of criteria.
+Only after repeated use should the temporary consult path be promoted to a permanent official profile.
 
 ## Suggested escalation criteria
 
-Use external consult profiles only for cases such as:
+Use external consult only for cases such as:
 
 - high uncertainty after local reasoning;
 - important decision with high cost of being wrong;
@@ -118,7 +156,7 @@ For normal personal tasks, local profiles are enough.
 
 ## Naming preference
 
-Use `consult-*` before `senior-*`.
+Use `consult-*` before `senior-*` if a permanent consult role is eventually needed.
 
 Reason:
 
@@ -152,4 +190,5 @@ The goal is simple:
 ```text
 Use local models by default.
 Ask external models only when the task needs a second opinion or stronger outside capability.
+Keep consult work temporary until repeated real use proves it deserves a profile.
 ```
