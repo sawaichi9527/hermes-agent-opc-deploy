@@ -134,6 +134,24 @@ The current inference baseline is local-first:
 LAN LM Studio -> Qwen3.6-35B-A3B -> Hermes Agent official profiles
 ```
 
+The active Phase 3L local provider baseline uses the OpenAI-compatible provider path:
+
+```text
+~/.hermes/profiles/<profile>/.env
+  OPENAI_API_BASE=http://127.0.0.1:1234/v1
+  OPENAI_API_KEY=lm-studio
+
+~/.hermes/profiles/<profile>/config.yaml
+  model.provider: openai
+  model.name: <model-id-returned-by-/v1/models>
+```
+
+The local backend is treated as LM Studio / llama.cpp server for personal use, not a vLLM-style concurrent serving backend. Runtime smoke must stay single-request and sequential.
+
+See:
+
+- [`docs/local-openai-compatible-provider.md`](docs/local-openai-compatible-provider.md)
+
 Future external model APIs should be treated as optional consultation capability, not as a reason to duplicate every base profile.
 
 The default future path is **consult subagent first, official consult profile later only if proven necessary**:
@@ -231,6 +249,18 @@ git pull
 ./scripts/verify-sim-layout.sh --require-profiles
 ./scripts/verify-layout.sh
 git status --short
+```
+
+Optional Phase 3L local provider endpoint smoke, when LM Studio / llama.cpp server is loaded and idle:
+
+```bash
+bash scripts/smoke-local-provider-sequential.sh
+```
+
+Optional generation smoke, still sequential and single-request only:
+
+```bash
+bash scripts/smoke-local-provider-sequential.sh --chat
 ```
 
 If the repository is not cloned yet:
