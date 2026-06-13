@@ -4,6 +4,37 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SIM_HERMES="$ROOT/simulate_env/.hermes"
 REAL_HERMES="${HERMES_HOME:-$HOME/.hermes}"
+require_profiles=0
+
+usage() {
+  cat <<'USAGE'
+Usage: scripts/verify-sim-layout.sh [options]
+
+Options:
+  --require-profiles   Treat simulated OPC profile directories and SOUL.md files as required.
+  -h, --help           Show this help.
+
+Default mode allows profile directories to be missing before scripts/deploy-sim-profiles.sh is run.
+USAGE
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --require-profiles)
+      require_profiles=1
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      printf 'ERROR unknown option: %s\n\n' "$1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
 
 fail_count=0
 
@@ -38,8 +69,22 @@ check_dir() {
   fi
 }
 
+check_profile_path() {
+  local path="$1"
+  if [ -e "$path" ]; then
+    pass "$path"
+  else
+    if [ "$require_profiles" -eq 1 ]; then
+      miss "$path"
+    else
+      warn "optional missing $path"
+    fi
+  fi
+}
+
 printf 'Simulated Hermes root: %s\n' "$SIM_HERMES"
-printf 'Real Hermes root:      %s\n\n' "$REAL_HERMES"
+printf 'Real Hermes root:      %s\n' "$REAL_HERMES"
+printf 'Require profiles:      %s\n\n' "$require_profiles"
 
 if [ "$SIM_HERMES" = "$REAL_HERMES" ]; then
   printf 'FAIL simulation path equals real Hermes path.\n' >&2
@@ -60,7 +105,7 @@ check_dir "$SIM_HERMES/profiles"
 check_file "$SIM_HERMES/SOUL.md"
 check_file "$SIM_HERMES/README.simulated-hermes-home.md"
 
-printf '\n== Maintainer OPC profile directories, optional before simulation deploy ==\n'
+printf '\n== Maintainer OPC profile directories ==\n'
 profiles=(
   "secretary"
   "coordinator"
@@ -70,15 +115,11 @@ profiles=(
   "runes-holder"
 )
 for profile in "${profiles[@]}"; do
+  check_profile_path "$SIM_HERMES/profiles/$profile"
+  check_profile_path "$SIM_HERMES/profiles/$profile/SOUL.md"
   if [ -d "$SIM_HERMES/profiles/$profile" ]; then
-    pass "$SIM_HERMES/profiles/$profile"
-  else
-    warn "optional missing $SIM_HERMES/profiles/$profile"
-  fi
-  if [ -f "$SIM_HERMES/profiles/$profile/SOUL.md" ]; then
-    pass "$SIM_HERMES/profiles/$profile/SOUL.md"
-  else
-    warn "optional missing $SIM_HERMES/profiles/$profile/SOUL.md"
+    check_profile_path "$SIM_HERMES/profiles/$profile/OPC_NOTES.md"
+    check_profile_path "$SIM_HERMES/profiles/$profile/DEPLOYED_FROM.txt"
   fi
 done
 
@@ -99,7 +140,11 @@ fi
 
 printf '\n== Summary ==\n'
 if [ "$fail_count" -eq 0 ]; then
-  printf 'PASS simulation layout is valid. Profile directories may remain optional until simulation deploy is implemented.\n'
+  if [ "$require_profiles" -eq 1 ]; then
+    printf 'PASS simulation layout is valid with deployed OPC profiles.\n'
+  else
+    printf 'PASS simulation layout is valid. Profile directories may remain optional until simulation deploy is implemented.\n'
+  fi
   exit 0
 fi
 
