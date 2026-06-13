@@ -84,6 +84,7 @@ printf '\n== Required scripts ==\n'
 required_scripts=(
   "scripts/verify-layout.sh"
   "scripts/verify-repo-layout.sh"
+  "scripts/verify-profile-templates.sh"
   "scripts/prepare-sim-env.sh"
   "scripts/deploy-sim-profiles.sh"
   "scripts/verify-sim-layout.sh"
