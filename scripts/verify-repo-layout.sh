@@ -40,43 +40,19 @@ check_dir() {
 
 printf 'Repository root: %s\n\n' "$ROOT"
 
-printf '== Required documentation ==\n'
+printf '== Required mainline documentation ==\n'
 required_docs=(
   "README.md"
-  "docs/architecture.md"
-  "docs/compatibility-matrix.md"
-  "docs/deployment.md"
-  "docs/developer-local-workflow.md"
   "docs/implementation-roadmap.md"
-  "docs/local-openai-compatible-provider.md"
-  "docs/verification-phase-3l-local-provider.md"
-  "docs/phase-3l5-local-model-name-cleanup.md"
-  "docs/phase-3m-runtime-readiness.md"
-  "docs/phase-3n-profile-invocation.md"
-  "docs/runtime-baseline.md"
-  "docs/local-runtime-runbook.md"
-  "docs/phase-4-opc-loop-design.md"
-  "docs/opc-manual-runbook.md"
-  "docs/opc-evidence-policy.md"
-  "docs/phase-4-11-prompt-size-preflight.md"
-  "docs/phase-4-12-logs-readonly-probe.md"
-  "docs/phase-4-13-sessions-readonly-probe.md"
-  "docs/phase-4-14-memory-status-probe.md"
-  "docs/phase-4-15-final-consolidation.md"
-  "docs/phase-5-simulation-trial.md"
   "docs/phase-6-hermes-native-profile-alignment.md"
+  "docs/local-openai-compatible-provider.md"
   "docs/maintenance-policy.md"
   "docs/migration.md"
   "docs/model-routing-policy.md"
-  "docs/consult-subagent-upgrade-policy.md"
-  "docs/deploy-reset-policy.md"
-  "docs/opc-gap-analysis.md"
-  "docs/profile-interaction-loop.md"
   "docs/profile-language-policy.md"
   "docs/runes-holder.md"
   "docs/secretary-profile.md"
-  "docs/simulation-and-deploy-policy.md"
-  "docs/simulation-runbook.md"
+  "archive/validation-history/README.md"
 )
 for path in "${required_docs[@]}"; do
   check_file "$path"
@@ -98,11 +74,25 @@ for profile in "${required_profiles[@]}"; do
 done
 check_file "profiles/README.md"
 
-printf '\n== Required scripts ==\n'
+printf '\n== Required mainline scripts ==\n'
 required_scripts=(
   "scripts/verify-layout.sh"
   "scripts/verify-repo-layout.sh"
   "scripts/verify-profile-templates.sh"
+)
+for path in "${required_scripts[@]}"; do
+  check_file "$path"
+  if [ -f "$path" ]; then
+    if bash -n "$path"; then
+      pass "syntax $path"
+    else
+      fail "syntax $path"
+    fi
+  fi
+done
+
+printf '\n== Optional historical / regression scripts ==\n'
+optional_scripts=(
   "scripts/prepare-sim-env.sh"
   "scripts/deploy-sim-profiles.sh"
   "scripts/inspect-sim-profiles.sh"
@@ -113,14 +103,16 @@ required_scripts=(
   "scripts/smoke-hermes-runtime-oneshot.sh"
   "scripts/check-runtime-baseline.sh"
 )
-for path in "${required_scripts[@]}"; do
-  check_file "$path"
+for path in "${optional_scripts[@]}"; do
   if [ -f "$path" ]; then
+    pass "optional file $path"
     if bash -n "$path"; then
-      pass "syntax $path"
+      pass "optional syntax $path"
     else
-      fail "syntax $path"
+      fail "optional syntax $path"
     fi
+  else
+    printf 'SKIP optional file %s\n' "$path"
   fi
 done
 
