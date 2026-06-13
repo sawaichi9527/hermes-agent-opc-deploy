@@ -63,13 +63,24 @@ LAN LM Studio -> Qwen3.6-35B-A3B -> Hermes Agent official profiles
 
 Future external model APIs should be treated as optional consultation capability, not as a reason to duplicate every base profile.
 
-The preferred future naming for second-opinion profiles is `consult-*`, such as:
+The default future path is **consult subagent first, official consult profile later only if proven necessary**:
 
-- `consult-researcher`
-- `consult-writer`
-- `consult-builder`
+```text
+normal work
+  -> local official profiles
+  -> local LM Studio / Qwen3.6-35B-A3B
 
-These should only be introduced when the role is genuinely advisory or second-opinion based. See: [`docs/model-routing-policy.md`](docs/model-routing-policy.md)
+rare escalation
+  -> temporary consult subagent / external model second opinion
+  -> advisory result returned to the base profile or coordinator
+
+only after repeated real use
+  -> consider official consult-researcher / consult-writer / consult-builder profiles
+```
+
+Avoid `senior-*` naming for this use case because it implies hierarchy. If a permanent advisory role is eventually needed, prefer `consult-*`.
+
+See: [`docs/model-routing-policy.md`](docs/model-routing-policy.md)
 
 ## Development safety rule
 
