@@ -51,6 +51,19 @@ For other users or forks, `secretary` may be treated as an optional extension. F
 
 `secretary` is a user-facing intake and preference-adapter profile. It is not the Lark bot itself and does not replace `coordinator`. See: [`docs/secretary-profile.md`](docs/secretary-profile.md)
 
+Profile language policy is single-template and no locale auto-switch by default:
+
+```text
+secretary
+  Traditional Chinese first
+
+coordinator / researcher / writer / builder / runes-holder
+  English-first canonical role instructions
+  user-facing language follows channel/task policy
+```
+
+See: [`docs/profile-language-policy.md`](docs/profile-language-policy.md)
+
 `hermes-runes-md-wiki` is optional. If it is absent or not called by `runes-holder`, Hermes Agent one-agent or multi-profile operation must continue normally.
 
 ## Implementation roadmap
@@ -65,12 +78,12 @@ Immediate next implementation tasks:
 1. Add repository layout verification.       DONE
 2. Add simulation environment preparation.  DONE
 3. Add simulation layout verification.      DONE
-4. Expand inert profile templates.
+4. Expand inert profile templates.          STARTED
 5. Design dry-run profile deployment.
 6. Evaluate Kanban / delegation / goals for stateful OPC office-loop behavior.
 ```
 
-Current Phase 1 commands:
+Current Phase 1/2 commands:
 
 ```bash
 bash scripts/verify-repo-layout.sh
