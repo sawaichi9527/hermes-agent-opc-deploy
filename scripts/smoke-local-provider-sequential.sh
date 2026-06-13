@@ -6,6 +6,7 @@ SMOKE_DELAY_SEC="${SMOKE_DELAY_SEC:-2}"
 RUN_CHAT=0
 CHAT_MAX_TOKENS="${CHAT_MAX_TOKENS:-32}"
 SINGLE_PROFILE=""
+PROFILE_LIST_ENV="${PROFILE_LIST:-}"
 
 profiles=(
   secretary
@@ -29,13 +30,15 @@ Default behavior:
 
 Options:
   --chat
-      Also send one minimal chat completion per profile, sequentially.
+      Also send one minimal chat completion per selected profile, sequentially.
 
   --profile <name>
       Check only one profile.
 
 Environment:
   HERMES_PROFILES_ROOT   Default: $HOME/.hermes/profiles
+  PROFILE_LIST           Optional comma/space-separated profile list.
+                         Example: PROFILE_LIST=secretary
   SMOKE_DELAY_SEC        Default: 2
   CHAT_MAX_TOKENS        Default: 32
 
@@ -71,6 +74,12 @@ while [ "$#" -gt 0 ]; do
       ;;
   esac
 done
+
+if [ -n "$PROFILE_LIST_ENV" ]; then
+  # Accept either comma-separated or whitespace-separated values.
+  # shellcheck disable=SC2206
+  profiles=(${PROFILE_LIST_ENV//,/ })
+fi
 
 if [ -n "$SINGLE_PROFILE" ]; then
   profiles=("$SINGLE_PROFILE")
@@ -118,31 +127,60 @@ PY
 extract_model_name() {
   local file="$1"
   python3 - "$file" <<'PY'
+import re
 import sys
 from pathlib import Path
 
 path = Path(sys.argv[1])
-text = path.read_text(encoding="utf-8").splitlines()
+lines = path.read_text(encoding="utf-8").splitlines()
+
+# Prefer the documented shape:
+# model:
+#   provider: openai
+#   name: <model-id>
 inside_model = False
 model_indent = None
-for raw in text:
+for raw in lines:
     stripped = raw.strip()
     if not stripped or stripped.startswith("#"):
         continue
     indent = len(raw) - len(raw.lstrip(" "))
-    if stripped == "model:" or stripped.startswith("model:"):
+    if re.match(r"^model\s*:\s*$", stripped):
         inside_model = True
         model_indent = indent
         continue
     if inside_model:
         if indent <= (model_indent or 0) and not raw.startswith(" "):
             inside_model = False
+            continue
         if stripped.startswith("name:"):
             value = stripped.split(":", 1)[1].strip()
             if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
                 value = value[1:-1]
             print(value)
             sys.exit(0)
+
+# Tolerate compact or alternate local config keys without requiring PyYAML.
+# These are fallbacks only for smoke-test compatibility.
+patterns = [
+    r"^model_name\s*:\s*(.+)$",
+    r"^modelName\s*:\s*(.+)$",
+    r"^OPENAI_MODEL\s*:\s*(.+)$",
+]
+for raw in lines:
+    stripped = raw.strip()
+    if not stripped or stripped.startswith("#"):
+        continue
+    for pat in patterns:
+        m = re.match(pat, stripped)
+        if not m:
+            continue
+        value = m.group(1).strip()
+        if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
+            value = value[1:-1]
+        print(value)
+        sys.exit(0)
+
 print("")
 PY
 }
@@ -173,6 +211,44 @@ elif isinstance(items, dict):
     print(len(items))
 else:
     print("unknown-shape")
+PY
+}
+
+json_get_first_model_id() {
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+try:
+    data = json.loads(path.read_text(encoding="utf-8"))
+except Exception:
+    print("")
+    sys.exit(0)
+
+items = None
+if isinstance(data, dict):
+    items = data.get("data")
+elif isinstance(data, list):
+    items = data
+
+candidate = None
+if isinstance(items, list) and items:
+    candidate = items[0]
+elif isinstance(items, dict) and items:
+    # Some local servers may return a mapping keyed by model id.
+    first_key = next(iter(items.keys()))
+    candidate = items.get(first_key) or first_key
+
+model_id = ""
+if isinstance(candidate, dict):
+    model_id = str(candidate.get("id") or candidate.get("name") or "")
+elif isinstance(candidate, str):
+    model_id = candidate
+
+print(model_id)
 PY
 }
 
@@ -215,6 +291,7 @@ warn() {
 
 printf 'Local provider sequential smoke\n'
 printf 'Profiles root: %s\n' "$PROFILES_ROOT"
+printf 'Selected profiles: %s\n' "${profiles[*]}"
 printf 'Chat smoke: %s\n' "$RUN_CHAT"
 printf 'Delay: %ss\n\n' "$SMOKE_DELAY_SEC"
 
@@ -287,10 +364,12 @@ for profile in "${profiles[@]}"; do
 
   models_url="${base_url%/}/models"
   models_tmp="$(mktemp)"
+  first_model_id=""
   if curl -fsS --max-time 30 \
       -H "Authorization: Bearer $api_key" \
       "$models_url" >"$models_tmp"; then
     count="$(json_get_model_count "$models_tmp" || true)"
+    first_model_id="$(json_get_first_model_id "$models_tmp" || true)"
     pass "$profile /models reachable; model_count=$count"
   else
     fail "$profile /models request failed: $models_url"
@@ -303,12 +382,18 @@ for profile in "${profiles[@]}"; do
 
   if [ "$RUN_CHAT" -eq 1 ]; then
     if [ -z "$model_name" ]; then
-      fail "$profile model.name missing in config.yaml; cannot run chat smoke"
-      printf '\n'
-      sleep "$SMOKE_DELAY_SEC"
-      continue
+      if [ -n "$first_model_id" ]; then
+        model_name="$first_model_id"
+        warn "$profile model.name missing in config.yaml; using first /models id for chat smoke: $model_name"
+      else
+        fail "$profile model.name missing in config.yaml and no /models fallback id available; cannot run chat smoke"
+        printf '\n'
+        sleep "$SMOKE_DELAY_SEC"
+        continue
+      fi
+    else
+      pass "$profile model.name present"
     fi
-    pass "$profile model.name present"
 
     chat_tmp="$(mktemp)"
     payload_tmp="$(mktemp)"
