@@ -2,9 +2,9 @@
 
 ## Status
 
-`secretary` is an optional OPC profile candidate for the Lark-bot-facing personal intake layer.
+For the maintainer's Lark-first OPC usage, `secretary` is a **standard profile**, not an optional sixth profile.
 
-It is not required for the first deployment baseline, but it should be part of the architecture discussion because the maintainer intends to interact with Hermes mainly through Lark after OPC-style profiles are introduced.
+For other users or forks, `secretary` can still be treated as an optional extension profile. This repository, however, records the maintainer baseline where Lark is expected to become the primary operating interface after OPC-style profile usage is enabled.
 
 ## Problem
 
@@ -14,7 +14,7 @@ Before OPC-style profile usage, Lark can send requests directly to the default H
 User -> Lark bot -> default Hermes Agent
 ```
 
-After OPC-style profile usage, sending every request directly to `coordinator` would make the coordinator absorb user-facing preferences, personal communication style, and playful or noisy request patterns.
+After OPC-style profile usage, sending every request directly to `coordinator` would make the coordinator absorb user-facing preferences, personal communication style, answer format preferences, and playful or noisy request patterns.
 
 That weakens the intended role purity of the core OPC worker profiles:
 
@@ -41,7 +41,7 @@ coordinator profile
   Task planner, router, merger, and boundary checker
 ```
 
-Recommended OPC-facing flow:
+Recommended maintainer OPC-facing flow:
 
 ```text
 User
@@ -96,7 +96,7 @@ The secretary should not:
 
 Do not overbuild this profile.
 
-For this repository, `secretary` should remain a small optional profile template. It should not introduce enterprise features such as:
+For this repository, `secretary` should remain a small maintainer-specific profile template. It should not introduce enterprise features such as:
 
 - org-wide approval chains;
 - multi-user RBAC;
@@ -111,19 +111,9 @@ The goal is simple:
 Protect OPC role purity while making Lark-based user interaction comfortable.
 ```
 
-## Initial deployment status
+## Maintainer deployment baseline
 
-The first deployment can still start with the core five profiles:
-
-```text
-coordinator
-researcher
-writer
-builder
-runes-holder
-```
-
-If the maintainer decides that Lark will become the main operating interface for OPC usage, add `secretary` as the sixth optional profile:
+The maintainer baseline contains six profiles:
 
 ```text
 secretary
@@ -134,15 +124,17 @@ builder
 runes-holder
 ```
 
-This keeps the architecture compatible with both modes:
+For forks or other users, the minimal generic OPC set can still be documented as:
 
 ```text
-Without secretary:
-User -> Lark bot -> coordinator
-
-With secretary:
-User -> Lark bot -> secretary -> coordinator
+coordinator
+researcher
+writer
+builder
+runes-holder
 ```
+
+But for this repository's own deployment target, `secretary` is standard because Lark is expected to be the main operating interface.
 
 ## Relationship to Lark bot
 
