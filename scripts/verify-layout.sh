@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="${1:-$HOME/.hermes}"
-PROFILES=(coordinator researcher writer builder runes-holder)
+PROFILES=(secretary coordinator researcher writer builder runes-holder)
 missing_optional=0
 
 printf 'Hermes root: %s\n' "$ROOT"
@@ -31,7 +31,7 @@ check_optional() {
 check_required "$ROOT"
 check_required "$ROOT/SOUL.md"
 
-printf '\n== Official profile layout, optional before OPC deployment ==\n'
+printf '\n== Official profile layout, optional before maintainer OPC deployment ==\n'
 check_optional "$ROOT/profiles"
 
 for profile in "${PROFILES[@]}"; do
@@ -41,8 +41,8 @@ done
 
 printf '\n'
 if [ "$missing_optional" -eq 0 ]; then
-  printf 'Summary: PASS - base Hermes root exists and OPC profile layout is present.\n'
+  printf 'Summary: PASS - base Hermes root exists and maintainer OPC profile layout is present.\n'
 else
-  printf 'Summary: BASE PASS - Hermes native root exists; OPC profiles are not fully deployed yet.\n'
-  printf 'This is expected before coordinator/researcher/writer/builder/runes-holder profiles are created.\n'
+  printf 'Summary: BASE PASS - Hermes native root exists; maintainer OPC profiles are not fully deployed yet.\n'
+  printf 'This is expected before secretary/coordinator/researcher/writer/builder/runes-holder profiles are created.\n'
 fi
