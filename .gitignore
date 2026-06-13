@@ -1,0 +1,41 @@
+# Secrets
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# Hermes runtime state
+sessions/
+logs/
+cache/
+state/
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# Python / local tooling
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Large generated artifacts
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
