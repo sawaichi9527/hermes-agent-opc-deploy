@@ -24,6 +24,7 @@ simulation path, safe for repository development
 7. Keep `hermes-runes-md-wiki` optional and agent-agnostic.
 8. Do not store real secrets, runtime session databases, or profile cache/log dumps in this repository.
 9. Preserve real Hermes state by default; clean-install style reset must be explicit and backed up.
+10. Use one authoritative SOUL template per profile; no locale auto-switch by default.
 
 ## Current target baseline profiles
 
@@ -68,6 +69,7 @@ Goals:
 - Record deploy reset / clean-install policy.
 - Record OPC gap analysis versus the original OPC concept documents.
 - Record the profile interaction loop problem and likely Hermes official primitives to evaluate.
+- Record profile language policy before SOUL templates are treated as deployable.
 
 Deliverables:
 
@@ -79,12 +81,14 @@ Deliverables:
 - `docs/deploy-reset-policy.md`
 - `docs/opc-gap-analysis.md`
 - `docs/profile-interaction-loop.md`
+- `docs/profile-language-policy.md`
 
 Exit criteria:
 
 - The baseline roles and non-goals are clear.
 - No one should confuse Lark bot, secretary, coordinator, Hermes runtime, or runes wiki.
 - Future reset behavior is explicit before any real deploy script exists.
+- SOUL template language strategy is documented before template expansion.
 
 ## Phase 1 - Repository structure and static validation
 
@@ -107,7 +111,7 @@ scripts/verify-sim-layout.sh
 Responsibilities:
 
 - `verify-repo-layout.sh`
-  - Check required docs, profile notes, script files, and template directories.
+  - Check required docs, profile notes, SOUL templates, script files, and template directories.
   - Check shell syntax for repository scripts.
   - Check that no forbidden runtime files are accidentally committed.
 
@@ -141,13 +145,16 @@ Exit criteria:
 
 ## Phase 2 - Profile template content
 
+Status: started.
+
 Goals:
 
 - Draft maintainer baseline profile templates without deploying them.
 - Keep templates role-pure and minimal.
 - Avoid overfitting to one project.
+- Apply the profile language policy consistently.
 
-Planned template areas:
+Template areas:
 
 ```text
 profiles/secretary/
@@ -158,13 +165,29 @@ profiles/builder/
 profiles/runes-holder/
 ```
 
-Likely files per profile template:
+Initial files per profile template:
 
 ```text
 NOTES.md
-SOUL.template.md
+SOUL.md.template
+```
+
+Later candidate files per profile template:
+
+```text
 memory.seed.template.md
 config-notes.md
+```
+
+Language policy:
+
+```text
+secretary
+  Traditional Chinese first
+
+coordinator / researcher / writer / builder / runes-holder
+  English-first canonical role instructions
+  user-facing language follows user/channel/task policy
 ```
 
 Content rules:
@@ -181,6 +204,7 @@ Exit criteria:
 - Each profile has a clear role contract.
 - Cross-profile contamination risks are explicitly documented.
 - Templates are deployable later but remain inert in this phase.
+- `verify-repo-layout.sh` passes with all SOUL templates present.
 
 ## Phase 3 - Official-profile initialization design
 
@@ -338,9 +362,9 @@ Exit criteria:
 
 Recommended implementation order:
 
-1. Run Phase 1 validation locally.
-2. Fix any shell or layout issues found by the new scripts.
-3. Expand profile template directories with inert template files.
+1. Run Phase 1/2 validation locally.
+2. Fix any shell or layout issues found by the scripts.
+3. Review the first `SOUL.md.template` files for profile purity.
 4. Add `docs/profile-deployment-design.md`.
 5. Add Kanban/office-loop evaluation docs.
 
