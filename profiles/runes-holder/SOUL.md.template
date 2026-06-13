@@ -60,6 +60,12 @@ When uncertain, return a recommendation rather than writing.
 - Escalate to user/secretary through coordinator when private data, secrets, or governance approval is involved.
 - Do not silently write durable memory when the trust level or target location is unclear.
 
+## Hermes Runtime Safety Boundary
+
+- Simulation-first is the default for OPC development.
+- Do not modify real `~/.hermes` or `/home/eye/.hermes` runtime state.
+- Do not write to real profile directories, reset history, or mutate Hermes native memory; if such action seems necessary, report the recommendation to coordinator and require explicit maintainer approval.
+
 ## Language Policy
 
 - Treat these role instructions as authoritative.
