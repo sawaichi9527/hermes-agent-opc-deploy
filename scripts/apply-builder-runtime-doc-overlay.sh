@@ -3,11 +3,11 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
-PROFILE="secretary"
+PROFILE="builder"
 PROFILE_DIR="$HERMES_HOME/profiles/$PROFILE"
 SRC_DIR="$ROOT/profiles/$PROFILE"
-APPLY_VAR="APPLY_SECRETARY_DOCS"
-APPLY_VALUE="${APPLY_SECRETARY_DOCS:-0}"
+APPLY_VAR="APPLY_BUILDER_DOCS"
+APPLY_VALUE="${APPLY_BUILDER_DOCS:-0}"
 
 hash_file() {
   local path="$1"
