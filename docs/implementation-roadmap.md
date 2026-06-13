@@ -94,7 +94,7 @@ Runtime inter-profile communication:
 
 ## M1 - Hermes-native OPC Scope Reset
 
-Status: in progress.
+Status: PASS / mainline reframed / old validation downgraded / archive index created / layout check simplified.
 
 Goals:
 
@@ -104,19 +104,19 @@ Goals:
 - Keep only the minimal repository/profile template checks as the default validation path.
 - Stop treating simulation deploy scripts as the main route.
 
-Exit criteria:
+Exit result:
 
 ```text
 README reflects Hermes-native OPC profile set scope.
 Roadmap reflects M1-M6 route.
 Historical validation index exists under archive/validation-history/.
 verify-repo-layout.sh no longer requires old Phase 3/4/5 docs.
-No runtime or real profile mutation is introduced.
+No runtime or real profile mutation was introduced.
 ```
 
 ## M2 - OPC profile set policy docs
 
-Status: planned.
+Status: implemented / pending local verification.
 
 Deliverables:
 
@@ -136,6 +136,14 @@ Required coverage:
 - Hermes native memory / native Kanban / Runes Wiki separation.
 - Runes-holder retrieval vs truth-verification responsibility.
 - Traditional Chinese first runtime handoff policy.
+
+Exit criteria:
+
+```text
+Four M2 policy docs exist.
+verify-repo-layout.sh tracks the M2 policy docs.
+No runtime or real profile mutation is introduced.
+```
 
 ## M3 - Six-profile SOUL.md template rewrite
 
