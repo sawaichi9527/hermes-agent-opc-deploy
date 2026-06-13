@@ -53,6 +53,25 @@ For other users or forks, `secretary` may be treated as an optional extension. F
 
 `hermes-runes-md-wiki` is optional. If it is absent or not called by `runes-holder`, Hermes Agent one-agent or multi-profile operation must continue normally.
 
+## Implementation roadmap
+
+The current implementation plan is tracked in:
+
+- [`docs/implementation-roadmap.md`](docs/implementation-roadmap.md)
+
+Immediate next implementation tasks:
+
+```text
+1. Add repository layout verification.
+2. Add simulation environment preparation.
+3. Add simulation layout verification.
+4. Expand inert profile templates.
+5. Design dry-run profile deployment.
+6. Evaluate Kanban / delegation / goals for stateful OPC office-loop behavior.
+```
+
+Real deployment into `~/.hermes/profiles/` is intentionally out of scope until the maintainer explicitly approves it.
+
 ## OPC gap tracking
 
 This repository now explicitly tracks the gap between:
