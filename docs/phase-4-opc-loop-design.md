@@ -1,6 +1,6 @@
 # Phase 4 OPC loop design review
 
-This document records Phase 4.1 through Phase 4.9 for the maintainer's personal Hermes Agent OPC deployment.
+This document records Phase 4.1 through Phase 4.10 for the maintainer's personal Hermes Agent OPC deployment.
 
 Phase 4 starts from the Phase 3 local runtime baseline and deliberately avoids building a separate orchestration system.
 
@@ -260,3 +260,74 @@ It does not create alias wrappers, Kanban items, sessions, memory records, telem
 ```
 
 Phase 4 now has both manual verification and repository layout tracking for its documentation baseline.
+
+## Phase 4.10 official primitive help probe lock
+
+Phase 4.10 records the maintainer's read-only help probe for official Hermes CLI primitives.
+
+Commands verified:
+
+```bash
+hermes kanban --help || true
+hermes sessions --help || true
+hermes logs --help || true
+hermes memory --help || true
+hermes prompt-size --help || true
+hermes chat --help
+```
+
+Locked result:
+
+```text
+Phase 4.10 Official Primitive Help Probe Lock
+PASS / read-only CLI help inventory completed / official primitive syntax captured / no runtime mutation
+```
+
+Observed primitive classification:
+
+```text
+kanban: available, but includes task mutation and dispatcher/gateway-oriented commands; documentation-only by default
+sessions: available for viewing/managing SQLite session store; read-only list/stats/browse are candidates, delete/prune/repair/rename deferred
+logs: available for viewing/tailing/filtering logs; tail/follow is interactive and not part of default smoke
+memory: available, but setup/off/reset mutate memory provider or built-in memory; status only is candidate read-only check
+prompt-size: available and offline; good candidate bounded-context preflight
+chat: available with -q, --provider, --model, --quiet, resume/continue/worktree options; Phase 3 accepted explicit provider/model one-shot remains the safe baseline
+```
+
+Important caution:
+
+```text
+Hermes kanban exposes swarm, dispatch, daemon/watch-style, task mutation, and garbage collection operations.
+Hermes sessions exposes delete, prune, repair, rename, optimize, and export operations.
+Hermes memory exposes setup, off, and reset operations.
+These must not be used by default in the personal Phase 4 baseline.
+```
+
+Allowed follow-up without extra approval:
+
+```text
+help probes
+prompt-size offline report
+logs list or small bounded view
+sessions list/stats if needed for evidence review
+memory status if needed for configuration awareness
+```
+
+Deferred unless explicitly approved:
+
+```text
+kanban init/create/dispatch/daemon/watch/swarm/gc
+sessions delete/prune/repair/rename/export
+memory setup/off/reset
+chat --worktree, resume/continue session workflows, or tool-enabled operational runs
+```
+
+Scope clarification:
+
+```text
+This phase only records CLI help output and classification.
+It does not create tasks.
+It does not start gateway, dispatcher, daemon, watch, or background behavior.
+It does not mutate sessions, memory, profiles, files, or aliases.
+It does not introduce a custom orchestrator.
+```
