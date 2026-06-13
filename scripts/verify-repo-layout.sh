@@ -52,6 +52,7 @@ required_docs=(
   "docs/verification-phase-3l-local-provider.md"
   "docs/phase-3l5-local-model-name-cleanup.md"
   "docs/phase-3m-runtime-readiness.md"
+  "docs/phase-3n-profile-invocation.md"
   "docs/maintenance-policy.md"
   "docs/migration.md"
   "docs/model-routing-policy.md"
