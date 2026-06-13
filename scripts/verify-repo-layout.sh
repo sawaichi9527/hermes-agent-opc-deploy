@@ -85,6 +85,7 @@ required_scripts=(
   "scripts/verify-layout.sh"
   "scripts/verify-repo-layout.sh"
   "scripts/prepare-sim-env.sh"
+  "scripts/deploy-sim-profiles.sh"
   "scripts/verify-sim-layout.sh"
 )
 for path in "${required_scripts[@]}"; do
