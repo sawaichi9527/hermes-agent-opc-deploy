@@ -176,10 +176,58 @@ hermes profile {list,use,create,delete,describe,show,alias,rename,export,import,
 
 The singular `hermes profile` command is supported. The plural `hermes profiles` command is not supported. There is no `hermes run` command in this runtime. Future runtime probes must not assume either `hermes profiles` or `hermes run`.
 
+## Phase 3M.3a provider alias discovery lock
+
+```text
+Phase 3M.3a Provider Alias Discovery
+Status: PASS
+Result: Hermes runtime provider alias identified as lmstudio; openai override confirmed unsupported
+Boundary: command/config discovery only / no successful model request / no profile mutation / no daemon / no concurrency / no load test
+```
+
+Maintainer verification confirmed:
+
+```text
+hermes -z with --provider openai: BLOCKED / Unknown provider 'openai'
+hermes model --help: PASS
+hermes config --help: PASS
+hermes config show: PASS
+hermes profile show secretary: PASS
+hermes profile list: PASS
+```
+
+Observed Hermes model configuration:
+
+```text
+provider: lmstudio
+model.default: qwen3.6-35b-a3b-uncensored-heretic-native-mtp-preserved@q5_k_m
+base_url: http://192.168.23.217:1234/v1
+```
+
+Observed secretary profile:
+
+```text
+profile: secretary
+model: qwen3.6-35b-a3b-uncensored-heretic-native-mtp-preserved@q5_k_m
+provider: lmstudio
+.env: exists
+SOUL.md: exists
+```
+
+The local API remains OpenAI-compatible at the HTTP protocol level, but the Hermes Agent runtime provider alias is `lmstudio`, not `openai`. Future Hermes runtime probes must use `--provider lmstudio` or the active Hermes profile/default configuration rather than `--provider openai`.
+
 ## Follow-up
 
-The next step is Phase 3M.3 single-profile Hermes runtime probe.
+The next step is Phase 3M.3b single-profile Hermes runtime request probe.
 
-Phase 3M.3 should use the discovered Hermes CLI syntax and remain bounded to one profile and one request. The preferred probe candidates are `hermes -z` / `hermes --oneshot` or `hermes chat -q`, depending on which command can be constrained most safely for a single-profile secretary check.
+Phase 3M.3b should use the discovered provider alias and remain bounded to one profile and one request. The preferred first probe is:
+
+```bash
+hermes -z "Reply with exactly: hermes-runtime-ok" \
+  --provider lmstudio \
+  --model qwen3.6-35b-a3b-uncensored-heretic-native-mtp-preserved@q5_k_m
+```
+
+If the direct provider/model override succeeds, a later profile-specific probe may validate whether `hermes profile use secretary` or another profile invocation path is appropriate. Do not mutate the sticky default profile unless the maintainer explicitly approves it.
 
 Do not expand this phase into routing, queues, concurrency, daemon management, load testing, throughput benchmarking, or external API fallback.
