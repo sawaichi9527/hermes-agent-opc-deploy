@@ -1,6 +1,6 @@
 # Phase 4 OPC loop design review
 
-This document records Phase 4.1 through Phase 4.8 for the maintainer's personal Hermes Agent OPC deployment.
+This document records Phase 4.1 through Phase 4.9 for the maintainer's personal Hermes Agent OPC deployment.
 
 Phase 4 starts from the Phase 3 local runtime baseline and deliberately avoids building a separate orchestration system.
 
@@ -229,11 +229,34 @@ It does not create alias wrappers.
 It does not create Kanban, sessions, memory, telemetry, queue, router, or daemon behavior.
 ```
 
-Current minor follow-up:
+## Phase 4.9 layout tracking cleanup
+
+Phase 4.9 removes the remaining documentation tracking gap from Phase 4.8.
+
+Locked result:
 
 ```text
-The three Phase 4 documents exist and are manually verified.
-The repository layout check remains PASS.
-The layout script does not yet explicitly track these three Phase 4 documents because earlier connector updates to the security-heavy layout script were blocked.
-This does not block Phase 4.8, but may be cleaned up later with a local maintainer patch if desired.
+Phase 4.9 Layout Tracking Cleanup
+PASS / Phase 4 documents added to repository layout check / no runtime functionality introduced
 ```
+
+Tracked Phase 4 documents:
+
+```text
+docs/phase-4-opc-loop-design.md
+docs/opc-manual-runbook.md
+docs/opc-evidence-policy.md
+```
+
+Scope clarification:
+
+```text
+This cleanup only extends the required documentation list in scripts/verify-repo-layout.sh.
+It does not change the forbidden tracked runtime/secrets check.
+It does not add a runtime script.
+It does not run Hermes.
+It does not mutate profiles.
+It does not create alias wrappers, Kanban items, sessions, memory records, telemetry, queue, router, or daemon behavior.
+```
+
+Phase 4 now has both manual verification and repository layout tracking for its documentation baseline.
