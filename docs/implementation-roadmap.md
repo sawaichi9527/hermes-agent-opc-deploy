@@ -147,7 +147,7 @@ No runtime or real profile mutation was introduced.
 
 ## M3 - Six-profile SOUL.md template rewrite
 
-Status: implemented / pending local verification.
+Status: PASS / six templates rewritten / M2 policy embedded / no runtime mutation.
 
 Deliverables:
 
@@ -182,18 +182,24 @@ runes-holder
   Hermes Runes MD Wiki retrieval/governance specialist; retrieves Runes context and uses runes shield only after secretary/user consent.
 ```
 
-Exit criteria:
+Exit result:
 
 ```text
 All six SOUL.md.template files reflect M2 policy docs.
 Templates preserve no-real-secret and no-real-runtime-mutation boundaries.
-verify-profile-templates.sh passes locally.
-No real ~/.hermes profile file is mutated by this repository update.
+verify-profile-templates.sh passed locally.
+No real ~/.hermes profile file was mutated by this repository update.
 ```
 
 ## M4 - Minimal verification
 
-Status: planned.
+Status: PASS / repo layout verified / profile templates verified / no runtime mutation / no profile mutation.
+
+Verification lock:
+
+```text
+docs/verification-m4-minimal.md
+```
 
 Default validation:
 
@@ -203,7 +209,15 @@ bash scripts/verify-profile-templates.sh
 git status --short
 ```
 
-Optional Hermes-native profile checks:
+Result:
+
+```text
+verify-repo-layout.sh: PASS / repository layout is valid
+verify-profile-templates.sh: PASS / profile templates satisfy baseline static checks
+git status --short: clean working tree
+```
+
+Optional Hermes-native profile checks remain available for future runtime inspection:
 
 ```bash
 hermes profile show secretary
@@ -214,7 +228,7 @@ hermes profile show builder
 hermes profile show runes-holder
 ```
 
-Optional Lark-facing secretary check:
+Optional Lark-facing secretary check, only when validating runtime behavior:
 
 ```bash
 hermes -p secretary gateway status
@@ -227,7 +241,7 @@ simulation deploy
 old Phase 3/4/5 validation bundle
 parallel multi-agent smoke
 real profile mutation
-native memory/session cleanup
+native memory/session maintenance
 Lark production cutover
 ```
 
