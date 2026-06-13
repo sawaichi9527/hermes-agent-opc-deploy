@@ -116,7 +116,7 @@ No runtime or real profile mutation was introduced.
 
 ## M2 - OPC profile set policy docs
 
-Status: implemented / pending local verification.
+Status: PASS / four policy docs added / layout-tracked / no runtime mutation.
 
 Deliverables:
 
@@ -127,7 +127,7 @@ docs/runes-holder-boundary.md
 docs/hermes-native-profile-usage.md
 ```
 
-Required coverage:
+Coverage:
 
 - Lark -> secretary -> coordinator -> worker profile flow.
 - Six-profile OPC set as one coherent design.
@@ -137,17 +137,17 @@ Required coverage:
 - Runes-holder retrieval vs truth-verification responsibility.
 - Traditional Chinese first runtime handoff policy.
 
-Exit criteria:
+Exit result:
 
 ```text
 Four M2 policy docs exist.
 verify-repo-layout.sh tracks the M2 policy docs.
-No runtime or real profile mutation is introduced.
+No runtime or real profile mutation was introduced.
 ```
 
 ## M3 - Six-profile SOUL.md template rewrite
 
-Status: planned.
+Status: implemented / pending local verification.
 
 Deliverables:
 
@@ -160,26 +160,35 @@ profiles/builder/SOUL.md.template
 profiles/runes-holder/SOUL.md.template
 ```
 
-Profile-specific direction:
+Profile-specific result:
 
 ```text
 secretary
-  Lark-facing entrypoint, personal-preference buffer, secretary-mediated user consent.
+  Lark-facing entrypoint, personal-preference buffer, secretary-mediated user consent, serialized handoff owner.
 
 coordinator
-  Sequential router, one next profile at a time, compact handoff packets.
+  Sequential router, one next profile at a time, compact Traditional Chinese-first handoff packets.
 
 researcher
   Evidence comparison owner; validates Runes/native/RAG/Obsidian/web material.
 
 writer
-  Drafting and presentation owner; preserves source status and uncertainty.
+  Drafting and presentation owner; preserves source status, uncertainty, and verified-vs-retrieved distinction.
 
 builder
   Implementation validation owner; validates against repo files, commands, official docs, and local state.
 
 runes-holder
-  Hermes Runes MD Wiki access/governance specialist; retrieves Runes context and uses runes shield only after secretary/user consent.
+  Hermes Runes MD Wiki retrieval/governance specialist; retrieves Runes context and uses runes shield only after secretary/user consent.
+```
+
+Exit criteria:
+
+```text
+All six SOUL.md.template files reflect M2 policy docs.
+Templates preserve no-real-secret and no-real-runtime-mutation boundaries.
+verify-profile-templates.sh passes locally.
+No real ~/.hermes profile file is mutated by this repository update.
 ```
 
 ## M4 - Minimal verification
