@@ -1,6 +1,6 @@
 # Phase 4 OPC loop design review
 
-This document records Phase 4.1 through Phase 4.10 for the maintainer's personal Hermes Agent OPC deployment.
+This document records Phase 4.1 through Phase 4.11 for the maintainer's personal Hermes Agent OPC deployment.
 
 Phase 4 starts from the Phase 3 local runtime baseline and deliberately avoids building a separate orchestration system.
 
@@ -329,5 +329,58 @@ This phase only records CLI help output and classification.
 It does not create tasks.
 It does not start gateway, dispatcher, daemon, watch, or background behavior.
 It does not mutate sessions, memory, profiles, files, or aliases.
+It does not introduce a custom orchestrator.
+```
+
+## Phase 4.11 offline prompt-size preflight preparation
+
+Phase 4.11 prepares the first safe official-primitive smoke after the read-only help probe.
+
+Selected primitive:
+
+```text
+hermes prompt-size --json
+```
+
+Reason:
+
+```text
+prompt-size is documented by Hermes help as an offline prompt budget report.
+It runs without an API call.
+It does not create tasks.
+It does not mutate sessions, memory, profiles, files, or aliases.
+It does not start daemon, gateway, dispatcher, watch, queue, router, or background behavior.
+```
+
+Manual verification command:
+
+```bash
+hermes prompt-size --json
+```
+
+Expected result:
+
+```text
+JSON output is produced.
+The command completes locally.
+No model request is sent.
+No runtime mutation is expected.
+```
+
+Phase 4.11 should only be marked PASS after maintainer local verification.
+
+Current status:
+
+```text
+Phase 4.11 Offline Prompt-size Preflight
+PENDING / prepared / awaiting maintainer local verification
+```
+
+Scope clarification:
+
+```text
+This preparation does not add a new script.
+It does not run Hermes chat or one-shot generation.
+It does not touch Kanban, sessions, memory setup/reset, profiles, aliases, or runtime files.
 It does not introduce a custom orchestrator.
 ```
