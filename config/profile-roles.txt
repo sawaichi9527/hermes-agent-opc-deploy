@@ -1,0 +1,8 @@
+# Canonical Hermes profile roles for guarded deploy.
+# One role per line. Blank lines and comments are ignored.
+secretary
+coordinator
+researcher
+writer
+builder
+runes-holder
