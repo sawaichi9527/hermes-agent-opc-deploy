@@ -1,6 +1,6 @@
 # Phase 5 simulation trial
 
-This document defines Phase 5.0 through Phase 5.6 for the maintainer's personal Hermes Agent OPC deployment.
+This document records Phase 5.0 through Phase 5.6 for the maintainer's personal Hermes Agent OPC deployment.
 
 Phase 5 is a repository-local simulation trial only.
 
@@ -19,14 +19,14 @@ simulate_env/.hermes/
 
 ## Phase 5.0 simulation trial entry criteria lock
 
-Entry criteria:
+Entry criteria verified:
 
 ```text
-Phase 4 final consolidation is PASS.
-Repository layout is PASS.
-Profile templates pass static checks before simulated deploy.
-Simulation commands target simulate_env only.
-Real profile deployment remains blocked unless explicitly approved later.
+Phase 4 final consolidation: PASS
+Repository layout: PASS
+Profile templates static checks: PASS
+Simulation commands target simulate_env only: PASS
+Real profile deployment remains blocked unless explicitly approved later: PASS
 ```
 
 Locked boundary:
@@ -40,16 +40,16 @@ no runtime daemon, queue, router, or scheduler
 no deployment to real profiles in Phase 5
 ```
 
-Current status:
+Locked result:
 
 ```text
 Phase 5.0 Simulation Trial Entry Criteria Lock
-PENDING / prepared / awaiting maintainer local verification
+PASS / Phase 4 closed / repo checks passed / simulation-only boundary retained
 ```
 
 ## Phase 5.1 simulation environment layout re-check
 
-Commands:
+Commands verified:
 
 ```bash
 ./scripts/verify-repo-layout.sh
@@ -58,7 +58,7 @@ Commands:
 ./scripts/verify-sim-layout.sh
 ```
 
-Expected result:
+Observed result:
 
 ```text
 repository layout: PASS
@@ -67,57 +67,90 @@ simulation environment prepared
 simulation layout valid before profile deployment
 ```
 
+Locked result:
+
+```text
+Phase 5.1 Simulation Environment Layout Re-check
+PASS / repository and simulation baseline verified
+```
+
 ## Phase 5.2 profile template simulation dry-run
 
-Command:
+Command verified:
 
 ```bash
 ./scripts/deploy-sim-profiles.sh --force
 ```
 
-Expected result:
+Observed result:
 
 ```text
-six simulated profiles are deployed under simulate_env/.hermes/profiles/
-repository templates are copied to simulated runtime names
-no real profile directory is changed
+six simulated profiles deployed under simulate_env/.hermes/profiles/
+SOUL templates copied to simulated SOUL.md files
+OPC notes copied to simulated OPC_NOTES.md files
+DEPLOYED_FROM.txt manifests written
+no real profile directory changed
+```
+
+Locked result:
+
+```text
+Phase 5.2 Profile Template Simulation Dry-run
+PASS / six simulated profiles deployed / no real profile mutation
 ```
 
 ## Phase 5.3 simulated conflict / existing-profile check
 
-Commands:
+Commands verified:
 
 ```bash
 ./scripts/deploy-sim-profiles.sh
 ./scripts/inspect-sim-profiles.sh --strict
 ```
 
-Expected result:
+Observed result:
 
 ```text
-existing simulated profile state is handled conservatively
-strict inspection confirms deployed files match repository templates
+second simulated deploy completed conservatively
+strict inspection confirmed deployed files match repository templates
+strict inspection completed with 0 warnings
 simulation manifests are present
+```
+
+Locked result:
+
+```text
+Phase 5.3 Simulated Conflict / Existing-profile Check
+PASS / repeated simulated deploy safe / strict inspection clean
 ```
 
 ## Phase 5.4 simulated deploy report verification
 
-Command:
+Command verified:
 
 ```bash
 ./scripts/verify-sim-layout.sh --require-profiles
 ```
 
-Expected result:
+Observed result:
 
 ```text
-simulation layout is valid with all required profiles
-simulate_env remains ignored and untracked
+simulation layout valid with deployed OPC profiles
+all six simulated profile directories present
+SOUL.md, OPC_NOTES.md, and DEPLOYED_FROM.txt present for all six profiles
+simulate_env remains untracked
+```
+
+Locked result:
+
+```text
+Phase 5.4 Simulated Deploy Report Verification
+PASS / require-profiles simulation layout verified
 ```
 
 ## Phase 5.5 simulation evidence lock
 
-Commands:
+Commands verified:
 
 ```bash
 ./scripts/verify-layout.sh
@@ -125,28 +158,74 @@ bash scripts/verify-repo-layout.sh
 git status --short
 ```
 
-Expected result:
+Observed result:
 
 ```text
-real Hermes root read-only baseline remains safe
-repository layout remains PASS
-working tree is clean or only expected local executable-bit changes are present
+real Hermes root baseline check: PASS
+repository layout: PASS
+forbidden tracked runtime/secrets check: PASS
+working tree clean implied
+```
+
+Locked result:
+
+```text
+Phase 5.5 Simulation Evidence Lock
+PASS / real Hermes baseline checked read-only / repo safety retained
 ```
 
 ## Phase 5.6 final simulation trial consolidation
 
-Final Phase 5 result can only be marked PASS after Phase 5.1 through Phase 5.5 are locally verified.
-
-Target final lock:
+Final Phase 5 result:
 
 ```text
 Phase 5 Simulation Trial
 PASS / simulation-only / repeatable / no real profile mutation / ready for Phase 6 decision
 ```
 
+Closed Phase 5 scope:
+
+```text
+Phase 5.0: PASS / entry criteria locked
+Phase 5.1: PASS / simulation environment layout re-check
+Phase 5.2: PASS / profile template simulation dry-run
+Phase 5.3: PASS / simulated conflict / existing-profile check
+Phase 5.4: PASS / simulated deploy report verification
+Phase 5.5: PASS / simulation evidence lock
+Phase 5.6: PASS / final simulation trial consolidation
+```
+
+Final evidence summary:
+
+```text
+verify-repo-layout: PASS
+verify-profile-templates: PASS
+prepare-sim-env: PASS
+verify-sim-layout before deploy: PASS
+deploy-sim-profiles --force: PASS
+deploy-sim-profiles repeat run: PASS
+inspect-sim-profiles --strict: PASS / 0 warnings
+verify-sim-layout --require-profiles: PASS
+verify-layout real Hermes baseline: PASS
+final repository layout: PASS
+forbidden tracked runtime/secrets check: PASS
+```
+
+## Boundary retained
+
+```text
+simulation target only: simulate_env/.hermes/
+real Hermes home not deployed to in Phase 5
+real profile mutation still requires maintainer approval in Phase 6
+no profile use or alias workflow
+no Kanban task mutation
+no external memory activation
+no runtime daemon, queue, router, or scheduler
+```
+
 ## Full maintainer verification command
 
-Run from the repository root:
+The verified command sequence was:
 
 ```bash
 cd ~/workspace/hermes-agent-opc-deploy
@@ -170,11 +249,9 @@ git status --short
 
 ```text
 Phase 5.0-5.6 Simulation Trial
-PENDING / prepared / awaiting maintainer local verification
+PASS / frozen / simulation-only verified / no real profile mutation / ready for Phase 6 decision
 ```
 
 ## Follow-up
 
-After local verification, this file can be updated to a PASS lock with the observed result summary.
-
-Phase 6 must not begin unless the maintainer explicitly approves real deployment.
+Phase 6 must not begin unless the maintainer explicitly approves real deployment to the real Hermes profile home.
