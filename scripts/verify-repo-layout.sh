@@ -49,6 +49,9 @@ required_docs=(
   "docs/developer-local-workflow.md"
   "docs/implementation-roadmap.md"
   "docs/local-openai-compatible-provider.md"
+  "docs/verification-phase-3l-local-provider.md"
+  "docs/phase-3l5-local-model-name-cleanup.md"
+  "docs/phase-3m-runtime-readiness.md"
   "docs/maintenance-policy.md"
   "docs/migration.md"
   "docs/model-routing-policy.md"
@@ -92,6 +95,8 @@ required_scripts=(
   "scripts/inspect-sim-profiles.sh"
   "scripts/verify-sim-layout.sh"
   "scripts/smoke-local-provider-sequential.sh"
+  "scripts/set-local-model-name.sh"
+  "scripts/check-hermes-runtime-readiness.sh"
 )
 for path in "${required_scripts[@]}"; do
   check_file "$path"
