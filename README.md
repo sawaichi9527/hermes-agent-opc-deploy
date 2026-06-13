@@ -80,7 +80,10 @@ only after repeated real use
 
 Avoid `senior-*` naming for this use case because it implies hierarchy. If a permanent advisory role is eventually needed, prefer `consult-*`.
 
-See: [`docs/model-routing-policy.md`](docs/model-routing-policy.md)
+See:
+
+- [`docs/model-routing-policy.md`](docs/model-routing-policy.md)
+- [`docs/consult-subagent-upgrade-policy.md`](docs/consult-subagent-upgrade-policy.md)
 
 ## Development safety rule
 
