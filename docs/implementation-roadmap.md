@@ -247,7 +247,13 @@ Lark production cutover
 
 ## M5 - SOUL.md behavior tuning
 
-Status: implemented / M5.1-M5.4 complete / pending local verification.
+Status: PASS / convention added / secretary tuned / worker profiles aligned / runes-holder format-only aligned / no runtime mutation.
+
+Verification lock:
+
+```text
+docs/verification-m5-soul-convention.md
+```
 
 Deliverables:
 
@@ -295,12 +301,12 @@ Semantic meaning is intended to remain frozen.
 Only hygiene adjustment: remove hard-coded personal naming from the language-policy description.
 ```
 
-Pending verification:
+M5.5 verification result:
 
-```bash
-bash scripts/verify-repo-layout.sh
-bash scripts/verify-profile-templates.sh
-git status --short
+```text
+verify-repo-layout.sh: PASS / repository layout is valid
+verify-profile-templates.sh: PASS / profile templates satisfy baseline static checks
+git status --short: clean working tree
 ```
 
 Not part of M5:
