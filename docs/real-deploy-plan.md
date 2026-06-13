@@ -1,12 +1,13 @@
 # Real Deploy Plan
 
-Status: Phase 3K-FIX.2 canonical role config and readiness rewrite implemented  
-Scope: real deploy planning, guarded apply verification, taxonomy correction, and canonical role readiness  
+Status: Phase 3K-FIX.3 drift cleanup planning implemented  
+Scope: real deploy planning, guarded apply verification, taxonomy correction, canonical role readiness, and drift cleanup planning  
 Real profile write: executed only through guarded apply  
+Real profile delete: not yet implemented  
 Restore execution: disabled  
 Target path: `~/.hermes/profiles/`  
 Current real apply result: five OPC-managed generic skeleton directories deployed during Phase 3J  
-Current correction result: canonical Hermes roles are config-driven; drift cleanup remains pending
+Current correction result: canonical Hermes roles are config-driven; drift cleanup planner is read-only
 
 ---
 
@@ -16,7 +17,9 @@ This plan defines the controlled real deployment path for OPC Hermes Agent profi
 
 The project moved from simulation into guarded real deploy. Phase 3J verified that guarded apply, backup-before-write, and managed markers work. Phase 3K then revealed a role taxonomy drift: the generic deployment roles used for pipeline validation were not the same as the existing Hermes profile taxonomy documented in `profiles/README.md`.
 
-Phase 3K-FIX.2 corrects the future deploy path so scripts now read canonical roles from a simple config file instead of hard-coded generic role names.
+Phase 3K-FIX.2 corrected the future deploy path so scripts read canonical roles from a simple config file instead of hard-coded generic role names.
+
+Phase 3K-FIX.3 adds read-only drift cleanup planning for the generic skeleton profiles created during the first guarded apply. It does not delete real profiles.
 
 The deployment layer must remain simple, personal-use friendly, local, and lightweight for Hermes Agent. It must not become a daemon, enterprise orchestrator, or runtime dependency.
 
@@ -47,7 +50,8 @@ The deployment layer must remain simple, personal-use friendly, local, and light
 | Phase 3K role profile content hardening | DRIFT DETECTED |
 | Phase 3K-FIX role taxonomy alignment | PASS / drift identified / Phase 3L blocked |
 | Phase 3K-FIX.1 taxonomy correction plan | PASS / canonical Hermes roles selected / cleanup planned / no real write |
-| Phase 3K-FIX.2 canonical role config and readiness rewrite | implemented / pending local verification |
+| Phase 3K-FIX.2 canonical role config and readiness rewrite | PASS / config-driven canonical roles / no real write |
+| Phase 3K-FIX.3 drift cleanup planning | implemented / pending local verification |
 
 Evidence and policy files:
 
@@ -64,6 +68,7 @@ Evidence and policy files:
 - `docs/verification-phase-3k-fix.md`
 - `docs/taxonomy-correction-plan.md`
 - `docs/verification-phase-3k-fix-2.md`
+- `docs/verification-phase-3k-fix-3.md`
 
 Config and scripts:
 
@@ -72,6 +77,7 @@ Config and scripts:
 - `scripts/plan-restore-real-profiles.sh`
 - `scripts/check-real-deploy-readiness.sh`
 - `scripts/deploy-real-profiles.sh`
+- `scripts/plan-drift-profile-cleanup.sh`
 
 ---
 
@@ -104,13 +110,13 @@ operator
 trial
 ```
 
-The scripts must use `config/profile-roles.txt` for future readiness and deploy checks.
+The readiness checker and guarded deploy script now read `config/profile-roles.txt` for future canonical deploy operations.
 
 ---
 
 ## Canonical Source Root
 
-Phase 3K-FIX.2 creates canonical repo-local role directories:
+Phase 3K-FIX.2 created canonical repo-local role directories:
 
 ```text
 profiles/secretary/
@@ -155,6 +161,43 @@ role=<role>
 ```
 
 These are governed drift artifacts, not user-authored personal profiles. No cleanup has been executed yet.
+
+---
+
+## Drift Cleanup Planning
+
+Phase 3K-FIX.3 adds a read-only planner:
+
+```text
+scripts/plan-drift-profile-cleanup.sh
+```
+
+The planner only inspects the known drift role set:
+
+```text
+default
+developer
+reviewer
+operator
+trial
+```
+
+A directory can be marked as a cleanup candidate only when it is under the real profile root and has a matching `.opc-managed-profile` marker with:
+
+```text
+managed_by=hermes-agent-opc-deploy
+source_root=<repo>/profiles
+role=<role>
+```
+
+The planner must emit:
+
+```text
+REAL_PROFILE_WRITE=false
+REAL_PROFILE_DELETE=false
+```
+
+Phase 3K-FIX.3 does not delete profiles and does not implement a cleanup apply command.
 
 ---
 
@@ -221,12 +264,14 @@ Allowed future restore/reset modes:
 | `remove-opc-managed` | Remove only known OPC-managed files. |
 | `full-reset` | Dangerous. Restore or remove the whole profile tree only with explicit confirmation. |
 
-Phase 3K-FIX.2 does not remove generic skeletons.
+Phase 3K-FIX.3 does not remove generic skeletons.
 
 Future cleanup must only remove directories that are both:
 
 1. In the drift role set: `default`, `developer`, `reviewer`, `operator`, `trial`.
 2. Marked with `.opc-managed-profile` containing `managed_by=hermes-agent-opc-deploy`.
+3. Planned by `scripts/plan-drift-profile-cleanup.sh` as `CLEANUP_CANDIDATE`.
+4. Confirmed by a future guarded cleanup token.
 
 ---
 
@@ -264,17 +309,24 @@ PASS / canonical Hermes roles selected / generic OPC roles marked drift / cleanu
 
 ### Phase 3K-FIX.2 Canonical Role Config and Readiness Rewrite
 
+```text
+Phase 3K-FIX.2 canonical role config and readiness rewrite
+PASS / config-driven canonical roles / readiness READY / deploy dry-run PASS / no real write / drift cleanup still pending
+```
+
+### Phase 3K-FIX.3 Drift Cleanup Planning
+
 Evidence file:
 
 ```text
-docs/verification-phase-3k-fix-2.md
+docs/verification-phase-3k-fix-3.md
 ```
 
 Expected local lock wording after verification:
 
 ```text
-Phase 3K-FIX.2 canonical role config and readiness rewrite
-PASS / config-driven canonical roles / readiness READY / deploy dry-run PASS / no real write / drift cleanup still pending
+Phase 3K-FIX.3 drift cleanup planning
+PASS / read-only cleanup planner implemented / five OPC-managed drift candidates expected / no real delete / no real write
 ```
 
 ---
@@ -294,13 +346,14 @@ Main risks:
 7. Role taxonomy drift can create unnecessary or misleading Hermes profile directories.
 8. Cleanup can remove useful data if ownership markers are ignored.
 
-Required controls before future guarded apply:
+Required controls before future guarded apply or cleanup:
 
 1. `config/profile-roles.txt` must be reviewed.
 2. Readiness checker must emit `READINESS_STATUS=READY`.
 3. Deploy script dry-run must emit `PREFLIGHT_STATUS=PASS`.
-4. Drift cleanup must be planned separately before any canonical apply.
+4. Drift cleanup planner must identify only expected `CLEANUP_CANDIDATE` directories.
 5. Real write must require `--apply --confirm REAL_DEPLOY_PROFILES`.
+6. Real cleanup must require a separate explicit cleanup token.
 
 ---
 
@@ -309,7 +362,7 @@ Required controls before future guarded apply:
 Recommended next phase:
 
 ```text
-Phase 3K-FIX.3 drift cleanup planning
+Phase 3K-FIX.4 guarded drift cleanup implementation
 ```
 
-Phase 3K-FIX.3 should plan how to safely remove only the OPC-managed generic skeletons. It should remain read-only first and must not delete files until an explicit cleanup command and confirmation token exist.
+Phase 3K-FIX.4 should implement a guarded cleanup command that removes only confirmed OPC-managed drift directories. It must not remove canonical roles or unmarked user-authored profiles.
