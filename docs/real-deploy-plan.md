@@ -1,7 +1,7 @@
 # Real Deploy Plan
 
-Status: Phase 3G readiness gate documented  
-Scope: planning, dry-run, guarded apply verification, restore planning, and readiness gating  
+Status: Phase 3H source root completed  
+Scope: planning, dry-run, guarded apply verification, restore planning, readiness gating, and source root completion  
 Real profile write: guarded apply only  
 Restore execution: disabled  
 Target path: `~/.hermes/profiles/`  
@@ -22,6 +22,7 @@ The project has moved from simulation into staged real-deploy preparation:
 - Phase 3E: guarded apply implementation draft, verified using temporary `HOME`
 - Phase 3F: Phase 3E evidence lock and restore planning
 - Phase 3G: real deploy readiness gate and source-root preflight
+- Phase 3H: canonical repo-local profile source root completion
 
 The deployment path must remain simple, personal-use friendly, and lightweight for Hermes Agent. It should help the user operate local profiles safely without becoming a second platform or runtime dependency.
 
@@ -45,7 +46,8 @@ The deployment path must remain simple, personal-use friendly, and lightweight f
 | Phase 3D real deploy guarded apply planning | PASS |
 | Phase 3E guarded apply implementation draft | PASS |
 | Phase 3F guarded apply verification lock / restore planning | PASS |
-| Phase 3G real deploy readiness gate | in verification |
+| Phase 3G real deploy readiness gate | PASS / source root blocked before Phase 3H |
+| Phase 3H profile source root completion | pending local verification |
 | Real `~/.hermes/profiles/` untouched by normal smoke | PASS |
 
 Evidence and policy files:
@@ -56,6 +58,7 @@ Evidence and policy files:
 - `docs/verification-phase-3e.md`
 - `docs/restore-policy.md`
 - `docs/verification-phase-3g.md`
+- `docs/verification-phase-3h.md`
 
 Read-only planning / verification scripts:
 
@@ -67,11 +70,15 @@ Guarded apply script:
 
 - `scripts/deploy-real-profiles.sh`
 
+Canonical guarded deploy source root:
+
+- `profiles/`
+
 ---
 
 ## Phase 3 Boundary
 
-Phase 3 may add repo-local planning, dry-run, verification, guarded apply, restore planning, and readiness-gate files.
+Phase 3 may add repo-local planning, dry-run, verification, guarded apply, restore planning, readiness-gate, and source-root files.
 
 The only implemented write-capable path is guarded apply in `scripts/deploy-real-profiles.sh`.
 
@@ -105,7 +112,7 @@ A guarded real deploy may create or update role-based profile directories under:
 - `~/.hermes/profiles/operator/`
 - `~/.hermes/profiles/trial/`
 
-These role names follow the current simulation baseline and should not be expanded unless there is a clear personal-use need.
+These role names follow the Phase 3 real-deploy baseline and should not be expanded unless there is a clear personal-use need.
 
 Future destination tree:
 
@@ -128,7 +135,11 @@ A real deploy requires one complete source root containing all required role dir
 - `operator/`
 - `trial/`
 
-Candidate source roots:
+Canonical source root after Phase 3H:
+
+    profiles/
+
+Candidate source roots remain:
 
 - `profiles/`
 - `templates/`
@@ -141,68 +152,62 @@ A caller may also pass an explicit source root:
 
 The selected source root must be printed before real write.
 
-Phase 3G adds a read-only readiness checker:
+Phase 3G added a read-only readiness checker:
 
     scripts/check-real-deploy-readiness.sh
 
 If the checker reports `READINESS_STATUS=BLOCKED`, real apply must not proceed.
 
+After Phase 3H, expected source-root result is:
+
+    SOURCE_STATUS=complete
+    SOURCE_ROOT=<repo>/profiles
+
+If destination ownership and restore readiness are safe, expected overall result is:
+
+    READINESS_STATUS=READY
+
 ---
 
-## Phase 3A Planning Script
+## Phase Locks
+
+### Phase 3A Planning Script
 
 `scripts/plan-real-deploy.sh` is read-only.
-
-It prints planned roles, candidate source roots, backup policy, reset policy, and `REAL_PROFILE_WRITE=false`.
 
 Lock wording:
 
     Phase 3A real deploy read-only planning
     PASS / docs + plan script verified / real ~/.hermes/profiles untouched / no real write
 
----
-
-## Phase 3B Dry-run Script
+### Phase 3B Dry-run Script
 
 `scripts/deploy-real-profiles.sh` began as a dry-run-only script in Phase 3B.
-
-Verified dry-run output included:
-
-- `Status: PHASE 3B DRY-RUN ONLY`
-- `Real deploy: DISABLED`
-- `PASS: real deploy dry-run completed`
-- `REAL_PROFILE_WRITE=false`
 
 Lock wording:
 
     Phase 3B real deploy dry-run implementation
     PASS / dry-run only / write modes rejected / real ~/.hermes/profiles untouched / executable bit fixed
 
----
+### Phase 3C Dry-run Verification Lock
 
-## Phase 3D Guarded Apply Contract
+`docs/verification-phase-3c.md` locks Phase 3A and Phase 3B evidence.
 
-`docs/guarded-apply-contract.md` defines the contract for guarded real deployment.
+Lock wording:
 
-It documents:
+    Phase 3C dry-run verification lock / docs alignment
+    PASS / Phase 3A+3B evidence locked / real ~/.hermes/profiles untouched / no real write
 
-- apply confirmation token
-- required preflight checks
-- deterministic source root selection
-- backup-before-write contract
-- managed marker and ownership policy
-- copy contract
-- rollback and restore policy
-- Phase 3E acceptance gate
+### Phase 3D Guarded Apply Contract
 
-Recommended lock wording:
+`docs/guarded-apply-contract.md` defines the guarded real deployment contract.
+
+Lock wording:
 
     Phase 3D real deploy guarded apply planning
     PASS / guarded apply contract documented / no real write / Phase 3E gate defined
 
----
-
-## Phase 3E Guarded Apply Implementation
+### Phase 3E Guarded Apply Implementation
 
 `scripts/deploy-real-profiles.sh` now implements the guarded apply draft.
 
@@ -210,28 +215,18 @@ Default mode remains dry-run:
 
     ./scripts/deploy-real-profiles.sh
 
-Dry-run must emit:
-
-    REAL_PROFILE_WRITE=false
-
 Real write requires explicit guarded apply:
 
     ./scripts/deploy-real-profiles.sh --apply --confirm REAL_DEPLOY_PROFILES
 
 Phase 3E was verified against temporary `HOME`, not the user's real `~/.hermes/profiles/`.
 
-Locked evidence is recorded in:
-
-    docs/verification-phase-3e.md
-
-Recommended lock wording:
+Lock wording:
 
     Phase 3E guarded apply implementation draft
     PASS / dry-run default / guarded apply token enforced / backup-before-write implemented / managed marker implemented / temp HOME apply verified / real ~/.hermes untouched by normal smoke
 
----
-
-## Phase 3F Restore Planning
+### Phase 3F Restore Planning
 
 Phase 3F adds restore planning without implementing real restore.
 
@@ -243,60 +238,55 @@ Read-only planner:
 
     scripts/plan-restore-real-profiles.sh
 
-The restore planner may list backup candidates and inspect a selected backup path, but must not create, copy, delete, or restore files.
-
-Restore planner output must include:
-
-- `Status: PHASE 3F RESTORE PLANNING ONLY`
-- `Real restore: DISABLED`
-- `PASS: restore planning completed in read-only mode`
-- `REAL_PROFILE_WRITE=false`
-
-Recommended lock wording:
+Lock wording:
 
     Phase 3F guarded apply verification lock / restore planning
     PASS / Phase 3E evidence locked / restore policy documented / restore planner read-only / no real restore / executable bit fixed
 
----
-
-## Phase 3G Readiness Gate
+### Phase 3G Readiness Gate
 
 Phase 3G adds the final read-only readiness gate before any real user-HOME deployment.
-
-Documentation:
-
-    docs/verification-phase-3g.md
 
 Readiness checker:
 
     scripts/check-real-deploy-readiness.sh
 
-The checker verifies:
+Phase 3G was verified as implemented and read-only. Before Phase 3H, it correctly blocked real apply because no complete source root existed.
 
-1. whether a complete source root exists
-2. whether required destination role directories are safe or managed
-3. whether restore planning files are present
-4. whether real apply should remain blocked or may proceed to Phase 3H
-
-Required output markers:
-
-- `Status: PHASE 3G REAL DEPLOY READINESS GATE`
-- `REAL_PROFILE_WRITE=false`
-- `REAL_RESTORE_WRITE=false`
-- `SOURCE_STATUS=complete` or `SOURCE_STATUS=blocked`
-- `DESTINATION_STATUS=pass` or `DESTINATION_STATUS=blocked`
-- `RESTORE_PLANNER_STATUS=pass` or `RESTORE_PLANNER_STATUS=blocked`
-- `READINESS_STATUS=READY` or `READINESS_STATUS=BLOCKED`
-
-Recommended lock wording if a complete source root exists:
+Lock wording:
 
     Phase 3G real deploy readiness gate
-    PASS / source root readiness checked / destination ownership checked / restore readiness checked / no real write
+    PASS / readiness gate implemented / source root blocked / destination ownership passed / restore planner passed / no real write / executable bit fixed
 
-Recommended lock wording if no complete source root exists yet:
+### Phase 3H Profile Source Root Completion
 
-    Phase 3G real deploy readiness gate
-    PASS / readiness gate implemented / real apply blocked until complete source root exists / no real write
+Phase 3H completes the canonical repo-local source root:
+
+    profiles/
+
+Required guarded deploy role directories now exist:
+
+    profiles/default/
+    profiles/developer/
+    profiles/reviewer/
+    profiles/operator/
+    profiles/trial/
+
+Evidence file:
+
+    docs/verification-phase-3h.md
+
+Phase 3H does not perform a real apply.
+
+Recommended lock wording if readiness becomes READY:
+
+    Phase 3H profile source root completion
+    PASS / canonical profiles source root complete / readiness READY / no real write
+
+Recommended lock wording if destination ownership blocks readiness:
+
+    Phase 3H profile source root completion
+    PASS / canonical profiles source root complete / readiness blocked by destination ownership / no real write
 
 ---
 
@@ -364,14 +354,16 @@ Required controls before real user-HOME deployment:
 5. Phase 3D guarded apply contract remains PASS.
 6. Phase 3E guarded apply remains PASS.
 7. Phase 3F restore planning remains PASS.
-8. Phase 3G readiness gate reports `READINESS_STATUS=READY`.
-9. Real `~/.hermes/profiles/` is inspected before write.
-10. The selected source root is printed.
-11. The destination root is printed.
-12. The backup path is printed.
-13. Dry-run remains the default behavior.
-14. Real write requires explicit confirmation.
-15. Existing unmarked profile directories are protected.
+8. Phase 3G readiness gate remains PASS.
+9. Phase 3H source root is complete.
+10. Readiness gate reports `READINESS_STATUS=READY`.
+11. Real `~/.hermes/profiles/` is inspected before write.
+12. The selected source root is printed.
+13. The destination root is printed.
+14. The backup path is printed.
+15. Dry-run remains the default behavior.
+16. Real write requires explicit confirmation.
+17. Existing unmarked profile directories are protected.
 
 ---
 
@@ -397,42 +389,36 @@ Prefer:
 - local timestamped backups
 - explicit dry-run output
 - simple copy/restore semantics
-- human-reviewed promotion from simulation to real deploy
+- human-reviewed promotion from source root to real deploy
 
 The deployment layer should help the user operate Hermes Agent safely. It should not become a second platform that Hermes Agent must depend on.
 
 ---
 
-## Phase 3G Acceptance Criteria
+## Phase 3H Acceptance Criteria
 
-Phase 3G is PASS only if:
+Phase 3H is PASS only if:
 
-1. `docs/verification-phase-3g.md` exists.
-2. `scripts/check-real-deploy-readiness.sh` exists.
-3. Readiness checker is executable.
-4. Readiness checker is read-only.
-5. Readiness checker emits `REAL_PROFILE_WRITE=false`.
-6. Readiness checker emits `REAL_RESTORE_WRITE=false`.
-7. Readiness checker reports source status.
-8. Readiness checker reports destination ownership status.
-9. Readiness checker reports restore planner status.
-10. If the repo lacks a complete source root, readiness is explicitly blocked.
-11. Deploy script dry-run still works.
-12. Deploy script still rejects incomplete apply authorization.
+1. `profiles/default/` exists.
+2. `profiles/developer/` exists.
+3. `profiles/reviewer/` exists.
+4. `profiles/operator/` exists.
+5. `profiles/trial/` exists.
+6. `profiles/README.md` documents the Phase 3H guarded deploy role set.
+7. `docs/verification-phase-3h.md` exists.
+8. Readiness checker reports `SOURCE_STATUS=complete`.
+9. Readiness checker reports `READINESS_STATUS=READY`, unless destination ownership blocks real apply.
+10. Deploy script default dry-run still reports `REAL_PROFILE_WRITE=false`.
+11. Deploy script still rejects incomplete apply authorization.
+12. No real deploy is performed.
 13. Git working tree is clean after verification.
 
 ---
 
 ## Next Phase
 
-The next phase depends on readiness result.
+If readiness becomes READY:
 
-If readiness is blocked because no complete source root exists:
+    Phase 3I first real guarded apply planning / operator confirmation
 
-    Phase 3H profile source root completion
-
-If readiness is ready:
-
-    Phase 3H first real guarded apply
-
-Either path must keep real deployment explicit and human-triggered.
+Phase 3I should still begin with explicit dry-run review before any real apply command is executed.
