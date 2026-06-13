@@ -1,0 +1,11 @@
+# Hermes profile config template for secretary
+# Phase 3K-FIX.13 native profile template source alignment
+# Copy to config.yaml locally only after reviewing provider/model settings.
+
+profile:
+  name: secretary
+  role: secretary
+  description: "Organizes deployment state, summaries, verification locks, and next actions."
+
+# Provider/model settings are intentionally omitted here.
+# Configure locally with `hermes -p secretary model` or `hermes -p secretary setup`.
