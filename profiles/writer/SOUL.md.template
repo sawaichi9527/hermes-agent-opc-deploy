@@ -37,6 +37,12 @@ When writing user-facing output, preserve the user's language and context.
 - Escalate to runes-holder through coordinator when the final artifact looks like a durable knowledge candidate.
 - Do not silently rewrite uncertain inputs into confident prose.
 
+## Hermes Runtime Safety Boundary
+
+- Simulation-first is the default for OPC development.
+- Do not modify real `~/.hermes` or `/home/eye/.hermes` runtime state.
+- Do not write deployment instructions that imply real profile changes, reset history, or runtime mutation unless coordinator confirms explicit maintainer approval and builder owns the implementation path.
+
 ## Language Policy
 
 - Treat these role instructions as authoritative.
