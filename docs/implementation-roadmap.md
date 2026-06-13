@@ -322,23 +322,84 @@ parallel multi-agent execution
 
 ## M6 - Pre-production profile cleanup
 
-Status: future / requires explicit approval.
+Status: implemented / planning docs and read-only inspector added / pending local verification.
 
-Before real long-term use, backup and selectively clean unneeded native memory, sessions, Kanban state, or history.
+M6 is a pre-production maintenance planning stage. It creates the safety procedure and inspection tooling for future runtime cleanup, but it does not clean the real runtime by itself.
 
-Must preserve:
+Deliverables:
 
 ```text
-.env
-config.yaml
-SOUL.md
-profile identity
-provider configuration
-Lark token/config
-any profile distribution metadata that should remain
+docs/pre-production-profile-maintenance.md
+docs/pre-production-cleanup-dry-run.md
+scripts/inspect-profile-runtime-state.sh
 ```
 
-No cleanup command should run without explicit maintainer approval.
+M6.1 Pre-production Runtime Inventory:
+
+```text
+Added scripts/inspect-profile-runtime-state.sh.
+The script is read-only and reports metadata only.
+It does not print .env contents, token values, session contents, native memory contents, database contents, or cache contents.
+```
+
+M6.2 Backup Policy:
+
+```text
+Documented required pre-cleanup backup policy in docs/pre-production-profile-maintenance.md.
+Backups must remain outside this repository and must not be copied into git, docs, profiles, or Runes Wiki candidates.
+```
+
+M6.3 Cleanup Classification:
+
+```text
+Documented preserve / cleanup-candidate-after-backup / defer classifications.
+Preserve identity/config/secrets/profile files by default.
+Defer unknown state, unclear native memory, unknown databases, and secret-bearing/private runtime data.
+```
+
+M6.4 Dry-run Cleanup Plan:
+
+```text
+Added docs/pre-production-cleanup-dry-run.md.
+The dry-run plan is a report template, not an executable cleanup.
+```
+
+M6.5 Manual Apply Procedure:
+
+```text
+Manual apply remains deliberately non-scripted in M6.
+Real cleanup requires reviewed inventory, external backup, exact target list, explicit maintainer approval, reviewed commands, and rollback path.
+```
+
+Default M6 verification:
+
+```bash
+bash scripts/verify-repo-layout.sh
+bash scripts/verify-profile-templates.sh
+bash -n scripts/inspect-profile-runtime-state.sh
+git status --short
+```
+
+Optional runtime inventory, only when the maintainer wants read-only inspection:
+
+```bash
+bash scripts/inspect-profile-runtime-state.sh
+```
+
+Not part of M6 implementation:
+
+```text
+real ~/.hermes cleanup
+real profile SOUL.md overwrite
+profile install/update
+gateway start/restart
+native memory deletion
+session deletion
+Kanban deletion
+Lark production cutover
+automatic cleanup apply script
+parallel multi-agent execution
+```
 
 ## Archived material
 
