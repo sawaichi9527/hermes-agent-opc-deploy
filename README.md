@@ -46,6 +46,32 @@ OPC is treated as a **usage pattern** over official Hermes profiles:
 
 `hermes-runes-md-wiki` is optional. If it is absent or not called by `runes-holder`, Hermes Agent one-agent or multi-profile operation must continue normally.
 
+## Development safety rule
+
+Do not deploy templates into the real Hermes profile directory until the maintainer explicitly approves deployment.
+
+During repository development, use documentation and templates first. When file-level testing is needed, use the repository-local simulation path:
+
+```text
+~/workspace/hermes-agent-opc-deploy/simulate_env/.hermes/
+```
+
+The real Hermes home remains untouched during design work:
+
+```text
+~/.hermes/
+~/.hermes/profiles/
+```
+
+Future deployment scripts must support both states:
+
+- OPC profiles are not deployed yet.
+- OPC profiles already exist and may contain local changes.
+
+Profile initialization should prefer official Hermes Agent commands first, then apply small customizations after the official files are created.
+
+See: [`docs/simulation-and-deploy-policy.md`](docs/simulation-and-deploy-policy.md)
+
 ## Local checkout
 
 Expected local path:
