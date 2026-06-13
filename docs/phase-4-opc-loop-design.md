@@ -1,6 +1,6 @@
 # Phase 4 OPC loop design review
 
-This document records Phase 4.1 through Phase 4.7 for the maintainer's personal Hermes Agent OPC deployment.
+This document records Phase 4.1 through Phase 4.8 for the maintainer's personal Hermes Agent OPC deployment.
 
 Phase 4 starts from the Phase 3 local runtime baseline and deliberately avoids building a separate orchestration system.
 
@@ -193,3 +193,47 @@ PASS / documented / manual-first / official-primitives-first / no enterprise com
 ```
 
 Future work may evaluate official Hermes Kanban or sessions only after a clear personal-use need is proven.
+
+## Phase 4.8 OPC design verification lock
+
+Phase 4.8 records the maintainer's local verification of the Phase 4.1-4.7 documentation baseline.
+
+Locked result:
+
+```text
+Phase 4.8 OPC Design Verification Lock
+PASS / local verification completed / documents present / repository layout still valid / no runtime functionality introduced
+```
+
+Maintainer verification confirmed:
+
+```text
+git pull: PASS / latest Phase 4 documentation commits pulled
+docs/phase-4-opc-loop-design.md: PASS / exists and reviewed
+docs/opc-manual-runbook.md: PASS / exists and reviewed
+docs/opc-evidence-policy.md: PASS / exists and reviewed
+manual file existence checks: PASS
+repository layout: PASS
+forbidden tracked runtime/secrets check: PASS
+working tree: clean implied
+```
+
+Scope clarification:
+
+```text
+This lock confirms that Phase 4.1-4.7 is locally documented and repository-safe.
+It does not add new scripts.
+It does not run Hermes runtime requests.
+It does not mutate profiles.
+It does not create alias wrappers.
+It does not create Kanban, sessions, memory, telemetry, queue, router, or daemon behavior.
+```
+
+Current minor follow-up:
+
+```text
+The three Phase 4 documents exist and are manually verified.
+The repository layout check remains PASS.
+The layout script does not yet explicitly track these three Phase 4 documents because earlier connector updates to the security-heavy layout script were blocked.
+This does not block Phase 4.8, but may be cleaned up later with a local maintainer patch if desired.
+```
