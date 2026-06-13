@@ -111,16 +111,53 @@ SOUL.md: exists
 
 Phase 3N.2 did not prove a built-in non-mutating CLI selector for `secretary`. At this point, the already verified Phase 3M path using explicit provider/model overrides is the safe single-request runtime path.
 
-## Follow-up
-
-Phase 3N should not use `hermes profile use secretary` unless the maintainer explicitly approves sticky default mutation.
-
-Possible future options:
+## Phase 3N.3 invocation decision lock
 
 ```text
-A. Accept explicit --provider lmstudio + --model MODEL override as the safe non-mutating runtime path.
-B. Explicitly approve a one-time alias wrapper creation test, then inspect the generated wrapper before using it.
-C. Defer profile-bound single-request execution until Hermes exposes a non-mutating --profile-like selector.
+Phase 3N.3 Invocation Decision Lock
+Status: PASS
+Result: explicit provider/model override accepted as the safe current-stage non-mutating runtime path
+Boundary: decision only / no model request / no profile mutation / no daemon / no concurrency / no load test
 ```
 
-Recommended next step is Phase 3N.3 decision lock: either accept explicit provider/model override as sufficient for this personal deployment stage, or intentionally test alias wrapper creation as a local mutation with maintainer approval.
+Decision:
+
+```text
+Accept explicit --provider lmstudio + --model MODEL override as the safe non-mutating runtime path for this personal deployment stage.
+Defer alias wrapper creation because it mutates the local filesystem.
+Defer sticky default profile switching because `hermes profile use secretary` mutates the default profile state.
+Defer true profile-bound one-shot execution until Hermes exposes a non-mutating --profile-like selector or the maintainer explicitly approves a local mutation test.
+```
+
+Accepted current-stage runtime pattern:
+
+```bash
+hermes -z "..." \
+  --provider lmstudio \
+  --model qwen3.6-35b-a3b-uncensored-heretic-native-mtp-preserved@q5_k_m
+```
+
+Rationale:
+
+```text
+Phase 3M already verified this path with an exact marker response.
+The command does not require changing the sticky default profile.
+The command does not require creating profile alias wrapper scripts.
+The command stays single-request and explicit.
+```
+
+This decision does not claim that the request is profile-bound to `secretary`. It only locks the safest currently proven non-mutating Hermes runtime invocation path.
+
+## Follow-up
+
+Phase 3N is now locked for profile invocation behavior discovery and current-stage invocation decision purposes.
+
+Future work may revisit profile-bound execution if one of the following becomes acceptable:
+
+```text
+Hermes adds a non-mutating --profile or -p selector.
+The maintainer explicitly approves a controlled alias wrapper creation/removal test.
+The maintainer explicitly approves temporary sticky default mutation with before/after verification.
+```
+
+Do not run `hermes profile use secretary` unless the maintainer explicitly approves sticky default mutation.
