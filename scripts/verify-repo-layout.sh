@@ -44,6 +44,7 @@ printf '== Required mainline documentation ==\n'
 required_docs=(
   "README.md"
   "docs/implementation-roadmap.md"
+  "docs/roadmap-m8-status-sync.md"
   "docs/phase-6-hermes-native-profile-alignment.md"
   "docs/opc-profile-set-design.md"
   "docs/local-compute-policy.md"
