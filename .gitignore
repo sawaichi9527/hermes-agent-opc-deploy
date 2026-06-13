@@ -19,6 +19,9 @@ state/
 *.db-shm
 *.db-wal
 
+# Repository-local simulation runtime
+simulate_env/
+
 # Python / local tooling
 __pycache__/
 *.py[cod]
