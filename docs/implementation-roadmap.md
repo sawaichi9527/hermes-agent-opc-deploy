@@ -405,6 +405,74 @@ automatic cleanup apply script
 parallel multi-agent execution
 ```
 
+## M7 - Pre-production profile deployment decision planning
+
+Status: implemented / deployment decision plan added / dry-run diff tooling added / pending local verification.
+
+M7 prepares the decision path for applying repository `SOUL.md.template` files to real Hermes runtime profile `SOUL.md` files. M7 does not apply profile changes by itself.
+
+Deliverables:
+
+```text
+docs/pre-production-profile-deployment.md
+docs/profile-deployment-dry-run.md
+scripts/dry-run-profile-deployment.sh
+```
+
+M7.1 Deployment decision matrix:
+
+```text
+Added docs/pre-production-profile-deployment.md.
+Defined apply-now / defer / skip / partial-manual-merge decisions for each profile.
+Each real target profile requires reviewed diff, backup, explicit approval, and rollback path.
+```
+
+M7.2 Backup requirement:
+
+```text
+Documented backup requirement before any real profile overwrite.
+Backup must exist outside git.
+Minimum backup scope includes SOUL.md, NOTES.md, .env, config.yaml, and profile.yaml for each target profile.
+```
+
+M7.3 Template-vs-runtime dry-run diff:
+
+```text
+Added scripts/dry-run-profile-deployment.sh.
+Default mode prints metadata and comparison status only.
+SHOW_DIFF=1 must be set explicitly to print unified diffs.
+The script does not copy, overwrite, delete, edit, start, stop, restart, or clean anything.
+```
+
+M7.4 Manual apply plan:
+
+```text
+Manual apply remains deliberately non-scripted in M7.
+A future apply requires reviewed runtime inventory, external backup, reviewed diff, exact target list, explicit maintainer approval, reviewed commands, and rollback path.
+```
+
+M7.5 Post-apply verification plan:
+
+```text
+Documented post-apply checks such as hermes profile show <profile>.
+Secretary gateway status and Lark cutover remain separate explicit maintainer-approved actions.
+```
+
+Not part of M7 implementation:
+
+```text
+real ~/.hermes profile overwrite
+profile install/update
+gateway start/restart
+native memory deletion
+session deletion
+Kanban deletion
+Lark production cutover
+automatic apply script
+automatic backup script
+parallel multi-agent execution
+```
+
 ## Archived material
 
 Earlier Phase 3/4/5 validation and simulation documents are historical evidence only. They should live under:
