@@ -106,7 +106,7 @@ The runbook is the maintainer-facing reference for safe local use.
 Phase 3S adds:
 
 ```text
-scripts/verify-runtime-baseline.sh
+scripts/check-runtime-baseline.sh
 ```
 
 It runs checks sequentially only:
