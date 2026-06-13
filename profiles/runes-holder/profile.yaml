@@ -1,0 +1,8 @@
+name: runes-holder
+role: runes-holder
+status: phase-3k-fix-13-native-template-source
+description: "Preserves governed memory, source-of-truth boundaries, drift prevention, and long-term profile continuity."
+description_auto: false
+opc_managed: true
+secret_policy: no-secrets-in-repo
+runtime_status: template-source-only
