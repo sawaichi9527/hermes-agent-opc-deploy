@@ -83,7 +83,7 @@ Governed writes to `hermes-runes-md-wiki/wiki` require secretary-mediated user c
 
 ```text
 SOUL.md templates:
-- secretary: Traditional Chinese / English mixed.
+- secretary: Traditional Chinese-first main body.
 - runes-holder: Traditional Chinese / English mixed.
 - coordinator / researcher / writer / builder: English-first role definitions.
 
@@ -247,9 +247,72 @@ Lark production cutover
 
 ## M5 - SOUL.md behavior tuning
 
-Status: future.
+Status: implemented / M5.1-M5.4 complete / pending local verification.
 
-After M4 passes, tune profile behavior and user-facing style. This should be based on actual use, especially secretary/coordinator/runes-holder handoff quality.
+Deliverables:
+
+```text
+docs/soul-template-convention.md
+profiles/secretary/SOUL.md.template
+profiles/coordinator/SOUL.md.template
+profiles/researcher/SOUL.md.template
+profiles/writer/SOUL.md.template
+profiles/builder/SOUL.md.template
+profiles/runes-holder/SOUL.md.template
+```
+
+M5.1 SOUL Template Convention:
+
+```text
+Added docs/soul-template-convention.md.
+Defined this repository's local SOUL.md section order, language convention, naming convention, context/compression policy, Runes boundary convention, and maintenance-notes convention.
+```
+
+M5.2 secretary tuning:
+
+```text
+Reworked secretary into Traditional Chinese-first main body.
+Added neutral user naming policy.
+Added intelligence secretary behavior.
+Added context/compression policy for Lark-facing long conversations.
+Added maintenance note M5-secretary-intelligence-v2 / 2026-06-14.
+```
+
+M5.3 coordinator / researcher / writer / builder tuning:
+
+```text
+Aligned templates with the SOUL convention.
+Added role-specific context/compression policies.
+Improved handoff clarity, evidence/source handling, source-aware writing, and bounded implementation behavior.
+Kept runtime handoff Traditional Chinese-first.
+```
+
+M5.4 runes-holder format alignment:
+
+```text
+Aligned runes-holder template format with the SOUL convention.
+Semantic meaning is intended to remain frozen.
+Only hygiene adjustment: remove hard-coded personal naming from the language-policy description.
+```
+
+Pending verification:
+
+```bash
+bash scripts/verify-repo-layout.sh
+bash scripts/verify-profile-templates.sh
+git status --short
+```
+
+Not part of M5:
+
+```text
+real ~/.hermes profile overwrite
+profile install/update
+gateway start/restart
+native memory/session/Kanban cleanup
+Lark cutover
+parallel multi-agent execution
+```
 
 ## M6 - Pre-production profile cleanup
 
