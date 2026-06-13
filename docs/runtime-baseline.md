@@ -140,6 +140,43 @@ Phase 3O-3T Local Runtime Baseline
 PASS / consolidated / documented / sequential smoke available / no enterprise complexity introduced
 ```
 
+## Phase 3T.1 final runtime baseline verification lock
+
+Phase 3T.1 records the maintainer's local verification of the Phase 3O-3T baseline after pulling the runtime baseline documentation and smoke scripts.
+
+Locked result:
+
+```text
+Phase 3T.1 Final Runtime Baseline Verification Lock
+PASS / local verification completed / sequential baseline check passed / no enterprise complexity introduced
+```
+
+Maintainer verification confirmed:
+
+```text
+git pull: PASS / latest runtime baseline commits pulled
+repository layout: PASS
+runtime docs tracked: PASS
+runtime smoke scripts tracked: PASS
+forbidden tracked runtime/secrets check: PASS
+exact marker Hermes oneshot smoke: PASS
+secretary-like bounded prompt smoke: PASS / non-empty
+runtime baseline bundle: PASS
+working tree: clean implied
+```
+
+The runtime baseline bundle verified, sequentially:
+
+```text
+repo layout: PASS
+Hermes runtime readiness: PASS / six profiles / warnings=0
+local provider sequential smoke: PASS / six profiles / model_count=8
+Hermes oneshot: PASS / exact marker returned
+runtime baseline check: PASS
+```
+
+This lock does not add new runtime features. It only records that the current documentation and scripts are locally verified and suitable as the maintainer's personal-use local Hermes runtime baseline.
+
 ## Non-goals
 
 Do not use this phase to introduce:
