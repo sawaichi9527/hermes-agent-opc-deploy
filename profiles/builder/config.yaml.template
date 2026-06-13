@@ -1,0 +1,11 @@
+# Hermes profile config template for builder
+# Phase 3K-FIX.13 native profile template source alignment
+# Copy to config.yaml locally only after reviewing provider/model settings.
+
+profile:
+  name: builder
+  role: builder
+  description: "Implements bounded, smoke-testable script and template changes with safety boundaries."
+
+# Provider/model settings are intentionally omitted here.
+# Configure locally with `hermes -p builder model` or `hermes -p builder setup`.
