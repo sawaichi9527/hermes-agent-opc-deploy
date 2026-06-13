@@ -63,6 +63,7 @@ required_docs=(
   "docs/phase-4-13-sessions-readonly-probe.md"
   "docs/phase-4-14-memory-status-probe.md"
   "docs/phase-4-15-final-consolidation.md"
+  "docs/phase-5-simulation-trial.md"
   "docs/maintenance-policy.md"
   "docs/migration.md"
   "docs/model-routing-policy.md"
