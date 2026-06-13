@@ -46,6 +46,7 @@ required_docs=(
   "docs/implementation-roadmap.md"
   "docs/roadmap-m8-status-sync.md"
   "docs/secretary-only-behavior-smoke.md"
+  "docs/verification-m9-secretary-smoke-partial.md"
   "docs/phase-6-hermes-native-profile-alignment.md"
   "docs/opc-profile-set-design.md"
   "docs/local-compute-policy.md"
@@ -101,6 +102,7 @@ required_scripts=(
   "scripts/backup-hermes-profiles.sh"
   "scripts/apply-secretary-soul-template.sh"
   "scripts/smoke-secretary-profile-local.sh"
+  "scripts/diagnose-secretary-local-smoke.sh"
 )
 for path in "${required_scripts[@]}"; do
   check_file "$path"
