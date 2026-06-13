@@ -53,6 +53,29 @@ For other users or forks, `secretary` may be treated as an optional extension. F
 
 `hermes-runes-md-wiki` is optional. If it is absent or not called by `runes-holder`, Hermes Agent one-agent or multi-profile operation must continue normally.
 
+## OPC gap tracking
+
+This repository now explicitly tracks the gap between:
+
+```text
+original OPC concept documents
+vs.
+current Hermes official profiles + personal-use deployment baseline
+```
+
+See:
+
+- [`docs/opc-gap-analysis.md`](docs/opc-gap-analysis.md)
+- [`docs/profile-interaction-loop.md`](docs/profile-interaction-loop.md)
+
+Current working assumption:
+
+```text
+profiles alone provide role separation;
+Kanban/delegation/goals may provide the stateful office-loop primitives;
+this repo should evaluate official Hermes primitives before adding custom workflow logic.
+```
+
 ## Model routing position
 
 The current inference baseline is local-first:
