@@ -1,11 +1,11 @@
 # Real Deploy Plan
 
-Status: Phase 3I operator confirmation documented  
-Scope: planning, dry-run, guarded apply verification, restore planning, readiness gating, source root completion, and operator confirmation  
-Real profile write: guarded apply only  
+Status: Phase 3J first real guarded apply locked  
+Scope: planning, dry-run, guarded apply, verification, restore planning, readiness gating, source-root completion, operator confirmation, and first real guarded apply  
+Real profile write: executed only through guarded apply  
 Restore execution: disabled  
 Target path: `~/.hermes/profiles/`  
-Current guarantee: normal smoke, readiness checks, restore planning, and Phase 3I planning do not touch real `~/.hermes/profiles/`
+Current real apply result: five managed role profile directories deployed
 
 ---
 
@@ -13,7 +13,7 @@ Current guarantee: normal smoke, readiness checks, restore planning, and Phase 3
 
 This plan defines the controlled real deployment path for OPC Hermes Agent profiles.
 
-The project has moved from simulation into staged real-deploy preparation:
+The project has moved from simulation into staged real-deploy preparation and then through the first guarded real apply:
 
 - Phase 3A: read-only real deploy planning
 - Phase 3B: dry-run deploy script
@@ -24,6 +24,7 @@ The project has moved from simulation into staged real-deploy preparation:
 - Phase 3G: real deploy readiness gate and source-root preflight
 - Phase 3H: canonical repo-local profile source root completion
 - Phase 3I: first real guarded apply planning / operator confirmation
+- Phase 3J: first real guarded apply verification lock
 
 The deployment path must remain simple, personal-use friendly, and lightweight for Hermes Agent. It should help the user operate local profiles safely without becoming a second platform or runtime dependency.
 
@@ -49,8 +50,8 @@ The deployment path must remain simple, personal-use friendly, and lightweight f
 | Phase 3F guarded apply verification lock / restore planning | PASS |
 | Phase 3G real deploy readiness gate | PASS / source root blocked before Phase 3H |
 | Phase 3H profile source root completion | PASS / readiness READY |
-| Phase 3I first real guarded apply planning / operator confirmation | pending local verification |
-| Real `~/.hermes/profiles/` untouched by normal smoke | PASS |
+| Phase 3I first real guarded apply planning / operator confirmation | PASS / no real write |
+| Phase 3J first real guarded apply | PASS / real write executed |
 
 Evidence and policy files:
 
@@ -62,6 +63,7 @@ Evidence and policy files:
 - `docs/verification-phase-3g.md`
 - `docs/verification-phase-3h.md`
 - `docs/verification-phase-3i.md`
+- `docs/verification-phase-3j.md`
 
 Read-only planning / verification scripts:
 
@@ -77,11 +79,13 @@ Canonical guarded deploy source root:
 
 - `profiles/`
 
+Real deployment target after Phase 3J:
+
+- `~/.hermes/profiles/`
+
 ---
 
 ## Phase 3 Boundary
-
-Phase 3 may add repo-local planning, dry-run, verification, guarded apply, restore planning, readiness-gate, source-root, and operator-confirmation files.
 
 The only implemented write-capable path is guarded apply in `scripts/deploy-real-profiles.sh`.
 
@@ -93,7 +97,7 @@ Normal smoke, planning, restore planning, and readiness checks must remain read-
 
     REAL_PROFILE_WRITE=false
 
-Still prohibited in normal planning or smoke paths:
+Still prohibited outside explicit guarded apply:
 
 - creating directories under real `~/.hermes/profiles/`
 - copying files into real `~/.hermes/profiles/`
@@ -105,9 +109,9 @@ Still prohibited in normal planning or smoke paths:
 
 ---
 
-## Future Real Deploy Target
+## Real Deploy Target
 
-A guarded real deploy may create or update role-based profile directories under:
+Guarded real deploy manages role-based profile directories under:
 
 - `~/.hermes/profiles/default/`
 - `~/.hermes/profiles/developer/`
@@ -117,7 +121,7 @@ A guarded real deploy may create or update role-based profile directories under:
 
 These role names follow the Phase 3 real-deploy baseline and should not be expanded unless there is a clear personal-use need.
 
-Future destination tree:
+Real destination tree after Phase 3J:
 
     ~/.hermes/profiles/
       default/
@@ -125,6 +129,8 @@ Future destination tree:
       reviewer/
       operator/
       trial/
+
+Each deployed role directory contains an `.opc-managed-profile` marker.
 
 ---
 
@@ -142,185 +148,46 @@ Canonical source root after Phase 3H:
 
     profiles/
 
-Candidate source roots remain:
-
-- `profiles/`
-- `templates/`
-- `simulation/profiles/`
-- `simulated-home/.hermes/profiles/`
-
-A caller may also pass an explicit source root:
-
-    --source-root PATH
-
-The selected source root must be printed before real write.
-
-Phase 3G added a read-only readiness checker:
-
-    scripts/check-real-deploy-readiness.sh
-
-If the checker reports `READINESS_STATUS=BLOCKED`, real apply must not proceed.
-
-After Phase 3H local verification, the source-root result is:
+After Phase 3H and Phase 3J verification:
 
     SOURCE_STATUS=complete
-    SOURCE_ROOT=<repo>/profiles
-
-With destination ownership and restore readiness safe, the overall result is:
-
+    SOURCE_ROOT=/home/eye/workspace/hermes-agent-opc-deploy/profiles
     READINESS_STATUS=READY
+
+The current source root content is intentionally minimal. It contains deployable role directory skeletons using `.gitkeep`. Phase 3J proves the guarded apply path, not final role-specific profile content completeness.
 
 ---
 
-## Operator Confirmation Gate
+## First Real Guarded Apply Result
 
-Phase 3I adds the final operator confirmation checklist before the first real guarded apply.
-
-Evidence file:
-
-    docs/verification-phase-3i.md
-
-Phase 3I does not execute real apply. It records that the first real apply is reserved for Phase 3J and must be executed explicitly by the operator.
-
-Expected Phase 3J guarded apply command:
+Phase 3J executed the first explicit guarded apply locally with:
 
     ./scripts/deploy-real-profiles.sh \
       --apply \
       --confirm REAL_DEPLOY_PROFILES \
       --source-root "$PWD/profiles"
 
-The command must not be hidden inside another script or executed automatically by Hermes Agent.
+Observed result:
 
----
+    Mode: apply
+    Real deploy: GUARDED_APPLY_REQUESTED
+    SOURCE_ROOT=/home/eye/workspace/hermes-agent-opc-deploy/profiles
+    SOURCE_STATUS=complete
+    PREFLIGHT_STATUS=PASS
+    BACKUP_PATH=/home/eye/.hermes/backups/opc-profiles/20260613-161857
+    BACKUP_STATUS=created
+    APPLIED_ROLE=default
+    APPLIED_ROLE=developer
+    APPLIED_ROLE=reviewer
+    APPLIED_ROLE=operator
+    APPLIED_ROLE=trial
+    PASS: guarded real deploy completed
+    REAL_PROFILE_WRITE=true
 
-## Phase Locks
+Locked result:
 
-### Phase 3A Planning Script
-
-`scripts/plan-real-deploy.sh` is read-only.
-
-Lock wording:
-
-    Phase 3A real deploy read-only planning
-    PASS / docs + plan script verified / real ~/.hermes/profiles untouched / no real write
-
-### Phase 3B Dry-run Script
-
-`scripts/deploy-real-profiles.sh` began as a dry-run-only script in Phase 3B.
-
-Lock wording:
-
-    Phase 3B real deploy dry-run implementation
-    PASS / dry-run only / write modes rejected / real ~/.hermes/profiles untouched / executable bit fixed
-
-### Phase 3C Dry-run Verification Lock
-
-`docs/verification-phase-3c.md` locks Phase 3A and Phase 3B evidence.
-
-Lock wording:
-
-    Phase 3C dry-run verification lock / docs alignment
-    PASS / Phase 3A+3B evidence locked / real ~/.hermes/profiles untouched / no real write
-
-### Phase 3D Guarded Apply Contract
-
-`docs/guarded-apply-contract.md` defines the guarded real deployment contract.
-
-Lock wording:
-
-    Phase 3D real deploy guarded apply planning
-    PASS / guarded apply contract documented / no real write / Phase 3E gate defined
-
-### Phase 3E Guarded Apply Implementation
-
-`scripts/deploy-real-profiles.sh` now implements the guarded apply draft.
-
-Default mode remains dry-run:
-
-    ./scripts/deploy-real-profiles.sh
-
-Real write requires explicit guarded apply:
-
-    ./scripts/deploy-real-profiles.sh --apply --confirm REAL_DEPLOY_PROFILES
-
-Phase 3E was verified against temporary `HOME`, not the user's real `~/.hermes/profiles/`.
-
-Lock wording:
-
-    Phase 3E guarded apply implementation draft
-    PASS / dry-run default / guarded apply token enforced / backup-before-write implemented / managed marker implemented / temp HOME apply verified / real ~/.hermes untouched by normal smoke
-
-### Phase 3F Restore Planning
-
-Phase 3F adds restore planning without implementing real restore.
-
-Policy file:
-
-    docs/restore-policy.md
-
-Read-only planner:
-
-    scripts/plan-restore-real-profiles.sh
-
-Lock wording:
-
-    Phase 3F guarded apply verification lock / restore planning
-    PASS / Phase 3E evidence locked / restore policy documented / restore planner read-only / no real restore / executable bit fixed
-
-### Phase 3G Readiness Gate
-
-Phase 3G adds the final read-only readiness gate before any real user-HOME deployment.
-
-Readiness checker:
-
-    scripts/check-real-deploy-readiness.sh
-
-Phase 3G was verified as implemented and read-only. Before Phase 3H, it correctly blocked real apply because no complete source root existed.
-
-Lock wording:
-
-    Phase 3G real deploy readiness gate
-    PASS / readiness gate implemented / source root blocked / destination ownership passed / restore planner passed / no real write / executable bit fixed
-
-### Phase 3H Profile Source Root Completion
-
-Phase 3H completes the canonical repo-local source root:
-
-    profiles/
-
-Required guarded deploy role directories now exist:
-
-    profiles/default/
-    profiles/developer/
-    profiles/reviewer/
-    profiles/operator/
-    profiles/trial/
-
-Evidence file:
-
-    docs/verification-phase-3h.md
-
-Phase 3H does not perform a real apply.
-
-Lock wording:
-
-    Phase 3H profile source root completion
-    PASS / canonical profiles source root complete / readiness READY / no real write
-
-### Phase 3I Operator Confirmation
-
-Phase 3I records the final operator confirmation checklist before the first real guarded apply.
-
-Evidence file:
-
-    docs/verification-phase-3i.md
-
-Phase 3I does not perform a real apply.
-
-Recommended lock wording after local verification:
-
-    Phase 3I first real guarded apply planning / operator confirmation
-    PASS / readiness READY locked / operator confirmation checklist documented / no real write
+    Phase 3J first real guarded apply
+    PASS / guarded token accepted / backup created / five role profiles applied / managed markers present / post-apply readiness READY
 
 ---
 
@@ -336,7 +203,17 @@ Backup format:
 
     ~/.hermes/backups/opc-profiles/YYYYMMDD-HHMMSS/
 
-Required backup behavior:
+Phase 3J backup path:
+
+    ~/.hermes/backups/opc-profiles/20260613-161857
+
+Phase 3J backup contents:
+
+    NO_PREVIOUS_PROFILE_TREE.txt
+
+This means no previous real Hermes profile tree existed before the first apply.
+
+Required backup behavior remains:
 
 1. If `~/.hermes/profiles/` exists, copy the existing tree into the timestamped backup directory.
 2. If `~/.hermes/profiles/` does not exist, record that no existing profile tree was present.
@@ -367,6 +244,66 @@ A future restore command must not guess which backup to restore. The user should
 
 ---
 
+## Phase Locks
+
+### Phase 3A Planning Script
+
+    Phase 3A real deploy read-only planning
+    PASS / docs + plan script verified / real ~/.hermes/profiles untouched / no real write
+
+### Phase 3B Dry-run Script
+
+    Phase 3B real deploy dry-run implementation
+    PASS / dry-run only / write modes rejected / real ~/.hermes/profiles untouched / executable bit fixed
+
+### Phase 3C Dry-run Verification Lock
+
+    Phase 3C dry-run verification lock / docs alignment
+    PASS / Phase 3A+3B evidence locked / real ~/.hermes/profiles untouched / no real write
+
+### Phase 3D Guarded Apply Contract
+
+    Phase 3D real deploy guarded apply planning
+    PASS / guarded apply contract documented / no real write / Phase 3E gate defined
+
+### Phase 3E Guarded Apply Implementation
+
+    Phase 3E guarded apply implementation draft
+    PASS / dry-run default / guarded apply token enforced / backup-before-write implemented / managed marker implemented / temp HOME apply verified / real ~/.hermes untouched by normal smoke
+
+### Phase 3F Restore Planning
+
+    Phase 3F guarded apply verification lock / restore planning
+    PASS / Phase 3E evidence locked / restore policy documented / restore planner read-only / no real restore / executable bit fixed
+
+### Phase 3G Readiness Gate
+
+    Phase 3G real deploy readiness gate
+    PASS / readiness gate implemented / source root blocked / destination ownership passed / restore planner passed / no real write / executable bit fixed
+
+### Phase 3H Profile Source Root Completion
+
+    Phase 3H profile source root completion
+    PASS / canonical profiles source root complete / readiness READY / no real write
+
+### Phase 3I Operator Confirmation
+
+    Phase 3I first real guarded apply planning / operator confirmation
+    PASS / readiness READY locked / operator confirmation checklist documented / no real write
+
+### Phase 3J First Real Guarded Apply
+
+Evidence file:
+
+    docs/verification-phase-3j.md
+
+Lock wording:
+
+    Phase 3J first real guarded apply
+    PASS / guarded token accepted / backup created / five role profiles applied / managed markers present / post-apply readiness READY
+
+---
+
 ## Risk Notes
 
 Real profile deployment can affect Hermes Agent behavior.
@@ -378,27 +315,18 @@ Main risks:
 3. Incorrect profile layout may make Hermes fail to load a profile.
 4. Future upstream Hermes changes may make local OPC templates stale.
 5. Reset without backup could permanently lose local profile customization.
+6. Skeleton profile directories do not yet provide final role-specific behavior.
 
-Required controls before real user-HOME deployment:
+Required controls for future guarded apply remain:
 
-1. Phase 2 full simulation baseline remains PASS.
-2. Phase 3A read-only planning remains PASS.
-3. Phase 3B dry-run remains PASS.
-4. Phase 3C verification lock remains PASS.
-5. Phase 3D guarded apply contract remains PASS.
-6. Phase 3E guarded apply remains PASS.
-7. Phase 3F restore planning remains PASS.
-8. Phase 3G readiness gate remains PASS.
-9. Phase 3H source root is complete.
-10. Phase 3I operator confirmation is reviewed.
-11. Readiness gate reports `READINESS_STATUS=READY`.
-12. Real `~/.hermes/profiles/` is inspected before write.
-13. The selected source root is printed.
-14. The destination root is printed.
-15. The backup path is printed.
-16. Dry-run remains the default behavior.
-17. Real write requires explicit confirmation.
-18. Existing unmarked profile directories are protected.
+1. Readiness gate reports `READINESS_STATUS=READY`.
+2. Selected source root is printed.
+3. Destination root is printed.
+4. Backup path is printed.
+5. Dry-run remains the default behavior.
+6. Real write requires explicit `--apply --confirm REAL_DEPLOY_PROFILES`.
+7. Existing unmarked destination role directories remain protected.
+8. Restore planning remains available before further apply operations.
 
 ---
 
@@ -430,25 +358,31 @@ The deployment layer should help the user operate Hermes Agent safely. It should
 
 ---
 
-## Phase 3I Acceptance Criteria
+## Phase 3J Acceptance Criteria
 
-Phase 3I is PASS only if:
+Phase 3J is PASS only if:
 
-1. `docs/verification-phase-3i.md` exists.
-2. The file records `READINESS_STATUS=READY` from Phase 3H validation.
-3. The file documents the explicit Phase 3J apply command.
-4. The file records that Phase 3I performs no real apply.
-5. `docs/real-deploy-plan.md` is aligned to Phase 3I.
-6. The guarded apply script still defaults to dry-run.
-7. Unauthorized `--apply` remains rejected.
-8. Git working tree is clean after verification.
+1. Guarded apply was executed only with `--apply --confirm REAL_DEPLOY_PROFILES`.
+2. Source root was `~/workspace/hermes-agent-opc-deploy/profiles`.
+3. Source status was complete.
+4. Preflight status was PASS.
+5. Backup path was created.
+6. All five roles were applied.
+7. All five role directories contain `.opc-managed-profile`.
+8. Post-apply readiness reports READY.
+9. Post-apply dry-run remains non-writing.
+10. Git working tree remains clean.
+
+All criteria are met.
 
 ---
 
 ## Next Phase
 
-If Phase 3I is verified:
+Recommended next phase:
 
-    Phase 3J first real guarded apply
+    Phase 3K role profile content hardening
 
-Phase 3J is the first phase allowed to perform real guarded apply, and only by explicit operator command execution.
+Phase 3K should add actual role profile content under `profiles/<role>/` while keeping the same guarded apply and backup-before-write controls.
+
+Phase 3K should avoid enterprise-grade complexity and keep the profile content small, readable, local, and easy to inspect.
