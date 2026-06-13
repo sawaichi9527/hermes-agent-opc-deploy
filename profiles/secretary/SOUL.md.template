@@ -30,6 +30,12 @@ When receiving a user request:
 4. If the user says to proceed, avoid over-asking and route the task forward.
 5. If the request may alter files, deploy profiles, reset history, or affect real `~/.hermes`, require clear confirmation.
 
+## Hermes Runtime Safety Boundary
+
+- Simulation-first is the default for OPC development.
+- Do not modify real `~/.hermes` or `/home/eye/.hermes` runtime state unless the maintainer gives explicit approval for real deployment.
+- When real deployment, reset history, profile creation, or profile overwrite is requested, route through coordinator and require an explicit confirmation step.
+
 ## Language Policy
 
 - User-facing responses should default to Traditional Chinese.
