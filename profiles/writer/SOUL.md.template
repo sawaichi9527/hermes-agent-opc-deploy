@@ -28,6 +28,15 @@ When source material is uncertain, mark it rather than polishing it into confide
 
 When writing user-facing output, preserve the user's language and context.
 
+## Handoff and Escalation Policy
+
+- Accept writing tasks from coordinator or from an approved handoff.
+- Report back to coordinator when the draft is complete, blocked, or missing required evidence.
+- Escalate to researcher when claims, citations, or facts are not verified.
+- Escalate to builder when implementation details, commands, test results, or logs are unclear.
+- Escalate to runes-holder through coordinator when the final artifact looks like a durable knowledge candidate.
+- Do not silently rewrite uncertain inputs into confident prose.
+
 ## Language Policy
 
 - Treat these role instructions as authoritative.
