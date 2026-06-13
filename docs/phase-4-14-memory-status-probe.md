@@ -1,52 +1,41 @@
-# Phase 4.14 memory status-only probe preparation
+# Phase 4.14 memory status-only probe verification
 
-This document prepares the Phase 4.14 memory status-only probe for the maintainer's personal Hermes Agent OPC deployment.
+This document records the maintainer's local verification of the Phase 4.14 memory status-only probe for the personal Hermes Agent OPC deployment.
 
 Phase 4.14 uses Hermes memory only for configuration awareness.
 
-## Selected command
+## Command verified
 
 ```bash
 hermes memory status
 ```
 
-## Expected result
-
-```text
-Hermes prints current memory provider status.
-The command completes locally.
-No runtime mutation is expected.
-```
-
-## Current status
+## Locked result
 
 ```text
 Phase 4.14 Memory Status-only Probe
-PENDING / prepared / awaiting maintainer local verification
+PASS / memory provider status printed / built-in-only state confirmed / no runtime mutation introduced
 ```
+
+## Observed summary
+
+```text
+memory status: PASS / status table printed
+built-in memory: always active
+external provider: none / built-in only
+installed provider plugins: listed
+repository layout: PASS
+forbidden tracked runtime/secrets check: PASS
+```
+
+Observed provider plugins included API-key and local-capable external memory provider options, but no external provider was activated.
 
 ## Scope
 
-This preparation does not add a script, configure a provider, change built-in memory, change profile state, create task state, or introduce custom orchestration.
+This was a status-only configuration awareness check.
 
-Memory mutation commands remain deferred unless explicitly approved by the maintainer.
-
-## Manual verification command
-
-Run from any shell where `hermes` is available:
-
-```bash
-hermes memory status
-```
-
-Then run the repository layout check from the repo root:
-
-```bash
-cd ~/workspace/hermes-agent-opc-deploy
-bash scripts/verify-repo-layout.sh
-git status --short
-```
+It did not configure a provider, disable memory, reset built-in memory, change profile state, create task state, or introduce custom orchestration.
 
 ## Follow-up
 
-After local verification, this document can be updated to a PASS lock with the observed bounded output summary.
+Phase 4 read-only official primitive probes are now complete. The next step is Phase 4.15 final consolidation.
