@@ -1,55 +1,44 @@
-# Phase 4.13 sessions read-only probe preparation
+# Phase 4.13 sessions read-only probe verification
 
-This document prepares the Phase 4.13 bounded sessions read-only probe for the maintainer's personal Hermes Agent OPC deployment.
+This document records the maintainer's local verification of the Phase 4.13 bounded sessions read-only probe for the personal Hermes Agent OPC deployment.
 
 Phase 4.13 uses Hermes sessions only as a local evidence/reference primitive.
 
-## Selected commands
+## Commands verified
 
 ```bash
 hermes sessions list
 hermes sessions stats
 ```
 
-## Expected result
-
-```text
-Hermes lists recent sessions or reports that none are available.
-Hermes prints session store statistics.
-The commands complete locally.
-No runtime mutation is expected.
-```
-
-## Current status
+## Locked result
 
 ```text
 Phase 4.13 Sessions Read-only Probe
-PENDING / prepared / awaiting maintainer local verification
+PASS / recent sessions listed / session statistics printed / no runtime mutation introduced
 ```
+
+## Observed summary
+
+```text
+sessions list: PASS / recent sessions table printed
+sessions stats: PASS / aggregate session store statistics printed
+observed total sessions: 281
+observed total messages: 4643
+observed cli sessions: 43
+observed database size: 56.6 MB
+repository layout: PASS
+forbidden tracked runtime/secrets check: PASS
+```
+
+Observed session list included recent CLI exact-marker probes and scheduled information-scan sessions. The evidence is summarized rather than copied in full.
 
 ## Scope
 
-This preparation does not add a script, resume a conversation, change profile state, create task state, or introduce custom orchestration.
+This was a bounded local session-store read only.
 
-Session mutation commands remain deferred unless explicitly approved by the maintainer.
-
-## Manual verification command
-
-Run from any shell where `hermes` is available:
-
-```bash
-hermes sessions list
-hermes sessions stats
-```
-
-Then run the repository layout check from the repo root:
-
-```bash
-cd ~/workspace/hermes-agent-opc-deploy
-bash scripts/verify-repo-layout.sh
-git status --short
-```
+It did not resume a conversation, delete or rename sessions, change profile state, create task state, modify memory, or introduce custom orchestration.
 
 ## Follow-up
 
-After local verification, this document can be updated to a PASS lock with the observed bounded output summary.
+The next Phase 4 read-only probe is Phase 4.14 memory status-only. It must avoid provider setup, disable, or reset operations unless explicitly approved.
