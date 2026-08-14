@@ -1,0 +1,11 @@
+# OPC-PERSONAL edition canonical Hermes profile roles for guarded deploy.
+# One role per line. Blank lines and comments are ignored.
+# D23: 8 profiles (5 core + runes-holder + aeon-builder + nim-researcher).
+secretary
+coordinator
+researcher
+writer
+builder
+runes-holder
+aeon-builder
+nim-researcher

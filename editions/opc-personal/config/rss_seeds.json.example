@@ -1,0 +1,9 @@
+{
+  "_comment": "D14: rss_seeds.json.example — cron 入口 owner=secretary；雙檔 rss_seeds.json / rss_suggestions.json（不進 Runes）。複製為 ~/.hermes/opc/secretary/rss_seeds.json 後依需調整。",
+  "seeds": [
+    {
+      "name": "example-feed",
+      "url": "https://example.com/rss"
+    }
+  ]
+}

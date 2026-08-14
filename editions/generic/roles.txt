@@ -1,0 +1,8 @@
+# GENERIC edition canonical Hermes profile roles for guarded deploy.
+# One role per line. Blank lines and comments are ignored.
+# D24: GENERIC = 5 profiles (secretary not bound to Lark).
+secretary
+coordinator
+researcher
+builder
+writer

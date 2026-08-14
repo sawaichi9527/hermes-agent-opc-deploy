@@ -1,0 +1,26 @@
+# GENERIC edition config.yaml example
+#
+# 本檔為骨架範例，provider 刻意留空（D25：GENERIC 雲端不預設 provider）。
+# 使用者請依自己的算力環境，從下列選項擇一填入 model.provider / model.name。
+#
+# 選項：
+#   - OpenRouter（雲端多模型）
+#       model:
+#         provider: openrouter
+#         name: <model-id>
+#   - Nous Portal / NIM（雲端 / 遠端端點）
+#       model:
+#         provider: openai
+#         base_url: https://<your-nim-or-portal-endpoint>/v1
+#         name: <model-id>
+#   - 本地（LM Studio / llama.cpp / vLLM）
+#       model:
+#         provider: openai
+#         base_url: http://127.0.0.1:1234/v1
+#         name: <model-id>
+#
+# 注意：請勿在本 repo 放入真實 API key / token（安全守則 §8.2）。
+
+model:
+  provider: PENDING_USER_CHOICE   # TODO: 擇一填 openrouter / openai(NIM) / local
+  name: PENDING_USER_CHOICE
