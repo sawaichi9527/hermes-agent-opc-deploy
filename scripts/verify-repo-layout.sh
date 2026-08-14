@@ -141,7 +141,8 @@ for s in \
   scripts/setup-feishu-gateway.sh \
   scripts/setup-nim-moa-profile.sh \
   scripts/jobs-json-init.sh \
-  scripts/approvals-deny-init.sh
+  scripts/approvals-deny-init.sh \
+  scripts/sync-soul-to-profiles.sh
 do
   check_syntax "$s"
 done
