@@ -48,7 +48,10 @@ check_forbidden() {
 
   while IFS= read -r path; do
     case "$path" in
-      profiles/*/.env.template)
+      editions/*/profiles/*/.env.template)
+        ;;
+
+      archive/*/.env.template|archive/*/*/.env.template|archive/*/*/*/.env.template)
         ;;
 
       *.env|*.env.*|*/.env|*/.env.*|*.secret|*.secrets|*secrets*|*token*|*TOKEN*|*password*|*PASSWORD*)
@@ -65,104 +68,70 @@ check_forbidden() {
   fi
 }
 
+check_edition_profiles() {
+  local edition_dir="$1"
+  shift
+  local roles=("$@")
+  local role
+
+  print_header "Edition profiles: ${edition_dir##*/}"
+  for role in "${roles[@]}"; do
+    check_dir "${edition_dir}/profiles/${role}"
+    check_file "${edition_dir}/profiles/${role}/SOUL.md.template"
+  done
+}
+
 print_header "Repository root"
 printf '%s\n' "$ROOT"
 
-print_header "Required mainline documentation"
+print_header "Required mainline files"
 for f in \
   README.md \
-  docs/implementation-roadmap.md \
-  docs/opc-profile-set-design.md \
-  docs/local-compute-policy.md \
-  docs/runes-holder-boundary.md \
-  docs/hermes-native-profile-usage.md \
-  docs/soul-template-convention.md \
-  docs/local-openai-compatible-provider.md \
-  docs/maintenance-policy.md \
-  docs/migration.md \
-  docs/model-routing-policy.md \
-  docs/profile-language-policy.md \
-  docs/runes-holder.md \
-  docs/secretary-profile.md \
-  docs/verification-m12-native-opc-runtime-baseline.md \
-  archive/validation-history/README.md
+  VERSION \
+  docs/shared/guarded-apply-contract.md \
+  docs/editions/generic \
+  docs/editions/opc-personal \
+  editions/generic/roles.txt \
+  editions/generic/config.yaml.example \
+  editions/generic/README.md \
+  editions/opc-personal/roles.txt \
+  editions/opc-personal/config/rss_seeds.json.example \
+  editions/opc-personal/README.md \
+  archive/v0.16-v0.17/README.md \
+  archive/v0.16-v0.17/validation-history/README.md
 do
-  check_file "$f"
-done
-
-print_header "Required profile template notes"
-for p in secretary coordinator researcher writer builder runes-holder; do
-  check_dir "profiles/$p"
-  check_file "profiles/$p/NOTES.md"
-  check_file "profiles/$p/SOUL.md.template"
-  check_file "profiles/$p/profile.yaml"
-  check_file "profiles/$p/README.md"
-done
-check_file "profiles/README.md"
-
-print_header "Required current mainline scripts"
-for s in \
-  scripts/verify-layout.sh \
-  scripts/verify-repo-layout.sh \
-  scripts/verify-profile-templates.sh \
-  scripts/verify-m12-native-opc-runtime-baseline.sh \
-  scripts/apply-secretary-runtime-doc-overlay.sh \
-  scripts/apply-coordinator-runtime-doc-overlay.sh \
-  scripts/apply-researcher-runtime-doc-overlay.sh \
-  scripts/apply-writer-runtime-doc-overlay.sh \
-  scripts/apply-builder-runtime-doc-overlay.sh \
-  scripts/apply-runes-holder-runtime-doc-overlay.sh \
-  scripts/create-coordinator-profile-clone.sh \
-  scripts/create-researcher-profile-clone.sh \
-  scripts/create-writer-profile-clone.sh \
-  scripts/create-builder-profile-clone.sh \
-  scripts/create-runes-holder-profile-clone.sh
-do
-  check_syntax "$s"
-done
-
-print_header "Optional historical / regression scripts"
-for s in \
-  scripts/prepare-sim-env.sh \
-  scripts/deploy-sim-profiles.sh \
-  scripts/inspect-sim-profiles.sh \
-  scripts/verify-sim-layout.sh \
-  scripts/smoke-local-provider-sequential.sh \
-  scripts/set-local-model-name.sh \
-  scripts/check-hermes-runtime-readiness.sh \
-  scripts/smoke-hermes-runtime-oneshot.sh \
-  scripts/check-runtime-baseline.sh \
-  scripts/backup-hermes-profiles.sh \
-  scripts/check-native-profile-runtime-smoke.sh \
-  scripts/check-native-profile-schema.sh \
-  scripts/check-native-profile-source-templates.sh \
-  scripts/inspect-profile-runtime-state.sh \
-  scripts/cleanup-drift-profiles.sh \
-  scripts/plan-drift-profile-cleanup.sh \
-  scripts/plan-repo-drift-source-cleanup.sh
-do
-  if [ -f "$s" ]; then
-    printf 'PASS optional file %s\n' "$s"
-    if bash -n "$s"; then
-      printf 'PASS optional syntax %s\n' "$s"
-    else
-      printf 'FAIL optional syntax %s\n' "$s"
-      ISSUES=$((ISSUES + 1))
-    fi
+  if [ -d "$f" ]; then
+    check_dir "$f"
   else
-    printf 'SKIP optional missing %s\n' "$s"
+    check_file "$f"
   fi
 done
 
-print_header "M13 archive staging"
-if find archive/pre-delete -maxdepth 3 -type f -name MANIFEST.md 2>/dev/null | grep -q .; then
-  find archive/pre-delete -maxdepth 3 -type f -name MANIFEST.md | sort | while read -r f; do
-    printf 'PASS archive manifest %s\n' "$f"
-  done
-else
-  printf 'MISS archive/pre-delete/*/MANIFEST.md\n'
-  ISSUES=$((ISSUES + 1))
+print_header "Version"
+if [ -f VERSION ]; then
+  v="$(cat VERSION)"
+  printf 'PASS VERSION=%s\n' "$v"
+  if [ "$v" = "0.20.0" ]; then
+    printf 'PASS VERSION matches 0.20.0\n'
+  else
+    printf 'FAIL VERSION is not 0.20.0\n'
+    ISSUES=$((ISSUES + 1))
+  fi
 fi
+
+check_edition_profiles editions/generic secretary coordinator researcher builder writer
+check_edition_profiles editions/opc-personal secretary coordinator researcher writer builder runes-holder aeon-builder nim-researcher
+
+print_header "Required current mainline scripts"
+for s in \
+  scripts/deploy-real-profiles.sh \
+  scripts/verify-repo-layout.sh \
+  scripts/verify-profile-templates.sh \
+  scripts/set-local-model-name.sh \
+  scripts/m0-capability-check.sh
+do
+  check_syntax "$s"
+done
 
 print_header "Forbidden tracked runtime/secrets check"
 check_forbidden

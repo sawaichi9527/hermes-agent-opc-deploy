@@ -1,20 +1,35 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROFILES_ROOT="${HERMES_PROFILES_ROOT:-$HOME/.hermes/profiles}"
 PROFILE_LIST_ENV="${PROFILE_LIST:-}"
 MODEL_NAME="${MODEL_NAME:-}"
 APPLY=0
 FORCE=0
 
-profiles=(
-  secretary
-  coordinator
-  researcher
-  writer
-  builder
-  runes-holder
-)
+profiles=()
+
+load_profiles_from_roles() {
+  local roles_file="$1"
+  local line
+  profiles=()
+  if [ -f "${roles_file}" ]; then
+    while IFS= read -r line || [ -n "${line}" ]; do
+      line="${line%%#*}"
+      line="${line#"${line%%[![:space:]]*}"}"
+      line="${line%"${line##*[![:space:]]}"}"
+      [ -n "${line}" ] || continue
+      profiles+=("${line}")
+    done < "${roles_file}"
+  fi
+}
+
+load_profiles_from_roles "${REPO_ROOT}/editions/opc-personal/roles.txt"
+
+if [ "${#profiles[@]}" -eq 0 ]; then
+  profiles=(secretary coordinator researcher writer builder runes-holder)
+fi
 
 usage() {
   cat <<'USAGE'
@@ -97,6 +112,11 @@ if [ -n "$PROFILE_LIST_ENV" ]; then
   profiles=(${PROFILE_LIST_ENV//,/ })
 fi
 
+if [ "${#profiles[@]}" -eq 0 ]; then
+  echo "FAIL no profiles loaded from editions/opc-personal/roles.txt" >&2
+  exit 2
+fi
+
 if [ -z "$MODEL_NAME" ]; then
   echo "FAIL model id is required. Pass --model <model-id> or MODEL_NAME=<model-id>." >&2
   exit 2
@@ -121,7 +141,7 @@ warn() { printf 'WARN %s\n' "$1"; }
 fail() { printf 'FAIL %s\n' "$1"; fail_count=$((fail_count + 1)); }
 info() { printf 'INFO %s\n' "$1"; }
 
-printf 'Phase 3L.5 local model.name cleanup\n'
+printf 'v0.20.0 model.name setup (profiles from editions/opc-personal/roles.txt)\n'
 printf 'Profiles root: %s\n' "$PROFILES_ROOT"
 printf 'Selected profiles: %s\n' "${profiles[*]}"
 printf 'Model name: %s\n' "$MODEL_NAME"
