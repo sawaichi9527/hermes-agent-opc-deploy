@@ -7,6 +7,9 @@ PROFILE_LIST_ENV="${PROFILE_LIST:-}"
 MODEL_NAME="${MODEL_NAME:-}"
 APPLY=0
 FORCE=0
+VERIFY=0
+AEON_BASE_URL="${AEON_BASE_URL:-http://192.168.23.215:1234/v1}"
+AEON_AUTH="${AEON_AUTH:-}"
 
 profiles=()
 
@@ -55,11 +58,18 @@ Options:
       Replace an existing model.name value.
       Without --force, existing model.name values are left unchanged.
 
+  --verify
+      After apply (or as a standalone dry-run check for aeon-builder), verify the
+      remote endpoint identity by querying /v1/models and comparing the reported
+      model id to the config model.name (D13). Only meaningful for aeon-builder.
+
 Environment:
   HERMES_PROFILES_ROOT   Default: $HOME/.hermes/profiles
   PROFILE_LIST           Optional comma/space-separated profile list.
                          Example: PROFILE_LIST=secretary
   MODEL_NAME             Alternative to --model.
+  AEON_BASE_URL          Default: http://192.168.23.215:1234/v1 (Spark vLLM, D13)
+  AEON_AUTH              Optional "Bearer <token>" for identity check.
 
 Examples:
   PROFILE_LIST=secretary \
@@ -70,9 +80,14 @@ Examples:
   MODEL_NAME=qwen3.6-35b-a3b-uncensored-heretic-native-mtp-preserved@q5_k_m \
   ./scripts/set-local-model-name.sh --apply
 
+  # aeon-builder model switch (D13): set model.name then verify remote identity
+  PROFILE_LIST=aeon-builder MODEL_NAME=qwen3.6-27b \
+    ./scripts/set-local-model-name.sh --apply --verify
+
 Boundary:
   This is local profile configuration cleanup only. It does not introduce model
   routing, queues, concurrency, load testing, external fallback, or daemon work.
+  The --verify identity check is read-only against the remote /v1/models endpoint.
 USAGE
 }
 
@@ -92,6 +107,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     --force)
       FORCE=1
+      shift
+      ;;
+    --verify)
+      VERIFY=1
       shift
       ;;
     -h|--help)
@@ -296,6 +315,25 @@ PY
   rm -f "$tmp_file" "$report_file"
   printf '\n'
 done
+
+# --- aeon-builder remote identity verification (D13) ---
+if [ "$VERIFY" -eq 1 ] && [[ " ${profiles[*]} " == *" aeon-builder "* ]]; then
+  printf '== aeon-builder remote identity check (D13) ==\n'
+  need_cmd curl
+  actual_model="$(curl -s -m 8 -H "Authorization: ${AEON_AUTH}" "${AEON_BASE_URL}/models" 2>/dev/null | grep -oE '"id"[[:space:]]*:[[:space:]]*"[^"]+"' | head -1 | sed -E 's/.*"id"[[:space:]]*:[[:space:]]*"([^"]+)"/\1/' || true)"
+  if [ -z "$actual_model" ]; then
+    fail "aeon-builder identity check: unable to fetch /v1/models from ${AEON_BASE_URL}"
+  else
+    config_file="$PROFILES_ROOT/aeon-builder/config.yaml"
+    configured="$(grep -E '^[[:space:]]*name:[[:space:]]*' "$config_file" 2>/dev/null | tail -1 | sed -E 's/^[^:]*:[[:space:]]*//' | tr -d '[:space:]' | tr -d "\"'" || true)"
+    if [ -n "$configured" ] && [[ "$actual_model" == *"$configured"* || "$configured" == *"$actual_model"* ]]; then
+      pass "aeon-builder identity verified: remote model=${actual_model} matches config model.name=${configured}"
+    else
+      warn "aeon-builder identity mismatch: remote=${actual_model} vs config=${configured}. Do not dispatch aeon-builder until models match (D13)."
+    fi
+  fi
+  printf '\n'
+fi
 
 printf '== Summary ==\n'
 if [ "$fail_count" -ne 0 ]; then
