@@ -91,6 +91,14 @@ for f in \
   docs/shared/guarded-apply-contract.md \
   docs/editions/generic \
   docs/editions/opc-personal \
+  docs/editions/opc-personal/nim-researcher-moa-profile.md \
+  docs/editions/opc-personal/aeon-builder-remote-endpoint.md \
+  docs/editions/opc-personal/plur-memory-layer.md \
+  docs/editions/opc-personal/a2a-expansion-pi5.md \
+  docs/editions/opc-personal/observability-jobs-json.md \
+  docs/editions/opc-personal/degradation-matrix.md \
+  docs/editions/opc-personal/cron-governance.md \
+  docs/editions/opc-personal/destruction-whitelist.md \
   editions/generic/roles.txt \
   editions/generic/config.yaml.example \
   editions/generic/README.md \
@@ -128,7 +136,12 @@ for s in \
   scripts/verify-repo-layout.sh \
   scripts/verify-profile-templates.sh \
   scripts/set-local-model-name.sh \
-  scripts/m0-capability-check.sh
+  scripts/m0-capability-check.sh \
+  scripts/setup-plur.sh \
+  scripts/setup-feishu-gateway.sh \
+  scripts/setup-nim-moa-profile.sh \
+  scripts/jobs-json-init.sh \
+  scripts/approvals-deny-init.sh
 do
   check_syntax "$s"
 done

@@ -27,14 +27,19 @@ nim-researcher 獨立第 8 profile，內部 MoA（D5/D5a/D5b）
 
 ```text
 roles.txt                       角色清單（8）
-profiles/<role>/SOUL.md.template   角色 SOUL 模板（階段一空骨架）
+profiles/<role>/SOUL.md.template   角色 SOUL 模板（M8 填實 v4.1）
 config/rss_seeds.json.example    cron 種子檔範例（D14）
 ```
+
+## 文件與腳本
+
+- `docs/editions/opc-personal/`：8 篇（nim-researcher-moa-profile / aeon-builder-remote-endpoint / plur-memory-layer / a2a-expansion-pi5 / observability-jobs-json / degradation-matrix / cron-governance / destruction-whitelist）。
+- setup 腳本（K6 執行）：`scripts/setup-plur.sh`、`scripts/setup-feishu-gateway.sh`、`scripts/setup-nim-moa-profile.sh`、`scripts/jobs-json-init.sh`、`scripts/approvals-deny-init.sh`、`scripts/set-local-model-name.sh`（aeon-builder 切換 + 身分驗證）。
 
 ## 狀態
 
 - 階段一（骨架）：完成
-- 階段二（M8 驗證後填入內容）：待辦。待填內容見藍圖 §8.1（含 8 個 SOUL 模板 + docs + scripts 更新）
+- 階段二（M8）：完成 — 8 SOUL 模板 + 8 docs + setup 腳本已填 v4.1 驗證內容
 
 ## 安全守則
 

@@ -28,8 +28,8 @@ Hermes 原生 profile 客製化與部署指南 repo。本 repo 是 Freelancer �
 README.md
 VERSION                        # 0.20.0
 docs/shared/                   # 共用文件（guarded-apply-contract、安全守則）
-docs/editions/{generic,opc-personal}/   # edition 專屬文件（階段二填）
-scripts/                       # deploy / verify 腳本
+docs/editions/{generic,opc-personal}/   # edition 專屬文件（opc-personal 已填 M8 內容）
+scripts/                       # deploy / verify / setup 腳本
 editions/generic/              # 5-profile 一般版
 editions/opc-personal/         # 8-profile 個人版
 archive/v0.16-v0.17/           # 舊版整批（含 validation-history）
@@ -38,8 +38,23 @@ config/                        # shared defaults
 
 ## 狀態
 
-- **階段一（現在）**：repo 骨架重構完成（雙版本 + archive + 空 profile 模板 + placeholder config + v0.20.0 版號）。
-- **階段二（M8 跑完）**：填入 v4.1 補丁已驗證的 v0.20.0 內容（見 `editions/opc-personal/README.md` 與藍圖 §8.1）。
+- **階段一**：repo 骨架重構完成（雙版本 + archive + 空 profile 模板 + placeholder config + v0.20.0 版號）。
+- **階段二（M8 完成）**：填入 v4.1 補丁已驗證的 v0.20.0 內容——8 個 SOUL 模板、`docs/editions/opc-personal/` 8 篇、setup 腳本 5 支 + `set-local-model-name.sh` 更新、README 同步。
+
+## OPC-PERSONAL setup 腳本（K6 執行）
+
+```bash
+bash scripts/m0-capability-check.sh                # 端點/套件可達性（M0）
+bash scripts/jobs-json-init.sh --apply             # jobs.json 初始化（M4）
+bash scripts/setup-plur.sh --apply                 # 8 profiles 啟用 plur（M7）
+bash scripts/setup-feishu-gateway.sh --apply --confirm REAL_FEISHU_GATEWAY_TAKEOVER  # secretary gateway 接管（M3）
+bash scripts/setup-nim-moa-profile.sh --apply      # nim-researcher MoA preset（M6b）
+bash scripts/approvals-deny-init.sh --apply        # D18 L3 deny 清單（M6a）
+PROFILE_LIST=aeon-builder MODEL_NAME=qwen3.6-27b \
+  bash scripts/set-local-model-name.sh --apply --verify   # aeon-builder 切換 + 身分驗證（D13）
+```
+
+各腳本說明見對應 doc（`docs/editions/opc-personal/`）。
 
 ## 基本驗證
 
@@ -56,7 +71,7 @@ bash scripts/verify-profile-templates.sh
 3. bash scripts/m0-capability-check.sh                          # 端點/套件可達性
 4. bash scripts/verify-repo-layout.sh && verify-profile-templates.sh   # 驗 repo 本身
 5. bash scripts/deploy-real-profiles.sh --edition <generic|opc-personal> --dry-run
-6. 依 docs 逐步設定 model/plugin/gateway/MoA/A2A/jobs.json
+6. 依 docs/editions/opc-personal/ 逐步設定 model/plugin/gateway/MoA/jobs.json（見上「OPC-PERSONAL setup 腳本」）
 7. 重啟 secretary gateway；Lark 冒煙測試
 8. runes inscribe + probe；verify-runes
 ```
