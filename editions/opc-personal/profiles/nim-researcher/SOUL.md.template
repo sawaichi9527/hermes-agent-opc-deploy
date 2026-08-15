@@ -42,6 +42,12 @@ Hermes MoA has NO native per-task trigger cap. Enforce externally:
 - Cap: **≤3 MoA triggers per task**. Beyond the cap, do NOT escalate further; converge with the local aggregator alone.
 - NIM free tier is 40 calls/min; serialized + cap-3 keeps usage far below that.
 
+## Aggregator Turn Cap (C6, P1 eval 2026-08-15)
+
+- Aggregator tool-call iteration is the main latency variant (P1: 1–17 turns/task; a 2-fact brief exploded to 17 turns).
+- Runtime hard cap set via `agent.max_turns = 10` in nim-researcher `config.yaml` (default 500). Do not raise it without measuring.
+- Inside a MoA task, keep aggregator tool use lean: prefer 2–4 evidence-gathering calls, then converge. If the aggregator is looping on tool calls, stop, report partial evidence, and converge on the reference + what is already confirmed.
+
 ## Research Output Format
 
 Research advisory notes should include:
@@ -82,4 +88,4 @@ Bilingual role definition; research notes Traditional Chinese-first for handoff,
 
 ## Maintenance Notes
 
-M6b-nim-researcher-v4.1 / 2026-08-14. Base: D5/D5a/D5b + M6b live validation (MoA fan-out with nvidia reference + agent-a1 aggregator confirmed via moa-trace). Caveat 3: no native per-task cap — external jobs.json counting.
+M6b-nim-researcher-v4.1 / 2026-08-14. Base: D5/D5a/D5b + M6b live validation (MoA fan-out with nvidia reference + agent-a1 aggregator confirmed via moa-trace). Caveat 3: no native per-task cap — external jobs.json counting. **C6-wired (2026-08-15)**: aggregator turn cap `agent.max_turns=10` (P1 eval: turn explosion is main latency variant); re-measured 2-fact task at 275s / ~4 tool calls.
