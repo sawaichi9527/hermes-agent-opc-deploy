@@ -25,11 +25,21 @@ hermes -p <role> config set plugins.enabled plur    # 每個 profile
 hermes -p <role> tools list | grep plur
 ```
 
-`plur_status` 回報 engrams 數量（M7：40）。
+`plur_status` 回報 engrams 數量（M7：40；2026-08-15 實測 **120**）。
 
 ## 使用工具
 
-`plur_learn` / `plur_recall` / `plur_status`（自動 learn/inject 由 plugin hooks 驅動）。Scope：`global` / `project:opc` / `local`。
+`plur_learn` / `plur_recall` / `plur_status`（自動 learn/inject 由 plugin hooks 驅動）。Scope：`global` / `user` / `agent:<role>` / `project:<slug>`。
+
+## Scope 紀律（§9 #4 評估結論，2026-08-15）
+
+CLI 0.9.4 無「scope 命中永遠注入」逃生門；recall 的 `--scope` 不過濾（scoped/unscoped 同批）。因此：
+
+- **跨 profile 共享**：改用固定 scope `project:freelancer`（不要散落一堆 `global`）。2026-08-15 現況：global 85 / user 34 / agent:writer 1 / project 0。
+- **關鍵長期規則**：`plur promote`（設 retrieval_strength 0.7）或 feedback 強化，避免衰退出注入範圍。
+- **中文 statement 帶英文關鍵字**（BGE-small 英文 embedder，#781），提高 recall 命中。
+- 既有 `global` engrams **不做 bulk 遷移**（共享 store 改動需謹慎）；新共享 learns 一律 `project:freelancer`。
+- P2(d) 跨週複查（約 2026-09-12）：`ENG-2026-0815-001`（agent:writer）/ `ENG-2026-0815-002`（global）是否仍被注入/衰減，複查後刪除測試 engram。
 
 ## Source priority（Runes ROADMAP P0.3 擴充）
 
