@@ -26,9 +26,10 @@ Hermes 原生 profile 客製化與部署指南 repo。本 repo 是 Freelancer �
 
 ```text
 README.md
-VERSION                        # 0.20.0
+VERSION                        # 0.20.1
 docs/shared/                   # 共用文件（guarded-apply-contract、安全守則）
 docs/editions/{generic,opc-personal}/   # edition 專屬文件（opc-personal 已填 M8 內容）
+docs/soul-token-audit.md       # 13 份 SOUL 模板 token 用量審計（2026-08-15 refine）
 scripts/                       # deploy / verify / setup 腳本
 editions/generic/              # 5-profile 一般版
 editions/opc-personal/         # 8-profile 個人版
@@ -40,6 +41,7 @@ config/                        # shared defaults
 
 - **階段一**：repo 骨架重構完成（雙版本 + archive + 空 profile 模板 + placeholder config + v0.20.0 版號）。
 - **階段二（M8 完成）**：填入 v4.1 補丁已驗證的 v0.20.0 內容——8 個 SOUL 模板、`docs/editions/opc-personal/` 8 篇、setup 腳本 5 支 + `set-local-model-name.sh` 更新、README 同步。
+- **v0.20.1（2026-08-15）**：13 份 SOUL 模板全量 refine——統一結構/語言政策（繁中為主）、補齊 2026-08-15 決策（Plur scope 紀律、C6/B4、#8(a)）、補 Fact Division、opc-personal 去冗（chars −13.7%）、generic 5 檔骨架填空；token 對照見 `docs/soul-token-audit.md`。
 
 ## OPC-PERSONAL setup 腳本（K6 執行）
 

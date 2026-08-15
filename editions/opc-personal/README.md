@@ -27,7 +27,7 @@ nim-researcher 獨立第 8 profile，內部 MoA（D5/D5a/D5b）
 
 ```text
 roles.txt                       角色清單（8）
-profiles/<role>/SOUL.md.template   角色 SOUL 模板（M8 填實 v4.1）
+profiles/<role>/SOUL.md.template   角色 SOUL 模板（M8 填實 v4.1；2026-08-15 refine 統一結構/語言政策）
 config/rss_seeds.json.example    cron 種子檔範例（D14）
 ```
 
@@ -40,6 +40,7 @@ config/rss_seeds.json.example    cron 種子檔範例（D14）
 
 - 階段一（骨架）：完成
 - 階段二（M8）：完成 — 8 SOUL 模板 + 8 docs + setup 腳本已填 v4.1 驗證內容
+- **v0.20.1 refine（2026-08-15）**：8 SOUL 統一結構/繁中為主語言政策、補 Plur scope 紀律與 Fact Division、去冗（chars −13.7%，tokens +23% 因繁中化）；token 對照見 `docs/soul-token-audit.md`
 
 ## 安全守則
 

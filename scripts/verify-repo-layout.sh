@@ -119,10 +119,10 @@ print_header "Version"
 if [ -f VERSION ]; then
   v="$(cat VERSION)"
   printf 'PASS VERSION=%s\n' "$v"
-  if [ "$v" = "0.20.0" ]; then
-    printf 'PASS VERSION matches 0.20.0\n'
+  if [ "$v" = "0.20.1" ]; then
+    printf 'PASS VERSION matches 0.20.1\n'
   else
-    printf 'FAIL VERSION is not 0.20.0\n'
+    printf 'FAIL VERSION is not 0.20.1\n'
     ISSUES=$((ISSUES + 1))
   fi
 fi

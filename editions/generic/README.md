@@ -23,14 +23,15 @@ writer         寫作
 
 ```text
 roles.txt                   角色清單（5）
-profiles/<role>/SOUL.md.template   角色 SOUL 模板（階段一空骨架）
+profiles/<role>/SOUL.md.template   角色 SOUL 模板（v4.1 精簡內容）
 config.yaml.example         provider placeholder + 註解
 ```
 
 ## 狀態
 
 - 階段一（骨架）：完成
-- 階段二（M8 驗證後填入內容）：待辦
+- 階段二（M8 驗證後填入內容）：完成 — 5 個 SOUL 模板已填入精簡內容（2026-08-15 refine，與 opc-personal 同結構、native-only 記憶、L1/L2 白名單）
+- token 對照見 `docs/soul-token-audit.md`
 
 ## 安全守則
 
