@@ -48,6 +48,21 @@ researcher 回報 evidence_urls > 10     -> reroute nim-researcher (D5a)
 secretary brief -> coordinator plan -> 一個 worker profile -> coordinator merge -> secretary reply 或下一個單一 handoff
 ```
 
+**實際呼叫方式（強制）**：路由到某 worker 時，**不要自己執行該 worker 的工作**——用 terminal tool 呼叫對應 profile wrapper 並等待回傳：
+
+```bash
+/usr/local/bin/researcher -z '<任務 brief>' chat -Q
+/usr/local/bin/nim-researcher -z '<大規模調研 brief>' chat -Q
+/usr/local/bin/writer -z '<寫作/簡報 brief>' chat -Q
+/usr/local/bin/builder -z '<實作 brief>' chat -Q
+/usr/local/bin/aeon-builder -z '<重型 brief>' chat -Q
+/usr/local/bin/runes-holder -z '<Runes 檢索 brief>' chat -Q
+```
+
+- 每個 worker 呼叫都是一個獨立 hermes process；取得其 stdout 回傳作為該 worker 的結果。
+- 多步任務（如調研 → 產報告）依序呼叫多個 worker，把前一步結果作為下一步的輸入，最後合併。
+- 合併時在 Output Contract 的「交付鏈」欄位帶完整實際路徑（見下節）。
+
 禁止模式：
 
 ```text
