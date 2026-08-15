@@ -48,6 +48,10 @@ check_forbidden() {
 
   while IFS= read -r path; do
     case "$path" in
+      *.md|*.markdown)
+        # 文件（含名稱含 token/secret 的審計文件，如 docs/soul-token-audit.md）非 runtime secret。
+        ;;
+
       editions/*/profiles/*/.env.template)
         ;;
 
@@ -99,6 +103,7 @@ for f in \
   docs/editions/opc-personal/degradation-matrix.md \
   docs/editions/opc-personal/cron-governance.md \
   docs/editions/opc-personal/destruction-whitelist.md \
+  docs/editions/opc-personal/soul-vs-agents.md \
   editions/generic/roles.txt \
   editions/generic/config.yaml.example \
   editions/generic/README.md \

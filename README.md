@@ -28,7 +28,7 @@ Hermes 原生 profile 客製化與部署指南 repo。本 repo 是 Freelancer �
 README.md
 VERSION                        # 0.20.1
 docs/shared/                   # 共用文件（guarded-apply-contract、安全守則）
-docs/editions/{generic,opc-personal}/   # edition 專屬文件（opc-personal 已填 M8 內容）
+docs/editions/{generic,opc-personal}/   # edition 專屬文件（opc-personal 已填 M8 內容；soul-vs-agents.md 標 SOUL/AGENTS 邊界）
 docs/soul-token-audit.md       # 13 份 SOUL 模板 token 用量審計（2026-08-15 refine）
 scripts/                       # deploy / verify / setup 腳本
 editions/generic/              # 5-profile 一般版
