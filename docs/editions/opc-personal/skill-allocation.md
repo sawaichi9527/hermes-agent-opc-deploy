@@ -61,6 +61,11 @@ SEARXNG_URL=http://127.0.0.1:8088
 ```
 Firecrawl self-host `USE_DB_AUTHENTICATION=false` → 免 API key。plugins：`web-searxng` + `web-firecrawl` enabled。
 
+**Docker 版本（2026-08-16 升級）**：
+- SearXNG：v2026.5.29 → **v2026.8.14**（`docker compose up -d --force-recreate`；settings.yml bind mount 保留）
+- Firecrawl：v2.11.0 時期 → **BUILD_SHA `f748af9d`（2026-08-15）**（全 stack `--force-recreate`；fdb/redis/rabbitmq volume 保留）
+- 升級後 search/scrape 實測 PASS、researcher web_search 正常。
+
 ## 驗證（2026-08-16）
 
 - 8 profile ping 全 PASS（升級後）。
