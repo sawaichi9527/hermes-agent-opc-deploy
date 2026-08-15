@@ -36,6 +36,17 @@
 | `web-firecrawl` | bundled 1.0.0 | enabled | 全域 fallback + 搜尋 3 角色 `web.extract_backend`（K6 :3002 self-host） |
 | `rtk-rewrite` | **1.2.3** (PyPI) | enabled | **2026-08-16 重裝**：官方 PyPI 套件 `rtk-hermes` v1.2.3（entry point `rtk-rewrite | rtk_hermes | 1.2.3 | True`）+ rtk binary v0.45.0（`~/.local/bin/rtk`）。先前移除的舊 0.1.0 目錄 plugin 因 rtk binary PATH 問題失效。 |
 
+## lark-cli 整合（2026-08-16）
+
+**背景**：hermes 內建 feishu 工具僅 `feishu_doc_read` + drive 評論（5 支）；`larksuite/cli`（lark-cli）補足「以 user 身份操作 Lark 生態」——200+ 命令、18 業務域、26 Agent Skills。
+
+- **安裝**：`npx @larksuite/cli@latest install` → **v1.0.87**（Go binary 於 npm package `bin/lark-cli`；skills 裝 `~/.agents/skills/`）。
+- **PATH**：`/usr/local/bin/lark-cli` symlink → `~/.local/bin/lark-cli` wrapper（設 `HOME=/home/eye` 讓 lark-cli 讀真實 config；因 agent 執行環境 HOME 被 hermes 重定向且 PATH 不含 `~/.local/bin`）。
+- **認證**：`config init --new --force-init --brand lark` → `config bind --identity user-default`（綁 secretary hermes app `cli_aaabd1f1bc38de18`）→ `auth login --recommend`（user OAuth）。bind 在 agent context（HERMES_HOME）下需 user 確認。
+- **掛載**：secretary（lark-shared/im/calendar/doc/drive/task）+ writer（lark-shared/doc/drive/sheets/slides/markdown），symlink → `~/.agents/skills/<name>`。
+- **驗證**：secretary/writer agent 執行 `lark-cli contact +search-user` 回報 open_id/email PASS。
+- **安全**：lark-cli 以 user 身份操作（可讀寫個人資源）；官方警告勿分享 bot/勿入群組；風險控制維持預設。
+
 ## Web Backend 本地化（2026-08-16）
 
 **決策**：捨 ddgs（免費 rate limit 不穩定），改用 K6 本機部署的 SearXNG（`127.0.0.1:8088`）+ Firecrawl（`127.0.0.1:3002`）。
