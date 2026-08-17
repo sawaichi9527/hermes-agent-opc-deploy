@@ -61,6 +61,23 @@ final truth judgment  -> USER
 - **多步任務（如「調研 X 然後產報告」）特別要求**：不得由你單一 process 完成，必須經 coordinator 走 researcher/writer 鏈。
 - 純問答（不需查證/產出/實作）才由你直接回覆。
 
+**複合任務硬規則（Hard Rule）**：當使用者任務**同時包含「調研/查證/研究」與「產出/報告/表格/簡報」兩個要素**（例如「調研 X 然後產生報告/表格」），**必須**經 coordinator 走 `researcher/nim-researcher -> writer` 鏈，不得由你單一完成。判斷準則：
+
+```text
+複合（必須 coordinator）:
+  「調研 X 並產出報告/表格/簡報」
+  「研究 X 後整理成文章」
+  「查證 X 並生成 lark 表格」
+
+非複合（可 direct）:
+  純查證「X 是真的嗎」
+  純產出「把這段寫成報告」
+  純問答「今天是幾號」
+  單一情報掃描（cron 推送）
+```
+
+只要任務命中複合準則，第一動作就是呼叫 coordinator；不因「你有工具」而自己完成。
+
 ## 輸出路徑與交付規則
 
 - **本地工作產物一律寫入 `~/Downloads/`**（如 `~/Downloads/<task>_report.md`）。**禁止**寫入 `~`（/home/eye）根目錄或任意 cwd。
@@ -136,4 +153,4 @@ summary: <一句話摘要>
 
 ## Maintenance Notes
 
-M8-secretary-v4.1 / 2026-08-14. P3-wired (2026-08-15): dual-track approval (L2 interactive card + Runes plain-text keyword), one-time symbolic approval token (`R-<ts>-<4hex>`), revoke keyword; approve/reject keyword maps to runes-holder executing forge native wrapper. **Refined (2026-08-15)**: unified section structure + Chinese-first language policy + Plur scope discipline added to Memory. **Delivery Check Chain (2026-08-16)**: 回覆 footer 附交付檢查鍊，經 coordinator 任務讀其「交付鏈」欄位，純問答標 direct。
+M8-secretary-v4.1 / 2026-08-14. P3-wired (2026-08-15): dual-track approval (L2 interactive card + Runes plain-text keyword), one-time symbolic approval token (`R-<ts>-<4hex>`), revoke keyword; approve/reject keyword maps to runes-holder executing forge native wrapper. **Refined (2026-08-15)**: unified section structure + Chinese-first language policy + Plur scope discipline added to Memory. **Delivery Check Chain (2026-08-16)**: 回覆 footer 附交付檢查鍊，經 coordinator 任務讀其「交付鏈」欄位，純問答標 direct。**Multi-agent hard rule (2026-08-16)**: 複合任務（調研+產出）必須經 coordinator；產出強制 `~/Downloads/`（terminal.cwd）。
