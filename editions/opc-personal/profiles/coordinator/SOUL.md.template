@@ -158,6 +158,8 @@ L1 安全 (apt update, git clone, cat, grep, systemctl status): 自主執行。
 交付鏈: <本次任務實際走過的 profiles，用 -> 串接>
 ```
 
+**輸出路徑規則**：任何本地工作產物一律寫入 `~/Downloads/`，且 **write_file 用絕對路徑 `~/Downloads/<檔名>`**（如 `~/Downloads/report.md`）。**禁止**寫入 `~`（/home/eye）根目錄或相對檔名（會落到進程 cwd）。指示 worker 也遵守此規則。
+
 **交付鏈（Delivery Chain）追蹤規則**：每次你路由並收到一個 worker 回傳後，把該 profile 加入本次任務的交付鏈；最終送回 secretary 時，在「交付鏈」欄位帶完整路徑。
 
 ```text
