@@ -33,7 +33,7 @@ config/rss_seeds.json.example    cron 種子檔範例（D14）
 
 ## 文件與腳本
 
-- `docs/editions/opc-personal/`：8 篇（nim-researcher-moa-profile / aeon-builder-remote-endpoint / plur-memory-layer / a2a-expansion-pi5 / observability-jobs-json / degradation-matrix / cron-governance / destruction-whitelist）+ `soul-vs-agents.md`（SOUL.md = per-profile identity；AGENTS.md = cwd/HERMES_HOME project context，非 profile 模板）。
+- `docs/editions/opc-personal/`：8 篇（nim-researcher-moa-profile / aeon-builder-remote-endpoint / plur-memory-layer / a2a-expansion-pi5 / observability-jobs-json / degradation-matrix / cron-governance / destruction-whitelist）+ `soul-vs-agents.md`（SOUL.md = per-profile identity；AGENTS.md = cwd/HERMES_HOME project context，非 profile 模板）+ `session-mechanism.md`（gateway 持久 per-chat vs `-z` oneshot 每任務新 session）。
 - setup 腳本（K6 執行）：`scripts/setup-plur.sh`、`scripts/setup-feishu-gateway.sh`、`scripts/setup-nim-moa-profile.sh`、`scripts/jobs-json-init.sh`、`scripts/approvals-deny-init.sh`、`scripts/set-local-model-name.sh`（aeon-builder 切換 + 身分驗證）。
 
 ## 狀態
