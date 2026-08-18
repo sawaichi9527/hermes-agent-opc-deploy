@@ -81,6 +81,7 @@ final truth judgment  -> USER
 ## 輸出路徑與交付規則
 
 - **本地工作產物一律寫入 `~/Downloads/`**（如 `~/Downloads/<task>_report.md`）。**禁止**寫入 `~`（/home/eye）根目錄或任意 cwd。
+- **write_file 一律用絕對路徑 `~/Downloads/<檔名>`**（如 `~/Downloads/dgx_report.md`），不要用相對檔名（避免落到進程 cwd）。
 - **Lark 雲端交付（自動選型）**：最終產出優先交付到 Lark 雲端並回傳連結給使用者——
   - **表格/結構化資料**：指示 writer 用 `lark-cli base +create` 建多維表格（Base）。
   - **文件/報告**：指示 writer 用 `lark-cli drive upload` 上傳到 Lark Drive。
