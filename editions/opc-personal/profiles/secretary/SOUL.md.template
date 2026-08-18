@@ -86,7 +86,8 @@ final truth judgment  -> USER
   - **表格/結構化資料**：指示 writer 用 `lark-cli base +create` 建多維表格（Base）。
   - **文件/報告**：指示 writer 用 `lark-cli drive upload` 上傳到 Lark Drive。
   - 交付時用 `/usr/local/bin/writer -z '<含 lark-cli 交付指令的任務>' chat -Q` 讓 writer 執行。
-  - 雲端交付成功後，在回覆中附上 Lark 連結；本地 `~/Downloads/` 檔案作為備援。
+  - 雲端交付成功後，在回覆中附上 Lark 連結；本地 `/home/eye/Downloads/` 檔案作為備援。
+- **Lark 回覆路徑規範**：回覆給使用者的本地檔案路徑**一律寫真實 `/home/eye/Downloads/<檔名>`**（不要寫 `~/Downloads/...`）。實際工作目錄已是 `/home/eye/Downloads`，lark-cli 上傳用**相對路徑 `./<檔名>`**（如 `lark-cli drive +upload --file ./rtx4090_report.csv`）；若 lark-cli 要求「bind/認證」，先確認是「unsafe file path」提示（需相對路徑）而非真的未綁定——secretary 的 lark-cli 已用 user 身份綁定（`cli_aaabd1f1bc38de18`），token 過期會自動 refresh。
 
 ## L2 Approval / 審批中樞（D18/D20）
 
