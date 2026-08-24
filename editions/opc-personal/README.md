@@ -34,7 +34,14 @@ config/rss_seeds.json.example    cron 種子檔範例（D14）
 ## 文件與腳本
 
 - `docs/editions/opc-personal/`：8 篇（nim-researcher-moa-profile / aeon-builder-remote-endpoint / plur-memory-layer / a2a-expansion-pi5 / observability-jobs-json / degradation-matrix / cron-governance / destruction-whitelist）+ `soul-vs-agents.md`（SOUL.md = per-profile identity；AGENTS.md = cwd/HERMES_HOME project context，非 profile 模板）+ `session-mechanism.md`（gateway 持久 per-chat vs `-z` oneshot 每任務新 session）。
-- setup 腳本（K6 執行）：`scripts/setup-plur.sh`、`scripts/setup-feishu-gateway.sh`、`scripts/setup-nim-moa-profile.sh`、`scripts/jobs-json-init.sh`、`scripts/approvals-deny-init.sh`、`scripts/set-local-model-name.sh`（aeon-builder 切換 + 身分驗證）。
+- setup 腳本（K6 執行）：`scripts/setup-plur.sh`、`scripts/setup-feishu-gateway.sh`、`scripts/setup-nim-moa-profile.sh`、`scripts/jobs-json-init.sh`、`scripts/approvals-deny-init.sh`、`scripts/set-local-model-name.sh`（aeon-builder 切換 + 身分驗證）+ **`scripts/align-secretary-model.sh`（secretary→coordinator/builder/writer/researcher 模型對齊，與 secretary 一致）**。
+
+## 模型一致性政策（2026-08-24）
+
+- **coordinator / builder / writer / researcher 4 角色必須與 secretary 使用同一模型**（provider / base_url / name 全對齊）。
+- 對齊工具：`scripts/align-secretary-model.sh` 讀 `~/.hermes/profiles/secretary/config.yaml` 的 `model:` 區塊，原樣寫入 4 目標（dry-run 預設，`--apply` 寫檔，自動 backup）。
+- **不觸及** `aeon-builder`（DGX Spark 專用 `aeon`）、`nim-researcher`（MoA 內部 `nvidia` + aggregator）、`runes-holder`。
+- K6 執行：`bash scripts/align-secretary-model.sh --apply`（驗證：`for p in secretary coordinator builder writer researcher; do echo "== $p =="; grep -A6 "^model:" ~/.hermes/profiles/$p/config.yaml | head -10; done`）。
 
 ## 狀態
 

@@ -52,6 +52,7 @@ bash scripts/setup-plur.sh --apply                 # 8 profiles 啟用 plur（M7
 bash scripts/setup-feishu-gateway.sh --apply --confirm REAL_FEISHU_GATEWAY_TAKEOVER  # secretary gateway 接管（M3）
 bash scripts/setup-nim-moa-profile.sh --apply      # nim-researcher MoA preset（M6b）
 bash scripts/approvals-deny-init.sh --apply        # D18 L3 deny 清單（M6a）
+bash scripts/align-secretary-model.sh --apply      # 對齊 secretary 模型到 coordinator/builder/writer/researcher（2026-08-24）
 PROFILE_LIST=aeon-builder MODEL_NAME=qwen3.6-27b \
   bash scripts/set-local-model-name.sh --apply --verify   # aeon-builder 切換 + 身分驗證（D13）
 ```
