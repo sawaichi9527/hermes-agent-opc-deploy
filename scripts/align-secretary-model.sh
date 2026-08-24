@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# align-secretary-model.sh — secretary → coordinator/builder/writer/researcher 模型對齊
-# 用途：把 secretary 的 model 區塊（provider / base_url / name / api_key 等）原樣複製到 4 個 worker，
-#        確保 5 角色使用「同一模型」。
-# 來源：使用者需求「coordinator, builder, writer, researcher 使用的模型，與 secretary 一致」
-# 機制：1) 讀 ~/.hermes/profiles/secretary/config.yaml 的 model: 區塊，寫入目標 4 profile 的同區塊。
+# align-secretary-model.sh — secretary → coordinator/builder/writer/researcher/runes-holder/nim-researcher 模型對齊
+# 用途：把 secretary 的 model 區塊（provider / base_url / name / api_key 等）原樣複製到目標 profile，
+#        確保所有 profile 使用「同一模型」（2026-08-24 決策：runes-holder / nim-researcher 也一併切換）。
+# 來源：使用者需求「coordinator, builder, writer, researcher 使用的模型，與 secretary 一致」+「runes-holder 與 nim-researcher 也一併切換」
+# 機制：1) 讀 ~/.hermes/profiles/secretary/config.yaml 的 model: 區塊，寫入目標 profile 的同區塊。
 #        2) 同步 .env 的 HERMES_CUSTOM_192_168_23_217_1234_API_KEY（secretary 的 api_key placeholder 所需）。
-# 安全：dry-run 預設；--apply 才寫檔；自動 backup；不改 aeon-builder / nim-researcher / runes-holder。
+#        3) nim-researcher：同步 moa preset aggregator.model 為 secretary 模型（reference 仍走 NIM）。
+# 安全：dry-run 預設；--apply 才寫檔；自動 backup；不改 aeon-builder（DGX Spark 專用）。
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROFILES_ROOT="${HERMES_PROFILES_ROOT:-$HOME/.hermes/profiles}"
 SECRETARY_PROFILE="${SECRETARY_PROFILE:-secretary}"
-TARGETS_DEFAULT="coordinator builder writer researcher"
+TARGETS_DEFAULT="coordinator builder writer researcher runes-holder nim-researcher"
 TARGETS_ENV="${PROFILE_LIST:-}"
 APPLY=0
 
@@ -22,20 +23,22 @@ Usage:
   ./scripts/align-secretary-model.sh [--apply] [--secretary <name>] [--targets <list>]
   PROFILE_LIST="coordinator writer" ./scripts/align-secretary-model.sh [--apply]
 
-對齊 secretary 的 model 區塊到 4 worker（coordinator/builder/writer/researcher）。
+對齊 secretary 的 model 區塊到目標 profiles
+（預設: coordinator/builder/writer/researcher/runes-holder/nim-researcher）。
 
 Default behavior:
   - Dry-run only. 顯示將如何對齊，不寫檔。
-  - 不觸及 aeon-builder / nim-researcher / runes-holder（專用模型/ MoA）。
+  - 不觸及 aeon-builder（DGX Spark 專用模型）。
   - 同步 .env 的 HERMES_CUSTOM_192_168_23_217_1234_API_KEY（若 secretary 使用 placeholder）。
+  - nim-researcher：同步 moa preset aggregator.model 為 secretary 模型。
 
 Options:
   --apply
-      實際寫入 ~/.hermes/profiles/<target>/config.yaml。
+      實際寫入 ~/.hermes/profiles/<target>/config.yaml 與 .env。
   --secretary <name>
       Secretary 來源 profile（預設 secretary）。
   --targets <list>
-      逗號或空白分隔的目標清單（預設: coordinator builder writer researcher）。
+      逗號或空白分隔的目標清單。
 
 Environment:
   HERMES_PROFILES_ROOT  Default: $HOME/.hermes/profiles
@@ -277,10 +280,11 @@ PY
   printf '\n'
 done
 
+OVERALL_FAIL=0
 printf '== Summary (config.yaml) ==\n'
 if [ "$fail_count" -ne 0 ]; then
   printf 'FAIL alignment completed with %s failure(s); changes=%s skipped=%s\n' "$fail_count" "$change_count" "$skip_count"
-  exit 1
+  OVERALL_FAIL=1
 fi
 if [ "$APPLY" -eq 1 ]; then
   printf 'PASS alignment apply completed; changes=%s skipped=%s (source=%s -> targets=%s)\n' "$change_count" "$skip_count" "$SECRETARY_PROFILE" "${targets[*]}"
@@ -337,4 +341,106 @@ else
     done
   fi
 fi
-printf '\nVerify: for p in secretary coordinator builder writer researcher; do echo "== $p =="; grep -A6 "^model:" ~/.hermes/profiles/$p/config.yaml | head -10; grep HERMES_CUSTOM ~/.hermes/profiles/$p/.env; echo; done\n'
+# --- nim-researcher MoA aggregator sync (aggregator.model -> secretary 模型) ---
+if [[ " ${targets[*]} " == *" nim-researcher "* ]]; then
+  printf '\n== nim-researcher MoA aggregator sync ==\n'
+  nim_cfg="$PROFILES_ROOT/nim-researcher/config.yaml"
+  src_default="$($PYTHON - "$src_file" <<'PY'
+import re, sys
+from pathlib import Path
+lines = Path(sys.argv[1]).read_text(encoding="utf-8").splitlines()
+in_model = False
+for raw in lines:
+    s = raw.strip()
+    if re.match(r"^model\s*:\s*$", s):
+        in_model = True
+        continue
+    if in_model:
+        if s and not s.startswith("#") and not raw.startswith(" "):
+            break
+        m = re.match(r"^(default|name)\s*:\s*(.+)$", s)
+        if m:
+            val = m.group(2).strip().strip("\"'")
+            print(val)
+            break
+PY
+)"
+  if [ -z "$src_default" ]; then
+    warn "cannot resolve secretary model default/name; skip MoA aggregator sync"
+  elif [ ! -f "$nim_cfg" ]; then
+    warn "nim-researcher config missing: $nim_cfg"
+  else
+    cur_agg="$($PYTHON - "$nim_cfg" <<'PY'
+import re, sys
+from pathlib import Path
+lines = Path(sys.argv[1]).read_text(encoding="utf-8").splitlines()
+in_agg = False
+agg_indent = None
+val = ""
+for raw in lines:
+    stripped = raw.strip()
+    indent = len(raw) - len(raw.lstrip(" "))
+    if re.match(r"^aggregator\s*:\s*$", stripped) and indent <= 6:
+        in_agg = True
+        agg_indent = indent
+        continue
+    if in_agg:
+        if stripped and indent <= agg_indent:
+            break
+        m = re.match(r"^model\s*:\s*(.+)$", stripped)
+        if m:
+            val = m.group(1).strip().strip("\"'")
+            break
+print(val)
+PY
+)"
+    if [ -z "$cur_agg" ]; then
+      info "no moa aggregator model line found (skip)"
+    elif [ "$cur_agg" = "$src_default" ]; then
+      pass "MoA aggregator already aligned ($cur_agg)"
+    else
+      if [ "$APPLY" -eq 1 ]; then
+        backup="$nim_cfg.bak.align-$(date +%Y%m%d%H%M%S)"
+        cp "$nim_cfg" "$backup"
+        tmp_cfg="$(mktemp)"
+        $PYTHON - "$nim_cfg" "$src_default" >"$tmp_cfg" <<'PY'
+import re, sys
+from pathlib import Path
+path = Path(sys.argv[1])
+new_val = sys.argv[2]
+lines = path.read_text(encoding="utf-8").splitlines()
+in_agg = False
+agg_indent = None
+done_flag = False
+for i, raw in enumerate(lines):
+    stripped = raw.strip()
+    indent = len(raw) - len(raw.lstrip(" "))
+    if re.match(r"^aggregator\s*:\s*$", stripped) and indent <= 6:
+        in_agg = True
+        agg_indent = indent
+        continue
+    if in_agg and not done_flag:
+        if stripped and indent <= agg_indent:
+            break
+        m = re.match(r"^(\s*)model\s*:\s*.+$", raw)
+        if m:
+            lines[i] = f"{m.group(1)}model: {new_val}"
+            done_flag = True
+            break
+sys.stdout.write("\n".join(lines) + "\n")
+PY
+        cat "$tmp_cfg" >"$nim_cfg"
+        rm -f "$tmp_cfg"
+        pass "MoA aggregator updated: $cur_agg -> $src_default; backup=$backup"
+      else
+        info "dry-run would update MoA aggregator: $cur_agg -> $src_default"
+      fi
+    fi
+  fi
+fi
+
+printf '\nVerify: for p in secretary coordinator builder writer researcher runes-holder nim-researcher; do echo "== $p =="; grep -A6 "^model:" ~/.hermes/profiles/$p/config.yaml | head -10; grep HERMES_CUSTOM ~/.hermes/profiles/$p/.env; echo; done\n'
+
+if [ "$OVERALL_FAIL" -ne 0 ]; then
+  exit 1
+fi

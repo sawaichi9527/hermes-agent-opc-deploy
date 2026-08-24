@@ -38,10 +38,10 @@ config/rss_seeds.json.example    cron 種子檔範例（D14）
 
 ## 模型一致性政策（2026-08-24）
 
-- **coordinator / builder / writer / researcher 4 角色必須與 secretary 使用同一模型**（provider / base_url / name 全對齊）。
-- 對齊工具：`scripts/align-secretary-model.sh` 讀 `~/.hermes/profiles/secretary/config.yaml` 的 `model:` 區塊，原樣寫入 4 目標（dry-run 預設，`--apply` 寫檔，自動 backup）。
-- **不觸及** `aeon-builder`（DGX Spark 專用 `aeon`）、`nim-researcher`（MoA 內部 `nvidia` + aggregator）、`runes-holder`。
-- K6 執行：`bash scripts/align-secretary-model.sh --apply`（驗證：`for p in secretary coordinator builder writer researcher; do echo "== $p =="; grep -A6 "^model:" ~/.hermes/profiles/$p/config.yaml | head -10; done`）。
+- **coordinator / builder / writer / researcher / runes-holder / nim-researcher 6 角色必須與 secretary 使用同一模型**（provider / base_url / default 全對齊）；**aeon-builder 除外**（DGX Spark 專用 `aeon`）。
+- nim-researcher 的 MoA preset `aggregator.model` 同步為 secretary 模型；`reference_models` 維持 NIM。
+- 對齊工具：`scripts/align-secretary-model.sh` 讀 `~/.hermes/profiles/secretary/config.yaml` 的 `model:` 區塊原樣寫入目標，並同步 `.env` 的 `HERMES_CUSTOM_192_168_23_217_1234_API_KEY`（dry-run 預設，`--apply` 寫檔，自動 backup）。
+- K6 執行：`bash scripts/align-secretary-model.sh --apply`（驗證：`for p in secretary coordinator builder writer researcher runes-holder nim-researcher; do echo "== $p =="; grep -A6 "^model:" ~/.hermes/profiles/$p/config.yaml | head -10; done`）。
 
 ## 狀態
 
