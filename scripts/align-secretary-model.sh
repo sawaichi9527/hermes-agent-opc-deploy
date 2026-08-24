@@ -5,8 +5,9 @@ set -euo pipefail
 # 用途：把 secretary 的 model 區塊（provider / base_url / name / api_key 等）原樣複製到 4 個 worker，
 #        確保 5 角色使用「同一模型」。
 # 來源：使用者需求「coordinator, builder, writer, researcher 使用的模型，與 secretary 一致」
-# 機制：讀 ~/.hermes/profiles/secretary/config.yaml 的 model: 區塊，寫入目標 4 profile 的同區塊。
-# 安全：dry-run 預設；--apply 才寫檔；自動 backup；不觸及 .env / secrets；不改 aeon-builder / nim-researcher / runes-holder。
+# 機制：1) 讀 ~/.hermes/profiles/secretary/config.yaml 的 model: 區塊，寫入目標 4 profile 的同區塊。
+#        2) 同步 .env 的 HERMES_CUSTOM_192_168_23_217_1234_API_KEY（secretary 的 api_key placeholder 所需）。
+# 安全：dry-run 預設；--apply 才寫檔；自動 backup；不改 aeon-builder / nim-researcher / runes-holder。
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROFILES_ROOT="${HERMES_PROFILES_ROOT:-$HOME/.hermes/profiles}"
@@ -26,7 +27,7 @@ Usage:
 Default behavior:
   - Dry-run only. 顯示將如何對齊，不寫檔。
   - 不觸及 aeon-builder / nim-researcher / runes-holder（專用模型/ MoA）。
-  - 不觸及 .env / api_key 值本身（只複製 config.yaml 的 model 區塊引用）。
+  - 同步 .env 的 HERMES_CUSTOM_192_168_23_217_1234_API_KEY（若 secretary 使用 placeholder）。
 
 Options:
   --apply
@@ -276,15 +277,64 @@ PY
   printf '\n'
 done
 
-printf '== Summary ==\n'
+printf '== Summary (config.yaml) ==\n'
 if [ "$fail_count" -ne 0 ]; then
   printf 'FAIL alignment completed with %s failure(s); changes=%s skipped=%s\n' "$fail_count" "$change_count" "$skip_count"
   exit 1
 fi
 if [ "$APPLY" -eq 1 ]; then
   printf 'PASS alignment apply completed; changes=%s skipped=%s (source=%s -> targets=%s)\n' "$change_count" "$skip_count" "$SECRETARY_PROFILE" "${targets[*]}"
-  printf 'Verify: for p in secretary coordinator builder writer researcher; do echo "== $p =="; grep -A6 "^model:" ~/.hermes/profiles/$p/config.yaml | head -10; done\n'
 else
   printf 'PASS alignment dry-run completed; planned_changes=%s skipped=%s\n' "$change_count" "$skip_count"
   printf 'Run with --apply to write changes.\n'
 fi
+
+# --- 同步 .env HERMES_CUSTOM (secretary placeholder 所需) ---
+printf '\n== .env HERMES_CUSTOM sync ==\n'
+src_env="$PROFILES_ROOT/$SECRETARY_PROFILE/.env"
+if [ ! -f "$src_env" ]; then
+  warn "source .env missing: $src_env (skip .env sync)"
+else
+  src_line="$(grep -E '^HERMES_CUSTOM_192_168_23_217_1234_API_KEY=' "$src_env" 2>/dev/null || true)"
+  if [ -z "$src_line" ]; then
+    info "secretary .env has no HERMES_CUSTOM_192_168_23_217_1234_API_KEY (skip .env sync)"
+  else
+    printf 'Source .env line: %s\n' "$src_line"
+    for profile in "${targets[@]}"; do
+      tgt_env="$PROFILES_ROOT/$profile/.env"
+      if [ ! -f "$tgt_env" ]; then
+        warn "$profile .env missing (skip)"
+        continue
+      fi
+      if grep -qE '^HERMES_CUSTOM_192_168_23_217_1234_API_KEY=' "$tgt_env" 2>/dev/null; then
+        cur="$(grep -E '^HERMES_CUSTOM_192_168_23_217_1234_API_KEY=' "$tgt_env")"
+        if [ "$cur" = "$src_line" ]; then
+          pass "$profile .env already aligned"
+        else
+          if [ "$APPLY" -eq 1 ]; then
+            backup="$tgt_env.bak.align-$(date +%Y%m%d%H%M%S)"
+            cp "$tgt_env" "$backup"
+            # replace line
+            tmp_env="$(mktemp)"
+            awk -v repl="$src_line" 'BEGIN{done=0} /^HERMES_CUSTOM_192_168_23_217_1234_API_KEY=/ {print repl; done=1; next} {print}' "$tgt_env" > "$tmp_env"
+            cat "$tmp_env" > "$tgt_env"
+            rm -f "$tmp_env"
+            pass "$profile .env updated; backup=$backup"
+          else
+            info "$profile .env dry-run would replace $cur -> $src_line"
+          fi
+        fi
+      else
+        if [ "$APPLY" -eq 1 ]; then
+          backup="$tgt_env.bak.align-$(date +%Y%m%d%H%M%S)"
+          cp "$tgt_env" "$backup"
+          printf '%s\n' "$src_line" >> "$tgt_env"
+          pass "$profile .env appended; backup=$backup"
+        else
+          info "$profile .env dry-run would append $src_line"
+        fi
+      fi
+    done
+  fi
+fi
+printf '\nVerify: for p in secretary coordinator builder writer researcher; do echo "== $p =="; grep -A6 "^model:" ~/.hermes/profiles/$p/config.yaml | head -10; grep HERMES_CUSTOM ~/.hermes/profiles/$p/.env; echo; done\n'
