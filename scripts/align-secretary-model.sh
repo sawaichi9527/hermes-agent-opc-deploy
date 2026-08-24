@@ -133,10 +133,10 @@ for j in range(m_start+1, len(lines)):
         m_end = j
         break
 block = lines[m_start:m_end]
-# sanity: must contain name:
+# sanity: must contain name or default:
 joined = "\n".join(block)
-if "name:" not in joined:
-    print("FAIL source model block has no name:", file=sys.stderr)
+if "name:" not in joined and "default:" not in joined:
+    print("FAIL source model block has no name/default:", file=sys.stderr)
     sys.exit(1)
 for l in block:
     print(l)
