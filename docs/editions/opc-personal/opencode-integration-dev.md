@@ -1,40 +1,48 @@
 # OpenCode integration development track
 
 > Branch: `dev/opencode-integration`
-> Version baseline: `0.21.0-dev.0`
-> Status: design / discussion only; no live Freelancer/k6 change is implied by this document.
+> Version baseline: `0.21.0-dev.1`
+> Status: live OPC-PERSONAL migration design; design decisions are recorded here before remote implementation changes Freelancer/k6.
 
 ## 1. Purpose
 
-This development track records the current design discussion for adding OpenCode as an optional capability to the existing Freelancer/k6 Hermes Agent deployment.
+This development track records the incremental design for introducing OpenCode capabilities into the **already deployed** OPC-PERSONAL Hermes Agent environment on Freelancer/k6.
 
-The primary architectural rule remains unchanged:
+This is **not** a greenfield 8-profile deployment plan. The OPC-PERSONAL 8-profile system is already implemented on the live Freelancer/k6 Hermes-Agent PC. The purpose of `0.21.0` is to evolve that existing deployment without weakening its Hermes-first architecture.
 
-- **Hermes Agent is the runtime owner and primary agent harness.**
-- The existing 8 Hermes profile rules remain the main organization and execution model.
-- OpenCode must not become a mandatory second orchestration layer unless later evidence shows a clear benefit.
-- This branch is the working specification. Later design decisions and direction changes should be updated here before remote implementation begins.
+Primary architectural rules:
 
-## 2. Current Freelancer/k6 profile baseline
+- **Hermes Agent remains the runtime owner and primary agent harness.**
+- The existing OPC-PERSONAL 8-profile organization is the current live baseline.
+- `0.21.0` is an incremental migration/refactor track, not a redeployment from zero.
+- OpenCode may provide models or selected auxiliary capabilities, but must not silently replace Hermes orchestration.
+- Any role rename/replacement must preserve the intended organizational function or explicitly document the new function.
+- Later target/direction changes are updated on this branch before a separate OpenCode workstation remotely modifies Freelancer/k6.
 
-Observed profile set on 2026-09-09:
+## 2. Live Freelancer/k6 baseline
 
-| Profile | Current model | Observed state | Current role in this design |
+The OPC-PERSONAL deployment is already in use. Profile state observed during the 2026-09-09 discussion:
+
+| Profile | Current model | Observed state | Current role |
 |---|---|---|---|
 | `aeon-builder` | `aeon` | stopped | specialized builder / execution role |
 | `builder` | `ornith-1.5-35b-a3b@q4_k_m` | stopped | normal build / code / test execution |
 | `coordinator` | `ornith-1.5-35b-a3b@q4_k_m` | stopped | orchestration, task decomposition, validation |
-| `nim-researcher` | `ornith-1.5-35b-a3b` | stopped | NIM / external technical research |
+| `nim-researcher` | `ornith-1.5-35b-a3b` | stopped | NIM-oriented external/model research path |
 | `researcher` | `ornith-1.5-35b-a3b@q4_k_m` | stopped | general research and analysis |
 | `runes-holder` | `ornith-1.5-35b-a3b@q4_k_m` | stopped | rules / knowledge / governance role |
 | `secretary` | `ornith-1.5-35b-a3b@q4_k_m` | running | Lark/Feishu user-facing entry point |
 | `writer` | `ornith-1.5-35b-a3b@q4_k_m` | stopped | documentation and writing |
 
-The 8-profile organization is the system to preserve. OpenCode is an optional capability underneath or beside selected profiles, not a ninth Hermes profile.
+This table is a live-state snapshot, not a guarantee of future state. Remote implementation must re-inspect the host before writes.
 
-## 3. Two possible OpenCode integration paths
+## 3. Why OpenCode is being considered now
 
-### A. OpenCode Go API as an additional model/provider
+The goal is not to make Freelancer/k6 an OpenCode-first machine. The goal is to improve selected Hermes roles while keeping the existing multi-profile Hermes organization authoritative.
+
+Two candidate OpenCode capabilities were discussed:
+
+### A. OpenCode Go API as an additional Hermes model/provider
 
 Concept:
 
@@ -45,19 +53,20 @@ Hermes profile
     -> result returns to Hermes
 ```
 
-Role:
+Potential use:
 
-- additional reasoning / second opinion
+- higher-quality or alternative reasoning
+- second opinion / arbitration
 - architecture review
 - difficult diagnosis
-- optional research or writing assistance
+- research tasks that benefit from a different model family
 
 Characteristics:
 
-- Hermes remains the only agent harness.
+- Hermes remains the agent harness.
 - No local OpenCode CLI is required.
-- Existing Hermes tools, profile rules, memory, governance and execution flow remain authoritative.
-- OpenCode Go should be treated as a model/provider capability, not a replacement runtime.
+- Existing Hermes tools, profile rules, memory, governance and execution flow stay authoritative.
+- OpenCode Go is a model/provider capability, not a worker framework.
 
 ### B. Local OpenCode CLI as a coding sub-agent
 
@@ -71,69 +80,169 @@ Hermes builder / aeon-builder
     -> repo read/edit/test/build
 ```
 
-Role:
+Potential use:
 
-- repo traversal
+- large-repository traversal
 - code editing
 - test/build/debug loops
 - coding-agent execution
 
 Characteristics:
 
-- introduces a second agent harness below Hermes
-- is useful mainly to `builder` and `aeon-builder`
-- can dilute the meaning of the existing Hermes builder profiles if overused
-- adds another session/config/tool-policy layer that must be debugged and governed
+- introduces a second agent harness beneath Hermes
+- mainly benefits `builder` / `aeon-builder`
+- can dilute the meaning of those Hermes profiles if it becomes the actual worker for most coding tasks
+- adds another session/config/tool-policy layer to operate and debug
 
-## 4. Current direction: do not mix A and B by default
+## 4. Current direction: Hermes-first, A before B
 
-Because Freelancer/k6 is intended to remain a **Hermes-Agent-first** machine, the current preferred direction is:
+Because Freelancer/k6 remains a Hermes-Agent-first system, current preference is:
 
-> **Start with A only: OpenCode Go API as an optional reasoning provider. Do not install or depend on local OpenCode CLI in the first implementation phase.**
+> **Evaluate OpenCode Go API first as a selective provider/role capability. Do not introduce local OpenCode CLI merely because it is available.**
 
-Reasoning:
+Path B remains deferred unless real Hermes-native builder workloads show a measurable reason to add it.
 
-1. The existing Hermes deployment already has dedicated `builder` and `aeon-builder` profiles.
-2. Adding local OpenCode CLI immediately would create an Agent-Harness-under-Agent-Harness arrangement.
-3. A-only preserves the current profile organization, tool ownership, session model and governance boundaries.
-4. OpenCode can remain a consultant / reasoning source instead of becoming the worker that actually owns coding execution.
-5. B can still be evaluated later if measured Hermes-native coding performance reveals a real bottleneck.
+Reasons:
 
-This is a **current design decision, not a permanent ban** on path B.
+1. OPC-PERSONAL already has dedicated `builder` and `aeon-builder` roles.
+2. The current need is selective capability improvement, not replacement of the Hermes execution layer.
+3. A provider-level integration preserves the existing runtime, tools, profile governance and session ownership.
+4. A local OpenCode CLI would create Agent-Harness-under-Agent-Harness complexity for a relatively narrow subset of the eight roles.
+5. The migration should change only the roles that gain clear operational value.
 
-## 5. Intended use of path A across the 8 profiles
+This is a current design preference, not a permanent ban on path B.
 
-Initial policy direction:
+## 5. New candidate role migration: `nim-researcher` -> `opencode-researcher`
 
-| Profile | OpenCode Go usage direction |
+### 5.1 Motivation
+
+The live OPC-PERSONAL blueprint includes `nim-researcher`, originally intended to exploit NVIDIA NIM as an external research/model path. In current operation, the maintainer has observed that the NVIDIA NIM model service is not sufficiently stable for the role to remain an attractive dedicated dependency.
+
+Therefore `0.21.0-dev.1` introduces this candidate migration:
+
+```text
+current:
+    nim-researcher
+        -> NIM-oriented specialist path
+
+candidate:
+    opencode-researcher
+        -> OpenCode Go-backed specialist research / second-opinion path
+```
+
+This is **not yet an approved live rename**. It is the main role-level design question for the next discussion/inspection phase.
+
+### 5.2 Why replacement may be cleaner than adding a ninth profile
+
+If `nim-researcher` is no longer operationally justified, adding `opencode-researcher` while keeping the old role would create profile sprawl:
+
+```text
+researcher
+nim-researcher
+opencode-researcher
+```
+
+Instead, a one-for-one replacement can keep OPC-PERSONAL at eight profiles:
+
+```text
+aeon-builder
+builder
+coordinator
+opencode-researcher   # candidate replacement for nim-researcher
+researcher
+runes-holder
+secretary
+writer
+```
+
+This preserves the overall organization size while replacing an unreliable external model dependency with a more useful external reasoning role.
+
+### 5.3 Candidate responsibility split
+
+If approved, the intended distinction should remain clear:
+
+| Role | Primary responsibility |
 |---|---|
-| `secretary` | normally avoid; keep Lark entry/routing cheap and predictable |
-| `coordinator` | suitable for difficult planning, arbitration, second-opinion reasoning |
-| `researcher` | suitable for difficult technical analysis or cross-checking |
-| `nim-researcher` | suitable when an additional reasoning source is useful |
-| `writer` | optional for difficult refinement; not a default dependency |
-| `runes-holder` | local-first; only use external reasoning for difficult rule conflicts if explicitly allowed |
-| `builder` | local-first; OpenCode Go may assist diagnosis, but execution remains Hermes-owned |
-| `aeon-builder` | local-first; same principle as builder |
+| `researcher` | general/default research using the normal Hermes/local path |
+| `opencode-researcher` | explicit external second opinion, deeper reasoning, alternative-model research via OpenCode Go |
+| `coordinator` | decides when escalation/cross-check is worthwhile; remains orchestration owner |
 
-The exact provider/model routing mechanism is intentionally **not hard-coded yet**. The remote implementer must first inspect the live Hermes v0.20.x configuration and supported provider/profile configuration schema before changing anything.
+`opencode-researcher` should not become a generic substitute for every profile merely because its model is stronger or paid.
 
-## 6. Path B remains a deferred option
+### 5.4 Questions that must be resolved before rename
 
-Path B should be reconsidered only if one or more measurable conditions appear, for example:
+- Does Hermes v0.20.x permit the desired OpenCode Go provider/model binding at profile scope?
+- Should `opencode-researcher` always use OpenCode Go, or retain a local fallback path?
+- What is the failure behavior under quota exhaustion / provider outage?
+- Does coordinator explicitly dispatch to it, or can profiles invoke it through delegation?
+- What spending/quota policy is acceptable?
+- Which existing NIM-specific MoA behavior should be retired, retained elsewhere, or redesigned?
+- Are any skills, cron jobs, Runes policies or degradation rules keyed to the literal `nim-researcher` name?
+
+## 6. Migration impact surface for `nim-researcher`
+
+A profile rename/replacement must not be implemented as a single directory rename. The remote implementer must scan all OPC-PERSONAL artifacts that can reference the old role.
+
+At minimum inspect:
+
+```text
+- live Hermes profile definition / SOUL / AGENTS data
+- editions/opc-personal profile templates
+- docs/editions/opc-personal/nim-researcher-moa-profile.md
+- scripts/setup-nim-moa-profile.sh
+- skill allocation rules
+- degradation / fallback matrices
+- coordinator delegation/routing rules
+- cron/jobs definitions
+- Runes approval/governance references
+- validation scripts that expect an exact 8-profile list
+- README / setup documentation
+- any session or profile-name keyed state on the live host
+```
+
+The migration design must decide for each dependency whether to:
+
+1. rename it,
+2. delete it,
+3. preserve it under a more generic name, or
+4. move its useful behavior to another role.
+
+Do not preserve NIM-specific complexity by default if the reason for the role replacement is to reduce dependency on NIM.
+
+## 7. OpenCode Go usage direction across the profile organization
+
+Current working direction, subject to provider-capability inspection:
+
+| Profile | OpenCode Go direction |
+|---|---|
+| `secretary` | avoid as a default; keep Lark entry/routing predictable |
+| `coordinator` | possible for difficult arbitration/planning, but preserve orchestration independence |
+| `researcher` | local/default general research path |
+| `nim-researcher` | candidate for retirement |
+| `opencode-researcher` | candidate dedicated OpenCode Go research/reasoning role |
+| `writer` | optional; not a default dependency |
+| `runes-holder` | local-first; external reasoning only for explicitly permitted difficult cases |
+| `builder` | local/Hermes execution first; optional diagnosis only if later justified |
+| `aeon-builder` | same principle as builder |
+
+If `nim-researcher -> opencode-researcher` is approved, the total live profile count should remain eight unless a later decision explicitly changes the organization size.
+
+## 8. Path B remains deferred
+
+Local OpenCode CLI should be reconsidered only if measurable conditions appear, for example:
 
 - repeated large-repository traversal is inefficient under Hermes-native builder flow
 - edit/test/debug loops are materially less reliable than OpenCode on the same task class
 - coding tasks consume disproportionate model context or tool-loop budget
-- builder profiles become the observed bottleneck in real workloads
+- builder profiles become an observed operational bottleneck
 
-If B is later approved, the intended scope is narrow:
+If B is later approved, intended scope remains narrow:
 
 - primary direct users: `builder`, `aeon-builder`
-- `coordinator` may dispatch the task but should not normally become a direct repo editor
-- other profiles should not receive unrestricted OpenCode CLI access
+- `coordinator` may dispatch but should not normally become a repo editor
+- other profiles should not receive unrestricted CLI access
 
-## 7. Observed Node/npm environment for possible future path B
+## 9. Observed Node/npm environment for possible future path B
 
 Observed on Freelancer/k6 on 2026-09-09:
 
@@ -146,7 +255,7 @@ npm:     /home/eye/.nvm/versions/node/v22.22.3/bin/npm
 prefix:  /home/eye/.nvm/versions/node/v22.22.3
 ```
 
-If local OpenCode CLI is eventually approved, the current preferred installation design is a user-owned dedicated npm prefix rather than a system-wide install:
+If local OpenCode CLI is eventually approved, current preferred installation design is a user-owned dedicated npm prefix:
 
 ```bash
 mkdir -p "$HOME/.local/opencode-cli"
@@ -160,111 +269,125 @@ npm install -g \
 Reasons:
 
 - no `sudo`
-- fixed path independent from NVM's currently active global package tree
-- easy removal / rollback
-- easy for Hermes/systemd to invoke by absolute path
-- does not require OpenCode Desktop
+- fixed path independent from the active NVM global package tree
+- easy rollback/removal
+- predictable absolute path for Hermes/systemd
+- no need for OpenCode Desktop
 
-This is **reference-only in `0.21.0-dev.0`**. Do not install it during the A-only pilot.
+This is reference-only. Do not install it as part of the current Go-provider/role migration unless path B is separately approved.
 
-## 8. Development stages
+## 10. Development stages
 
-### DEV-0 — documentation baseline
+### DEV-0 — design baseline (completed)
+
+- recorded A/B alternatives
+- recorded Hermes-first constraint
+- created remote implementation handoff
+
+### DEV-0.1 — live-baseline correction (`0.21.0-dev.1`)
 
 Current stage.
 
-- record A/B alternatives
-- record 8-profile impact
-- record current preferred A-only direction
-- keep stable `main` untouched
-- no live configuration changes on Freelancer/k6
+- record that OPC-PERSONAL 8-profile is already deployed on Freelancer/k6
+- reframe work as an incremental migration/refactor
+- add `nim-researcher -> opencode-researcher` as a candidate role replacement
+- keep local OpenCode CLI deferred
 
-### DEV-1 — inspect actual Hermes provider capability
+### DEV-1 — inspect live migration surface
 
-Before implementation:
+Before functional change:
 
-- verify live Hermes version
-- inspect the actual provider/model configuration schema used by the deployment
-- verify whether OpenCode Go can be configured per profile, through delegation, or only at another scope
-- verify fallback behavior to the current Ornith/AEON models
-- verify where API credentials are expected to live
-- do not commit any real API key or secret
+- verify live Hermes version and exact profile/config locations
+- inspect the actual provider/model configuration schema
+- verify OpenCode Go compatibility and profile/delegation scope
+- inventory every live/repo reference to `nim-researcher`
+- identify NIM-specific behavior that is still useful vs obsolete
+- verify current fallback, restart and secret-loading mechanisms
+- produce a concrete migration diff and rollback plan
 
-Output: update this document with the confirmed integration method.
+Output: update this document with confirmed implementation facts.
 
-### DEV-2 — smallest A-only pilot
+### DEV-2 — OpenCode Go proof of capability
 
-Target:
-
-- introduce OpenCode Go to the smallest practical subset of profiles
-- prefer a non-user-facing reasoning profile first, subject to DEV-1 findings
-- preserve current local model as fallback
-- do not modify all 8 profiles at once
-- do not introduce OpenCode CLI
+Before renaming the live profile, prove that the intended OpenCode Go path works in Hermes with the smallest reversible test.
 
 Validation should cover:
 
-- profile starts normally
-- local/default path still works
-- explicit OpenCode Go reasoning call works
-- failure / quota exhaustion does not break the Hermes profile organization
-- no secret is exposed in repo, logs or generated artifacts
+- provider connection
+- intended model selection
+- scoped invocation semantics
+- credential isolation
+- failure / quota exhaustion behavior
+- preservation of current local/default paths
 
-### DEV-3 — controlled profile expansion
+Do not make a role rename depend on an unproven provider integration.
 
-Only after DEV-2 succeeds:
+### DEV-3 — candidate `opencode-researcher` migration
 
-- evaluate `coordinator`
-- evaluate `researcher` / `nim-researcher`
-- optionally evaluate `writer`
-- keep `secretary` local-first
-- keep builder execution Hermes-owned
+If DEV-2 succeeds and the role design is approved:
 
-Record quality, latency, quota consumption and operational complexity.
+- back up current `nim-researcher` live state
+- migrate profile definition and routing deliberately
+- retire or refactor NIM-specific MoA artifacts
+- update exact-name validation/scripts/docs
+- validate `researcher` vs `opencode-researcher` responsibility split
+- verify coordinator routing and fallback
+- verify secretary/Lark is unaffected
 
-### DEV-4 — decision gate for local OpenCode CLI
+### DEV-4 — controlled expansion / optimization
 
-After enough real Hermes usage exists, decide one of:
+After the role migration stabilizes:
 
-1. **A-only remains final** — OpenCode is a reasoning provider only.
-2. **Replace A with B for coding use cases** — keep local reasoning primarily Hermes-native and add CLI only to builders.
-3. **Allow a tightly controlled A+B hybrid** — only if measured benefit justifies the extra complexity.
+- decide whether coordinator should also have direct OpenCode Go reasoning capability
+- evaluate optional writer/builder diagnosis use only if justified
+- measure quality, latency, quota consumption and operational complexity
 
-The current preference is option 1 unless evidence supports another choice.
+### DEV-5 — decision gate for local OpenCode CLI
 
-## 9. Success criteria
+Only after enough live Hermes usage exists, decide one of:
 
-The OpenCode integration is successful only if it improves capability without weakening the Hermes-first architecture.
+1. **Go-provider integration is sufficient** — no local CLI.
+2. **Add CLI only to builder-class roles** because measured coding execution benefits justify it.
+3. **Use a tightly controlled hybrid** only if additional complexity has measurable value.
+
+Current preference remains option 1 unless evidence supports another choice.
+
+## 11. Success criteria
+
+The `0.21.0` migration is successful only if capability improves without weakening the Hermes-first architecture.
 
 Minimum criteria:
 
 - Hermes remains runtime owner.
-- 8-profile rules remain authoritative.
-- existing local Ornith/AEON path remains usable.
-- OpenCode failure or quota exhaustion does not collapse normal Hermes operation.
-- no secret is stored in Git.
-- operational/debug complexity remains acceptable.
-- any new dependency has a documented rollback procedure.
+- the live OPC-PERSONAL organization remains coherent.
+- if `nim-researcher` is replaced, total profile count remains eight unless explicitly redesigned.
+- `researcher` and any `opencode-researcher` have non-overlapping, understandable responsibilities.
+- existing local Ornith/AEON paths remain usable where intended.
+- OpenCode failure/quota exhaustion does not collapse normal Hermes operation.
+- NIM-specific artifacts are not left as broken/stale references after a rename.
+- no secrets are committed to Git.
+- every live migration step has a documented rollback.
 
-## 10. Non-goals for the current dev track
+## 12. Non-goals for the current dev track
 
-Not part of `0.21.0-dev.0` unless later explicitly approved:
+Unless later explicitly approved:
 
+- redeploying OPC-PERSONAL from scratch
 - replacing Hermes profiles with OpenCode agents
-- making OpenCode CLI the default builder backend
+- making local OpenCode CLI the default builder backend
 - installing OpenCode Desktop on Freelancer/k6
-- giving all profiles direct shell access to OpenCode CLI
-- auto-fallback from a free/local OpenCode worker into paid Go usage
+- adding a ninth profile merely to keep a deprecated `nim-researcher`
+- giving all profiles OpenCode Go by default
 - storing OpenCode Go credentials in this repository
 - introducing a new queue/router/daemon/orchestration layer outside Hermes
 
-## 11. Change-control rule for this dev branch
+## 13. Change-control rule
 
-Until implementation begins:
+1. Treat the live Freelancer/k6 OPC-PERSONAL system as the starting point.
+2. Discuss target/direction changes first.
+3. Update this dev document before implementation.
+4. Keep candidate decisions explicitly marked unresolved until approved.
+5. A separate OpenCode workstation performs the eventual remote inspection/change according to the handoff document.
+6. Implementation reality that differs from this design must be written back into the dev branch instead of silently diverging.
 
-1. Discuss target/direction changes first.
-2. Update this dev document to reflect the latest decision.
-3. Keep uncertain items explicitly marked as unresolved instead of silently assuming implementation details.
-4. Only after the design is accepted should a remote OpenCode workstation modify the live Freelancer/k6 Hermes Agent PC.
-
-This document is therefore both a design record and the primary pre-implementation specification for the `0.21.0` development track.
+This file is the primary migration design record for the `0.21.0` development track.
