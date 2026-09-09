@@ -1,76 +1,99 @@
 # Remote implementation handoff — OpenCode workstation -> Freelancer/k6
 
 > Development branch: `dev/opencode-integration`
-> Version baseline: `0.21.0-dev.0`
-> Status: pre-implementation handoff. Do not treat examples here as approval to modify the live host until the design track is accepted.
+> Version baseline: `0.21.0-dev.1`
+> Status: pre-implementation handoff for an **already deployed** OPC-PERSONAL 8-profile Hermes system.
 
 ## 1. Purpose
 
-This file is the handoff contract for the later implementation phase in which a separate workstation running OpenCode will remotely inspect and modify the Freelancer/k6 Hermes Agent PC.
+This file is the handoff contract for a later implementation phase in which a separate workstation running OpenCode remotely inspects and modifies the live Freelancer/k6 Hermes Agent PC.
 
-The external OpenCode workstation is an **implementation console**, not the runtime owner. The live target remains Hermes Agent on Freelancer/k6.
+Important baseline correction:
+
+- OPC-PERSONAL is **already deployed** on Freelancer/k6.
+- The remote task is an incremental migration/refactor, not an initial 8-profile deployment.
+- The external OpenCode workstation is an implementation console only.
+- Hermes Agent on Freelancer/k6 remains the runtime owner.
 
 ## 2. Source-of-truth order
 
-Before touching the live host, the remote implementer must read, in order:
+Before touching the live host, read in order:
 
 1. repository `README.md`
 2. `VERSION`
 3. `docs/editions/opc-personal/opencode-integration-dev.md`
 4. this file
-5. relevant existing OPC-PERSONAL deployment/safety documents and scripts
+5. existing OPC-PERSONAL deployment/safety documents and scripts relevant to affected profiles
 
-If this handoff conflicts with `opencode-integration-dev.md`, the later design decision recorded in that design file wins.
+If this handoff conflicts with a later decision in `opencode-integration-dev.md`, the design file wins.
 
-## 3. Current implementation target
+## 3. Current migration target
 
-For `0.21.0-dev.0`, the current target is **A-only**:
+Current direction for `0.21.0-dev.1`:
 
-- evaluate OpenCode Go as an optional Hermes reasoning/model provider
-- keep Hermes Agent as the only agent harness/runtime owner
-- retain the existing 8 profile rules
-- retain Ornith/AEON as current local/default paths unless an explicitly approved profile-level change says otherwise
-- do **not** install local OpenCode CLI on Freelancer/k6 during this phase
-- do **not** install OpenCode Desktop
+- preserve Hermes-first architecture
+- evaluate OpenCode Go as a selective Hermes model/provider capability
+- keep local OpenCode CLI deferred
+- inspect whether `nim-researcher` should be replaced by `opencode-researcher`
+- do not add a ninth profile merely to avoid deciding the fate of `nim-researcher`
+- preserve the live eight-profile organization unless a later explicit decision changes it
 
-Path B (local OpenCode CLI as coding sub-agent) is deferred to a later decision gate.
+Candidate target organization if the replacement is approved:
+
+```text
+aeon-builder
+builder
+coordinator
+opencode-researcher   # candidate replacement for nim-researcher
+researcher
+runes-holder
+secretary
+writer
+```
+
+This candidate is **not yet approval to rename the live profile**.
 
 ## 4. Remote implementation principles
 
-The remote OpenCode workstation must follow these rules:
+The remote OpenCode workstation must:
 
 - inspect before edit
-- create backups before modifying live configuration
+- treat live Freelancer/k6 state as authoritative
+- create backups before every live configuration/profile change
 - make the smallest reversible change first
-- do not roll out to all 8 profiles in one step
-- do not expose API keys in Git, terminal transcripts committed to Git, screenshots, logs, generated docs or test artifacts
-- do not replace Hermes orchestration with OpenCode orchestration
-- do not introduce an extra daemon/router/queue unless a later design revision explicitly approves it
-- preserve the existing rollback path
+- avoid changing all profiles together
+- prove OpenCode Go provider behavior before making a role migration depend on it
+- keep secretary/Lark user-facing flow stable
+- never expose API keys in Git, committed transcripts, screenshots, generated docs or test artifacts
+- not replace Hermes orchestration with OpenCode orchestration
+- not introduce another daemon/router/queue without a later explicit design decision
+- document implementation reality back into the dev branch
 
-## 5. Required live-host discovery before any write
+## 5. Required live-host discovery before writes
 
-The remote implementer must first collect and report the live state of Freelancer/k6, including at minimum:
+Collect and report at minimum:
 
 ```text
 - OS / hostname / active user
 - Hermes Agent version
 - Hermes executable / installation path
-- current profile list and model mapping
-- currently running profile(s)
-- relevant Hermes config file paths
-- provider/model configuration schema actually supported by the installed Hermes version
-- systemd/user-service units involved, if any
-- current secret-loading mechanism and file permissions
+- complete current profile list and exact model mapping
+- running profile(s)
+- profile definition / SOUL / AGENTS locations
+- relevant Hermes config paths
+- actual provider/model configuration schema supported by installed Hermes
+- whether provider/model selection is global, per-profile, delegated-task scoped, or another mechanism
+- current systemd/user-service units, if any
+- current secret-loading mechanism and permissions
 - current backup/restore mechanism
-- Git checkout status if this repo already exists on the target
+- current Git checkout state
 ```
 
-Known observations from the design discussion may be used as hints, but the live host is authoritative.
+Also specifically inventory all references to `nim-researcher` on the live host and in the repo checkout.
 
-## 6. Known current profile baseline to verify
+## 6. Expected live baseline to verify
 
-Expected 8 profiles:
+Current expected eight profiles:
 
 ```text
 aeon-builder
@@ -83,7 +106,7 @@ secretary
 writer
 ```
 
-Expected model mapping observed on 2026-09-09:
+Model mapping observed on 2026-09-09:
 
 ```text
 aeon-builder    -> aeon
@@ -98,77 +121,137 @@ writer          -> ornith-1.5-35b-a3b@q4_k_m
 
 Observed running state at discussion time: only `secretary` was running. Re-verify before implementation.
 
-## 7. DEV-1 remote inspection deliverable
+## 7. Required `nim-researcher` dependency scan
 
-The first remote session should make **no functional provider change** unless the configuration mechanism is already unambiguous and explicitly approved.
+Do not implement the candidate rename as a single file/directory rename.
 
-Expected deliverable back to this repo:
-
-- confirmed Hermes version
-- exact config locations
-- exact supported OpenCode/OpenAI-compatible provider mechanism, if any
-- whether provider/model can be selected per profile, delegated task, or only globally
-- credential placement method
-- fallback behavior
-- restart/reload requirement
-- concrete diff proposed for the smallest pilot
-- rollback commands
-
-Update `opencode-integration-dev.md` with these confirmed facts before progressing to DEV-2.
-
-## 8. DEV-2 smallest pilot rules
-
-When the provider integration is confirmed, perform a minimal A-only pilot.
-
-Preferred pilot characteristics:
-
-- avoid changing `secretary` first because it is the Lark/Feishu user-facing gateway
-- prefer a reasoning-oriented, non-user-facing profile if Hermes supports scoped model/provider configuration
-- preserve the current local model path
-- make paid/OpenCode Go usage explicit rather than silently automatic
-- verify quota/failure behavior
-
-The exact first profile is intentionally not fixed yet; it depends on the real Hermes configuration semantics discovered in DEV-1.
-
-## 9. Validation checklist after each live change
-
-At minimum:
+Inspect at least:
 
 ```text
-[ ] target profile starts successfully
-[ ] secretary/Lark path still works
-[ ] unchanged profiles retain prior model mapping
-[ ] local/default model path still works
-[ ] explicit OpenCode Go reasoning path works
-[ ] provider failure is observable
-[ ] quota/rate-limit failure does not corrupt profile state
-[ ] restart/reload behavior is understood
-[ ] secrets are absent from Git diff
-[ ] backup exists and rollback is tested or clearly executable
+- live nim-researcher profile definition
+- profile SOUL / AGENTS content
+- editions/opc-personal templates
+- docs/editions/opc-personal/nim-researcher-moa-profile.md
+- scripts/setup-nim-moa-profile.sh
+- skill allocation
+- degradation/fallback rules
+- coordinator routing/delegation
+- cron/jobs references
+- Runes governance/approval references
+- validation scripts that enumerate exact profile names
+- README/setup/reinstall documentation
+- any session/state keyed by profile name
 ```
 
-Record evidence in a concise implementation note; do not commit secrets or large runtime logs.
+For every NIM-specific artifact, classify it as:
 
-## 10. Rollback expectation
+```text
+KEEP     useful and provider-agnostic
+RENAME   useful but role name must change
+REFACTOR useful behavior belongs in a generic/OpenCode design
+REMOVE   obsolete because dedicated NIM dependency is being retired
+```
 
-Every applied change must have a same-session rollback method.
+Return this inventory to the dev branch before destructive cleanup.
 
-The preferred rollback pattern is:
+## 8. DEV-1 deliverable: migration discovery report
 
-1. stop/reload only the affected Hermes component if required
-2. restore the backed-up config
-3. restart/reload
-4. verify original Ornith/AEON mapping
-5. verify secretary gateway
-6. record rollback result
+The first remote session should preferably make no role rename.
 
-Do not rely solely on `git revert` for files that live outside the repository.
+Expected report:
 
-## 11. Deferred path B: local OpenCode CLI
+- confirmed live Hermes/version/config facts
+- exact OpenCode Go integration mechanism supported by the installed Hermes version
+- credential placement method
+- fallback/reload/restart behavior
+- full `nim-researcher` impact inventory
+- which NIM-specific functions are still worth preserving
+- proposed responsibility boundary between `researcher` and candidate `opencode-researcher`
+- smallest OpenCode Go proof-of-capability diff
+- complete rollback commands
 
-Do not implement this during the current A-only phase.
+Update `opencode-integration-dev.md` with confirmed facts before progressing.
 
-If a later design decision approves it, re-check the host first. The currently observed Node environment is:
+## 9. DEV-2: prove OpenCode Go before role replacement
+
+The provider path must work independently before the profile migration is tied to it.
+
+Validate:
+
+```text
+[ ] OpenCode Go provider authenticates successfully
+[ ] intended model is selectable in the required Hermes scope
+[ ] an explicit test invocation returns normally
+[ ] local/default model path remains usable
+[ ] provider failure is observable
+[ ] quota/rate-limit behavior is understood
+[ ] secret is not exposed in repo/log artifacts
+[ ] restart/reload semantics are understood
+[ ] rollback restores original behavior
+```
+
+Avoid changing `secretary` during this proof unless strictly necessary.
+
+## 10. DEV-3: candidate `nim-researcher -> opencode-researcher` migration
+
+Only proceed after DEV-2 succeeds and the maintainer approves the role design.
+
+Required order:
+
+1. back up all affected live profile/config files
+2. record the old `nim-researcher` model/provider/routing state
+3. migrate the role definition deliberately
+4. update coordinator routing/delegation references
+5. update relevant skills/policies/validation rules
+6. retire/refactor NIM-specific MoA pieces according to the dependency inventory
+7. preserve useful provider-agnostic behavior
+8. verify profile count and profile discovery
+9. verify `researcher` and `opencode-researcher` have distinct responsibilities
+10. verify secretary/Lark and unrelated profiles are unchanged
+
+Do not leave stale `nim-researcher` references that make reinstall/validation disagree with the live host.
+
+## 11. Post-change validation checklist
+
+After each live change:
+
+```text
+[ ] affected profile starts successfully
+[ ] secretary/Lark path still works
+[ ] unrelated profiles retain their prior mapping
+[ ] profile list matches the intended eight-role organization
+[ ] local/default model path still works where intended
+[ ] OpenCode Go path works where explicitly configured
+[ ] provider failure does not corrupt Hermes profile state
+[ ] coordinator routing still behaves as designed
+[ ] researcher/opencode-researcher responsibilities are distinguishable
+[ ] no stale NIM-only dependency breaks validation or reinstall scripts
+[ ] secrets are absent from Git diff
+[ ] backup exists
+[ ] rollback is tested or directly executable
+```
+
+## 12. Rollback expectation
+
+Every applied migration step must have same-session rollback.
+
+Preferred pattern:
+
+1. stop/reload only affected Hermes component if required
+2. restore backed-up profile/config state
+3. restore the original profile name/routing if a rename was attempted
+4. restart/reload
+5. verify original Ornith/AEON/NIM mapping as appropriate
+6. verify secretary/Lark
+7. record rollback result
+
+Do not rely only on `git revert` for live files outside the repository.
+
+## 13. Deferred path B: local OpenCode CLI
+
+Do not install local OpenCode CLI merely as part of the OpenCode Go / researcher migration.
+
+Current observed Node environment is retained for a possible later decision:
 
 ```text
 Node.js v22.22.3
@@ -176,7 +259,7 @@ npm 10.9.8
 nvm 0.40.3
 ```
 
-Current preferred future installation layout, if approved:
+If path B is separately approved later, preferred installation layout remains:
 
 ```bash
 mkdir -p "$HOME/.local/opencode-cli"
@@ -184,42 +267,45 @@ npm install -g --prefix "$HOME/.local/opencode-cli" opencode-ai
 "$HOME/.local/opencode-cli/bin/opencode" --version
 ```
 
-Intended B scope would be limited primarily to `builder` and `aeon-builder`.
+Intended CLI scope remains primarily `builder` / `aeon-builder`.
 
-This section is reference-only and must not be interpreted as an installation instruction for `0.21.0-dev.0`.
+This section is reference-only for the current migration.
 
-## 12. Commit discipline during remote implementation
+## 14. Commit discipline
 
 When the remote OpenCode workstation makes repo changes:
 
-- work on `dev/opencode-integration`
+- use `dev/opencode-integration`
 - keep commits small and purpose-specific
-- do not commit credentials or live-host private data
+- never commit credentials/live-host private data
 - update design docs when implementation reality differs from assumptions
-- record implementation decisions rather than silently changing the target
+- distinguish provider proof, role migration, cleanup and validation commits
 
-Suggested commit categories:
+Suggested categories:
 
 ```text
 docs(dev): ...
 chore(dev): ...
 feat(opencode-go): ...
+refactor(profile): ...
 fix(opencode-go): ...
 test(opencode-go): ...
 ```
 
-## 13. Promotion gate to stable
+## 15. Promotion gate to stable
 
-Do not merge this development track into `main` merely because configuration can connect to OpenCode Go.
+Do not merge into `main` merely because OpenCode Go can connect.
 
 Promotion requires:
 
-- successful controlled pilot
+- successful controlled provider proof
+- approved final role organization
+- successful role migration if `opencode-researcher` is adopted
+- no stale NIM-specific deployment references
 - validated rollback
-- no regression to secretary/Lark operation
-- acceptable quota/cost behavior
-- acceptable latency and reliability
-- documentation matching the actual deployed configuration
+- no secretary/Lark regression
+- acceptable quota/cost, latency and reliability
+- repo documentation/scripts matching the actual live deployment
 - explicit maintainer decision that `0.21.0` is ready
 
-Until then, `main` / `0.20.1` remains the stable deployment source and this branch remains the evolving development specification.
+Until then, `main` / `0.20.1` remains the stable source and this branch remains the evolving migration specification.
