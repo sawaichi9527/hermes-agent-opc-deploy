@@ -5,7 +5,7 @@ set -euo pipefail
 #
 # 設計：在 K6 上，把 secretary profile 設為唯一 gateway owner（Lark/Feishu）。
 #   * 停用 default gateway、啟用 secretary gateway（hermes-gateway-secretary.service + systemd linger）。
-#   * Feishu env 複製（.env FEISHU_* + NVIDIA_API_KEY）到 secretary。
+#   * Feishu env 複製（.env FEISHU_*）到 secretary。
 #   * plugins（feishu/plur/rtk-rewrite）與 approvals/security 設定複製 secretary。
 #   * cron 2 jobs 遷移至 secretary（owner=secretary，D14）。
 #
@@ -102,7 +102,7 @@ pass "$profile profile exists"
 
 # --- 1. Feishu env 準備（只檢查變數名，不讀真實值）---
 printf '\n== Feishu env (secretary/.env) ==\n'
-required_vars=(FEISHU_APP_ID FEISHU_APP_SECRET NVIDIA_API_KEY)
+required_vars=(FEISHU_APP_ID FEISHU_APP_SECRET)
 if [ -f "$env_file" ]; then
   for var in "${required_vars[@]}"; do
     if grep -qE "^${var}=" "$env_file" 2>/dev/null || grep -qE "^${var}[[:space:]]*=" "$env_file" 2>/dev/null; then
@@ -112,7 +112,7 @@ if [ -f "$env_file" ]; then
     fi
   done
 else
-  warn "$env_file does not exist — must contain FEISHU_* + NVIDIA_API_KEY (set out-of-band)"
+  warn "$env_file does not exist — must contain FEISHU_* (set out-of-band)"
 fi
 
 # --- 2. plugins 複製清單 ---

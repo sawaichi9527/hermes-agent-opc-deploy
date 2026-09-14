@@ -36,7 +36,7 @@ cron(owner=secretary) -> secretary 組 brief -> coordinator -> 同機序列 rese
 
 - default gateway 停用；secretary gateway 啟用（`hermes-gateway-secretary.service` + systemd linger）。
 - cron 2 jobs 遷移至 secretary，正常排程推送（21:34 run ok）。
-- Feishu 設定（`.env` FEISHU_* + NVIDIA_API_KEY）+ plugins（feishu/plur/rtk-rewrite）+ approvals/security 已複製 secretary。
+- Feishu 設定（`.env` FEISHU_*）+ plugins（feishu/plur/rtk-rewrite）+ approvals/security 已複製 secretary。
 
 ## 設定腳本
 

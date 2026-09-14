@@ -12,7 +12,7 @@ writer         寫作（含 ppt-master skill，D17）
 builder        本機實作（L3 白名單硬熔斷，D18）
 runes-holder   Runes 治理取證（D2 專職保留）
 aeon-builder   遠端 DGX vLLM 端點重型實作（D4/D8/D13）
-nim-researcher 獨立第 8 profile，內部 MoA（D5/D5a/D5b）
+opencode-researcher 獨立第 8 profile，內部 MoA（D5/D5a/D5b）
 ```
 
 ## 特性（對比 GENERIC）
@@ -20,7 +20,7 @@ nim-researcher 獨立第 8 profile，內部 MoA（D5/D5a/D5b）
 - 記憶：3 層（native + Plur + Runes）
 - 破壞性白名單：三級完整（L3 硬熔斷需 K6 wrapper，caveat 1）
 - cron 治理：雙檔 `rss_seeds.json`/`rss_suggestions.json` + pre_approved + governance audit cron
-- MoA / A2A：nim-researcher 內部 MoA；A2A 留給未來 Pi 5（D6/D21）
+- MoA / A2A：opencode-researcher 內部 MoA；A2A 留給未來 Pi 5（D6/D21）
 - 算力：Strix Halo 本機 `agent-a1` + DGX/NIM 遠端顧問
 
 ## 目錄
@@ -33,15 +33,15 @@ config/rss_seeds.json.example    cron 種子檔範例（D14）
 
 ## 文件與腳本
 
-- `docs/editions/opc-personal/`：8 篇（nim-researcher-moa-profile / aeon-builder-remote-endpoint / plur-memory-layer / a2a-expansion-pi5 / observability-jobs-json / degradation-matrix / cron-governance / destruction-whitelist）+ `soul-vs-agents.md`（SOUL.md = per-profile identity；AGENTS.md = cwd/HERMES_HOME project context，非 profile 模板）+ `session-mechanism.md`（gateway 持久 per-chat vs `-z` oneshot 每任務新 session）。
-- setup 腳本（K6 執行）：`scripts/setup-plur.sh`、`scripts/setup-feishu-gateway.sh`、`scripts/setup-nim-moa-profile.sh`、`scripts/jobs-json-init.sh`、`scripts/approvals-deny-init.sh`、`scripts/set-local-model-name.sh`（aeon-builder 切換 + 身分驗證）+ **`scripts/align-secretary-model.sh`（secretary→coordinator/builder/writer/researcher 模型對齊，與 secretary 一致）**。
+- `docs/editions/opc-personal/`：8 篇（opencode-researcher-moa-profile / aeon-builder-remote-endpoint / plur-memory-layer / a2a-expansion-pi5 / observability-jobs-json / degradation-matrix / cron-governance / destruction-whitelist）+ `soul-vs-agents.md`（SOUL.md = per-profile identity；AGENTS.md = cwd/HERMES_HOME project context，非 profile 模板）+ `session-mechanism.md`（gateway 持久 per-chat vs `-z` oneshot 每任務新 session）。
+- setup 腳本（K6 執行）：`scripts/setup-plur.sh`、`scripts/setup-feishu-gateway.sh`、`scripts/setup-opencode-moa-profile.sh`、`scripts/jobs-json-init.sh`、`scripts/approvals-deny-init.sh`、`scripts/set-local-model-name.sh`（aeon-builder 切換 + 身分驗證）+ **`scripts/align-secretary-model.sh`（secretary→coordinator/builder/writer/researcher 模型對齊，與 secretary 一致）**。
 
 ## 模型一致性政策（2026-08-24）
 
-- **coordinator / builder / writer / researcher / runes-holder / nim-researcher 6 角色必須與 secretary 使用同一模型**（provider / base_url / default 全對齊）；**aeon-builder 除外**（DGX Spark 專用 `aeon`）。
-- nim-researcher 的 MoA preset `aggregator.model` 同步為 secretary 模型；`reference_models` 維持 NIM。
+- **coordinator / builder / writer / researcher / runes-holder / opencode-researcher 6 角色必須與 secretary 使用同一模型**（provider / base_url / default 全對齊）；**aeon-builder 除外**（DGX Spark 專用 `aeon`）。
+- opencode-researcher 的 MoA preset `aggregator.model` 同步為 secretary 模型；`reference_models` 走 OpenCode Go（reference provider 可抽換，見 `opencode-researcher-moa-profile.md`）。
 - 對齊工具：`scripts/align-secretary-model.sh` 讀 `~/.hermes/profiles/secretary/config.yaml` 的 `model:` 區塊原樣寫入目標，並同步 `.env` 的 `HERMES_CUSTOM_192_168_23_217_1234_API_KEY`（dry-run 預設，`--apply` 寫檔，自動 backup）。
-- K6 執行：`bash scripts/align-secretary-model.sh --apply`（驗證：`for p in secretary coordinator builder writer researcher runes-holder nim-researcher; do echo "== $p =="; grep -A6 "^model:" ~/.hermes/profiles/$p/config.yaml | head -10; done`）。
+- K6 執行：`bash scripts/align-secretary-model.sh --apply`（驗證：`for p in secretary coordinator builder writer researcher runes-holder opencode-researcher; do echo "== $p =="; grep -A6 "^model:" ~/.hermes/profiles/$p/config.yaml | head -10; done`）。
 
 ## 狀態
 

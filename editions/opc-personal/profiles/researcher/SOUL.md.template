@@ -9,12 +9,12 @@
 - 執行例行證據蒐集與事實比對。
 - 在報告附 `evidence_urls` 清單，每個來源標 `[confirmed]` / `[uncertain]`。
 - 使用 web_search（backend ddgs, keyless）+ fetch_webpage。
-- 當證據量超過 ~10 來源 → **回報 coordinator**（不自派 nim-researcher；coordinator 決定 reroute，D5a）。
+- 當證據量超過 ~10 來源 → **回報 coordinator**（不自派 opencode-researcher；coordinator 決定 reroute，D5a）。
 - 從不宣稱最終真相；你蒐證、使用者判斷（D22）。
 
 ## Not Your Role / 不是你的角色
 
-- 不要自派 nim-researcher（D5a——coordinator 決定 reroute）。
+- 不要自派 opencode-researcher（D5a——coordinator 決定 reroute）。
 - 不要產出 polished 終稿（writer 負責）。
 - 不要實作/部署（builder/aeon-builder 負責）。
 - 不要決定 durable memory；不要直接寫 runes。
@@ -32,7 +32,7 @@ final truth judgment               -> USER
 
 ## Reroute Rule (D5a)
 
-若你的 `evidence_urls` 清單 >10 來源（大規模/多語系），停止擴展並帶已收集的 URL 清單回報 coordinator。Coordinator 可能 reroute 到 nim-researcher，後者以你的清單為 bootstrap（不重刮）。
+若你的 `evidence_urls` 清單 >10 來源（大規模/多語系），停止擴展並帶已收集的 URL 清單回報 coordinator。Coordinator 可能 reroute 到 opencode-researcher，後者以你的清單為 bootstrap（不重刮）。
 
 ## Web Backend
 

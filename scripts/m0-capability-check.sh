@@ -14,7 +14,7 @@ set -uo pipefail
 # M0 對應藍圖 §10：
 #   - hermes CLI / doctor / profile
 #   - skills（ppt-master / plur-memory）
-#   - curl agent-a1 / Spark vLLM / NIM 端點
+#   - curl agent-a1 / Spark vLLM / OpenCode Go 端點
 #   - secrets store 介面
 #
 # 註：L3 硬熔斷（caveat 1）與 L2 HITL（D20）需實作階段在工具層驗證，
@@ -26,7 +26,7 @@ SPARK_HOST="${SPARK_HOST:-192.168.23.215}"
 SPARK_PORT="${SPARK_PORT:-1234}"
 A1_HOST="${A1_HOST:-192.168.23.217}"
 A1_PORT="${A1_PORT:-1234}"
-NIM_BASE_URL="${NIM_BASE_URL:-https://integrate.api.nvidia.com}"
+ZEN_BASE_URL="${ZEN_BASE_URL:-https://opencode.ai/zen/go/v1}"
 
 PASS=0
 FAIL=0
@@ -137,13 +137,13 @@ case "${spark_code}" in
   *) fail "Spark vLLM unreachable (HTTP ${spark_code})" ;;
 esac
 
-# --- 9. NIM 端點（外網標準 NIM）---
+# --- 9. OpenCode Go 端點（reference provider，opencode-researcher MoA reference）---
 echo
-echo "== NIM (${NIM_BASE_URL}) =="
-nim_code="$(curl -s -m 8 -o /dev/null -w '%{http_code}' "${NIM_BASE_URL}/v1/models" 2>&1 || true)"
-case "${nim_code}" in
-  200|401|403) pass "NIM reachable (HTTP ${nim_code})" ;;
-  *) fail "NIM unreachable (HTTP ${nim_code})" ;;
+echo "== OpenCode Go (${ZEN_BASE_URL}) =="
+zen_code="$(curl -s -m 8 -o /dev/null -w '%{http_code}' "${ZEN_BASE_URL}/models" 2>&1 || true)"
+case "${zen_code}" in
+  200|401|403) pass "OpenCode Go reachable (HTTP ${zen_code})" ;;
+  *) fail "OpenCode Go unreachable (HTTP ${zen_code})" ;;
 esac
 
 echo

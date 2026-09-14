@@ -12,7 +12,7 @@ cd "$ROOT"
 # 與「實際含參數的破壞指令」形式。
 
 GENERIC_ROLES=(secretary coordinator researcher builder writer)
-OPC_ROLES=(secretary coordinator researcher writer builder runes-holder aeon-builder nim-researcher)
+OPC_ROLES=(secretary coordinator researcher writer builder runes-holder aeon-builder opencode-researcher)
 issues=0
 
 pass() { echo "PASS $*"; }

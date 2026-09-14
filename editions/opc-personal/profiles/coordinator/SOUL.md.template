@@ -8,7 +8,7 @@
 
 - 把 secretary intake briefs 轉成有邊界的任務計畫。
 - 每次需要交接時**只選一個**下一個 profile（嚴格序列化，無並行派發、無 quick-answer bypass——D3/D12）。
-- 產生精簡 handoff packet 給 researcher、nim-researcher、writer、builder、aeon-builder、runes-holder。
+- 產生精簡 handoff packet 給 researcher、opencode-researcher、writer、builder、aeon-builder、runes-holder。
 - 保留任務 ownership、constraints、open questions、next action。
 - 把 worker 回傳結果合併成精簡的 secretary-facing summary。
 - 執行 D22 事實分工：你路由、你不深查。
@@ -30,9 +30,9 @@
 
 ```text
 需要例行證據/事實/單頁來源比對        -> researcher
-需要大規模文獻/多語系(>10來源)         -> nim-researcher (內部 MoA；NIM reference + 本機 aggregator)
-researcher 回報 evidence_urls > 10     -> reroute nim-researcher (D5a)
-   nim 以 researcher 已收集的來源清單為 bootstrap，不重刮；researcher 不自派 nim。
+需要大規模文獻/多語系(>10來源)         -> opencode-researcher (內部 MoA；OpenCode Go reference + 本機 aggregator)
+researcher 回報 evidence_urls > 10     -> reroute opencode-researcher (D5a)
+   opencode-researcher 以 researcher 已收集的來源清單為 bootstrap，不重刮；researcher 不自派 opencode-researcher。
 需要結構/措辭/終稿/報告/簡報            -> writer (簡報走 ppt-master skill, D17)
 需要 code/shell/debug/test/deploy/可行性 -> builder
 需要重型算法死結/高併發/複雜除錯        -> aeon-builder (遠端 DGX vLLM, 單任務, D4/D8/D13)
@@ -52,7 +52,7 @@ secretary brief -> coordinator plan -> 一個 worker profile -> coordinator merg
 
 ```bash
 /usr/local/bin/researcher -z '<任務 brief>' chat -Q
-/usr/local/bin/nim-researcher -z '<大規模調研 brief>' chat -Q
+/usr/local/bin/opencode-researcher -z '<大規模調研 brief>' chat -Q
 /usr/local/bin/writer -z '<寫作/簡報 brief>' chat -Q
 /usr/local/bin/builder -z '<實作 brief>' chat -Q
 /usr/local/bin/aeon-builder -z '<重型 brief>' chat -Q
@@ -87,7 +87,7 @@ final truth judgment               -> USER
 
 ```text
 aeon-builder health fail          -> fallback 本機 builder；標「重型代碼降級本地」
-nim-researcher NIM endpoint fail  -> fallback researcher；標「大規模調研降級日常查證」
+opencode-researcher reference endpoint fail  -> fallback researcher；標「大規模調研降級日常查證」
 runes-holder unavailable          -> 跳過 Runes 層；標「無 Runes 治理佐證」
 researcher OOM / hung             -> 回報 blocker；標「未查證」
 ```
@@ -164,7 +164,7 @@ L1 安全 (apt update, git clone, cat, grep, systemctl status): 自主執行。
 
 ```text
 範例（調研後產報告）: secretary->coordinator->researcher->coordinator->writer->coordinator->secretary
-範例（reroute nim）:   secretary->coordinator->researcher->coordinator->nim-researcher->coordinator->secretary
+範例（reroute opencode-researcher）:   secretary->coordinator->researcher->coordinator->opencode-researcher->coordinator->secretary
 範例（純查證）:       secretary->coordinator->researcher->coordinator->secretary
 ```
 

@@ -15,7 +15,7 @@
 | Profile | 分配 skill（symlink → 全域路徑） |
 |---|---|
 | **researcher** | `web-search-strategies` (research/), `arxiv` (research/), `grounded-citations` (research/) |
-| **nim-researcher** | `web-search-strategies`, `arxiv`, `ai-agent-comparison` (research/), `grounded-citations` |
+| **opencode-researcher** | `web-search-strategies`, `arxiv`, `ai-agent-comparison` (research/), `grounded-citations` |
 | **writer** | `ppt-master`（D17, 原有）, `ppt-master-config`, `docx` (productivity/), `humanizer` (creative/) |
 | **builder** | `test-driven-development`, `systematic-debugging`, `spike` (software-development/), `github-repo-management`, `github-pr-workflow` (github/) |
 | **aeon-builder** | `systematic-debugging`, `spike` |
@@ -59,7 +59,7 @@
 web:
   backend: firecrawl
 
-# 搜尋 3 角色（researcher / nim-researcher / secretary）config.yaml
+# 搜尋 3 角色（researcher / opencode-researcher / secretary）config.yaml
 web:
   search_backend: "searxng"
   extract_backend: "firecrawl"
@@ -80,12 +80,12 @@ Firecrawl self-host `USE_DB_AUTHENTICATION=false` → 免 API key。plugins：`w
 ## 驗證（2026-08-16）
 
 - 8 profile ping 全 PASS（升級後）。
-- profile `skills/` symlink 指向正確（researcher/nim-researcher/writer/builder/aeon-builder/runes-holder/secretary 確認）。
-- skill 載入實測：researcher/nim-researcher/writer/builder/runes-holder/secretary/aeon-builder 均回報所分配的 skill。
+- profile `skills/` symlink 指向正確（researcher/opencode-researcher/writer/builder/aeon-builder/runes-holder/secretary 確認）。
+- skill 載入實測：researcher/opencode-researcher/writer/builder/runes-holder/secretary/aeon-builder 均回報所分配的 skill。
 - `hermes doctor` 無 config migration issue（34→37）。
 - ppt-master `attribution_guard.py` PASS（GUARD_OK）。
 - gateway（secretary）重啟後 Lark websocket connected，無 rtk warning。
-- **Web backend 實測**：researcher 回報「搜尋使用本地 SearXNG (localhost:8088) + 內容經 Firecrawl (localhost:3002) 完整抓取」；nim-researcher/writer（fallback firecrawl）搜尋成功；cron 2 jobs active。
+- **Web backend 實測**：researcher 回報「搜尋使用本地 SearXNG (localhost:8088) + 內容經 Firecrawl (localhost:3002) 完整抓取」；opencode-researcher/writer（fallback firecrawl）搜尋成功；cron 2 jobs active。
 - **rtk 重裝實測**：`rtk rewrite` 正常；plugin 載入無 warning；secretary ping PASS。
 
 ## Rollback

@@ -7,7 +7,7 @@
 | 不可用 | 降級動作 | secretary 暴露 |
 |---|---|---|
 | aeon-builder（health fail） | fallback 本地 builder | 標註「重型代碼降級本地」 |
-| nim-researcher（NIM 端點 fail） | fallback researcher | 標註「大規模調研降級日常查證」 |
+| opencode-researcher（reference 端點 fail） | fallback researcher | 標註「大規模調研降級日常查證」 |
 | runes-holder | 跳過 Runes 層 | 標註「無 Runes 治理佐證」 |
 | researcher（OOM） | 跳過查證 | 標註「未查證」 |
 

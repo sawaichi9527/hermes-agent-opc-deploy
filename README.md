@@ -10,13 +10,13 @@ Hermes 原生 profile 客製化與部署指南 repo。本 repo 是 Freelancer �
 
 | | GENERIC（給一般人參考） | OPC-PERSONAL（本藍圖 8-profile） |
 |---|---|---|
-| 角色 | 5（secretary, coordinator, researcher, builder, writer） | 8（5 core + runes-holder + aeon-builder + nim-researcher） |
-| 算力預設 | 雲端（provider **placeholder**，使用者自選） | Strix Halo 本機 `agent-a1` + DGX/NIM 遠端顧問 |
+| 角色 | 5（secretary, coordinator, researcher, builder, writer） | 8（5 core + runes-holder + aeon-builder + opencode-researcher） |
+| 算力預設 | 雲端（provider **placeholder**，使用者自選） | Strix Halo 本機 `agent-a1` + DGX vLLM 遠端實作 + OpenCode Go reference 顧問（provider 可抽換，見 `opencode-researcher-moa-profile.md`） |
 | secretary 綁定 | 不綁 Lark；`gateway setup` 多選平台 | Lark/Feishu |
 | 記憶 | 1 層（native only） | 3 層（native + Plur + Runes） |
 | cron 治理 | 無 | 雙檔 `rss_seeds.json`/`rss_suggestions.json` + pre_approved + governance audit cron |
 | 破壞性白名單 | L1/L2 簡化（無 L3 硬熔斷） | 三級完整（L3 需 K6 wrapper） |
-| MoA / A2A | 無 | nim-researcher 內部 MoA + A2A 留給未來 Pi 5 |
+| MoA / A2A | 無 | opencode-researcher 內部 MoA + A2A 留給未來 Pi 5 |
 | 事實判斷分工 | 簡化三層（researcher / coordinator / user） | 完整五層（D22） |
 | secret 守則 | 共用 | 共用 |
 
@@ -26,7 +26,7 @@ Hermes 原生 profile 客製化與部署指南 repo。本 repo 是 Freelancer �
 
 ```text
 README.md
-VERSION                        # 0.20.1
+VERSION                        # 0.20.2
 docs/shared/                   # 共用文件（guarded-apply-contract、安全守則）
 docs/editions/{generic,opc-personal}/   # edition 專屬文件（opc-personal 已填 M8 內容；soul-vs-agents.md 標 SOUL/AGENTS 邊界；session-mechanism.md 標 session 機制）
 docs/soul-token-audit.md       # 13 份 SOUL 模板 token 用量審計（2026-08-15 refine）
@@ -42,6 +42,7 @@ config/                        # shared defaults
 - **階段一**：repo 骨架重構完成（雙版本 + archive + 空 profile 模板 + placeholder config + v0.20.0 版號）。
 - **階段二（M8 完成）**：填入 v4.1 補丁已驗證的 v0.20.0 內容——8 個 SOUL 模板、`docs/editions/opc-personal/` 8 篇、setup 腳本 5 支 + `set-local-model-name.sh` 更新、README 同步。
 - **v0.20.1（2026-08-15）**：13 份 SOUL 模板全量 refine——統一結構/語言政策（繁中為主）、補齊 2026-08-15 決策（Plur scope 紀律、C6/B4、#8(a)）、補 Fact Division、opc-personal 去冗（chars −13.7%）、generic 5 檔骨架填空；token 對照見 `docs/soul-token-audit.md`。
+- **v0.20.2（2026-09-14）**：第 8 profile 更名 `nim-researcher` → `opencode-researcher`；MoA reference 換源 Nvidia NIM → OpenCode Go（`opencode-go` / `deepseek-v4.1-flash`），key `NVIDIA_API_KEY` → `OPENCODE_GO_API_KEY`；reference provider 概念文檔保留 NIM/opencode-go/其他 API 抽換彈性。K6 實機已完成同步。
 
 ## OPC-PERSONAL setup 腳本（K6 執行）
 
@@ -50,7 +51,7 @@ bash scripts/m0-capability-check.sh                # 端點/套件可達性（M0
 bash scripts/jobs-json-init.sh --apply             # jobs.json 初始化（M4）
 bash scripts/setup-plur.sh --apply                 # 8 profiles 啟用 plur（M7）
 bash scripts/setup-feishu-gateway.sh --apply --confirm REAL_FEISHU_GATEWAY_TAKEOVER  # secretary gateway 接管（M3）
-bash scripts/setup-nim-moa-profile.sh --apply      # nim-researcher MoA preset（M6b）
+bash scripts/setup-opencode-moa-profile.sh --apply      # opencode-researcher MoA preset（M6b）
 bash scripts/approvals-deny-init.sh --apply        # D18 L3 deny 清單（M6a）
 bash scripts/align-secretary-model.sh --apply      # 對齊 secretary 模型到 coordinator/builder/writer/researcher（2026-08-24）
 PROFILE_LIST=aeon-builder MODEL_NAME=qwen3.6-27b \

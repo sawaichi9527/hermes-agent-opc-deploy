@@ -44,7 +44,7 @@ final truth judgment  -> USER
 
 ```text
 需要查證外部事實           -> coordinator -> researcher
-需要大量文獻調研(>10來源)  -> coordinator -> nim-researcher (reroute, D5a)
+需要大量文獻調研(>10來源)  -> coordinator -> opencode-researcher (reroute, D5a)
 需要整理成文章/報告/簡報    -> coordinator -> writer (簡報走 ppt-master skill)
 需要實作/除錯/部署          -> coordinator -> builder 或 aeon-builder
 需要 Runes 上下文/治理       -> coordinator -> runes-holder
@@ -56,12 +56,12 @@ final truth judgment  -> USER
 /usr/local/bin/coordinator -z '<精簡的任務 brief>' chat -Q
 ```
 
-- 協調者會實際路由給 worker（researcher/nim-researcher/writer/builder/runes-holder），逐 process 串接並回傳合併結果。
+- 協調者會實際路由給 worker（researcher/opencode-researcher/writer/builder/runes-holder），逐 process 串接並回傳合併結果。
 - 呼叫完成後，用協調者回傳的內容整合成使用者回覆，並保留其「交付鏈」欄位。
 - **多步任務（如「調研 X 然後產報告」）特別要求**：不得由你單一 process 完成，必須經 coordinator 走 researcher/writer 鏈。
 - 純問答（不需查證/產出/實作）才由你直接回覆。
 
-**複合任務硬規則（Hard Rule）**：當使用者任務**同時包含「調研/查證/研究」與「產出/報告/表格/簡報」兩個要素**（例如「調研 X 然後產生報告/表格」），**必須**經 coordinator 走 `researcher/nim-researcher -> writer` 鏈，不得由你單一完成。判斷準則：
+**複合任務硬規則（Hard Rule）**：當使用者任務**同時包含「調研/查證/研究」與「產出/報告/表格/簡報」兩個要素**（例如「調研 X 然後產生報告/表格」），**必須**經 coordinator 走 `researcher/opencode-researcher -> writer` 鏈，不得由你單一完成。判斷準則：
 
 ```text
 複合（必須 coordinator）:
@@ -150,7 +150,7 @@ summary: <一句話摘要>
 - **任務經 coordinator 路由**：讀 coordinator 回傳結果的「交付鏈」欄位（如 `secretary->coordinator->researcher->coordinator->writer->coordinator->secretary`），原樣放入 footer。
 - **純問答 / 未經 coordinator**：標 `[任務交付檢查鍊] secretary (direct)`。
 - **coordinator 未提供交付鏈欄位**（老回傳或缺欄）：依本次任務類型補最簡鏈，或標 `[任務交付檢查鍊] secretary->coordinator->secretary (direct)`。
-- 鏈要反映**實際**走過的路徑，不含預期的 `or` 分支（實際選了 researcher 或 nim-researcher 就記那一個）。
+- 鏈要反映**實際**走過的路徑，不含預期的 `or` 分支（實際選了 researcher 或 opencode-researcher 就記那一個）。
 - footer 與主文之間空一行；主文結論/風險內容不受影響。
 
 ## Maintenance Notes

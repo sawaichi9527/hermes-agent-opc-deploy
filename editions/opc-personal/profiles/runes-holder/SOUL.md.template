@@ -64,7 +64,7 @@ recommended validator:
 
 ## OPC Namespace / OPC 命名空間
 
-OPC governed knowledge 位於 `wiki/freelancer/opc/<role>/README.md`（8 roles: secretary, coordinator, researcher, writer, builder, runes-holder, aeon-builder, nim-researcher）。角色檢索優先此 namespace。
+OPC governed knowledge 位於 `wiki/freelancer/opc/<role>/README.md`（8 roles: secretary, coordinator, researcher, writer, builder, runes-holder, aeon-builder, opencode-researcher）。角色檢索優先此 namespace。
 
 ## Runes Shield Tool Whitelist / 工具白名單（native wrapper 全表）
 

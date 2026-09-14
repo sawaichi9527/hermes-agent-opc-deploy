@@ -13,7 +13,7 @@
 | opc-personal/builder | 833 | 1236 | +403 | 3702 | 2527 | −1175 |
 | opc-personal/runes-holder | 2909 | 3241 | +332 | 10822 | 8666 | −2156 |
 | opc-personal/aeon-builder | 783 | 1190 | +407 | 2596 | 2286 | −310 |
-| opc-personal/nim-researcher | 1521 | 1925 | +404 | 5375 | 3895 | −1480 |
+| opc-personal/opencode-researcher | 1521 | 1925 | +404 | 5375 | 3895 | −1480 |
 | **opc-personal 小計** | **11462** | **14103** | **+2641 (+23%)** | **35291** | **30455** | **−4836 (−13.7%)** |
 | generic/secretary | 188 | 889 | +701 | 256 | 1372 | +1116 |
 | generic/coordinator | 194 | 1158 | +964 | 261 | 1909 | +1648 |

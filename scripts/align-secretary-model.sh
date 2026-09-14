@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# align-secretary-model.sh — secretary → coordinator/builder/writer/researcher/runes-holder/nim-researcher 模型對齊
+# align-secretary-model.sh — secretary → coordinator/builder/writer/researcher/runes-holder/opencode-researcher 模型對齊
 # 用途：把 secretary 的 model 區塊（provider / base_url / name / api_key 等）原樣複製到目標 profile，
-#        確保所有 profile 使用「同一模型」（2026-08-24 決策：runes-holder / nim-researcher 也一併切換）。
-# 來源：使用者需求「coordinator, builder, writer, researcher 使用的模型，與 secretary 一致」+「runes-holder 與 nim-researcher 也一併切換」
+#        確保所有 profile 使用「同一模型」（2026-08-24 決策：runes-holder / opencode-researcher 也一併切換）。
+# 來源：使用者需求「coordinator, builder, writer, researcher 使用的模型，與 secretary 一致」+「runes-holder 與 opencode-researcher 也一併切換」
 # 機制：1) 讀 ~/.hermes/profiles/secretary/config.yaml 的 model: 區塊，寫入目標 profile 的同區塊。
 #        2) 同步 .env 的 HERMES_CUSTOM_192_168_23_217_1234_API_KEY（secretary 的 api_key placeholder 所需）。
-#        3) nim-researcher：同步 moa preset aggregator.model 為 secretary 模型（reference 仍走 NIM）。
+#        3) opencode-researcher：同步 moa preset aggregator.model 為 secretary 模型（reference 仍走 OpenCode Go）。
 # 安全：dry-run 預設；--apply 才寫檔；自動 backup；不改 aeon-builder（DGX Spark 專用）。
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROFILES_ROOT="${HERMES_PROFILES_ROOT:-$HOME/.hermes/profiles}"
 SECRETARY_PROFILE="${SECRETARY_PROFILE:-secretary}"
-TARGETS_DEFAULT="coordinator builder writer researcher runes-holder nim-researcher"
+TARGETS_DEFAULT="coordinator builder writer researcher runes-holder opencode-researcher"
 TARGETS_ENV="${PROFILE_LIST:-}"
 APPLY=0
 
@@ -24,13 +24,13 @@ Usage:
   PROFILE_LIST="coordinator writer" ./scripts/align-secretary-model.sh [--apply]
 
 對齊 secretary 的 model 區塊到目標 profiles
-（預設: coordinator/builder/writer/researcher/runes-holder/nim-researcher）。
+（預設: coordinator/builder/writer/researcher/runes-holder/opencode-researcher）。
 
 Default behavior:
   - Dry-run only. 顯示將如何對齊，不寫檔。
   - 不觸及 aeon-builder（DGX Spark 專用模型）。
   - 同步 .env 的 HERMES_CUSTOM_192_168_23_217_1234_API_KEY（若 secretary 使用 placeholder）。
-  - nim-researcher：同步 moa preset aggregator.model 為 secretary 模型。
+  - opencode-researcher：同步 moa preset aggregator.model 為 secretary 模型。
 
 Options:
   --apply
@@ -341,10 +341,10 @@ else
     done
   fi
 fi
-# --- nim-researcher MoA aggregator sync (aggregator.model -> secretary 模型) ---
-if [[ " ${targets[*]} " == *" nim-researcher "* ]]; then
-  printf '\n== nim-researcher MoA aggregator sync ==\n'
-  nim_cfg="$PROFILES_ROOT/nim-researcher/config.yaml"
+# --- opencode-researcher MoA aggregator sync (aggregator.model -> secretary 模型) ---
+if [[ " ${targets[*]} " == *" opencode-researcher "* ]]; then
+  printf '\n== opencode-researcher MoA aggregator sync ==\n'
+  nim_cfg="$PROFILES_ROOT/opencode-researcher/config.yaml"
   src_default="$($PYTHON - "$src_file" <<'PY'
 import re, sys
 from pathlib import Path
@@ -368,7 +368,7 @@ PY
   if [ -z "$src_default" ]; then
     warn "cannot resolve secretary model default/name; skip MoA aggregator sync"
   elif [ ! -f "$nim_cfg" ]; then
-    warn "nim-researcher config missing: $nim_cfg"
+    warn "opencode-researcher config missing: $nim_cfg"
   else
     cur_agg="$($PYTHON - "$nim_cfg" <<'PY'
 import re, sys
@@ -439,7 +439,7 @@ PY
   fi
 fi
 
-printf '\nVerify: for p in secretary coordinator builder writer researcher runes-holder nim-researcher; do echo "== $p =="; grep -A6 "^model:" ~/.hermes/profiles/$p/config.yaml | head -10; grep HERMES_CUSTOM ~/.hermes/profiles/$p/.env; echo; done\n'
+printf '\nVerify: for p in secretary coordinator builder writer researcher runes-holder opencode-researcher; do echo "== $p =="; grep -A6 "^model:" ~/.hermes/profiles/$p/config.yaml | head -10; grep HERMES_CUSTOM ~/.hermes/profiles/$p/.env; echo; done\n'
 
 if [ "$OVERALL_FAIL" -ne 0 ]; then
   exit 1

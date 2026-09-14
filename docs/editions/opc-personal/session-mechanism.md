@@ -12,7 +12,7 @@ OPC 8-profile 系統存在**兩種截然不同的 session 生命週期**：
 | Session | **持久**，per Lark chat | **每次全新**，一任務一 session |
 | 跨任務對話記憶 | 有（同一 chat 沿用） | 無（每次空 session 起手） |
 
-**全系統只有 secretary 是持久 session**（跟使用者的 Lark 聊天綁定）。只要被 coordinator 指派，其他 agent（researcher / nim-researcher / writer / builder / aeon-builder / runes-holder）就是全新 oneshot process + 全新 session；**coordinator 自己也是**（被 secretary 用同樣方式呼叫）。
+**全系統只有 secretary 是持久 session**（跟使用者的 Lark 聊天綁定）。只要被 coordinator 指派，其他 agent（researcher / opencode-researcher / writer / builder / aeon-builder / runes-holder）就是全新 oneshot process + 全新 session；**coordinator 自己也是**（被 secretary 用同樣方式呼叫）。
 
 ## 1. Secretary ＝ 持久 session per Lark chat（gateway）
 

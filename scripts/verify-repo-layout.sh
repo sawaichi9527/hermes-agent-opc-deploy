@@ -95,7 +95,7 @@ for f in \
   docs/shared/guarded-apply-contract.md \
   docs/editions/generic \
   docs/editions/opc-personal \
-  docs/editions/opc-personal/nim-researcher-moa-profile.md \
+  docs/editions/opc-personal/opencode-researcher-moa-profile.md \
   docs/editions/opc-personal/aeon-builder-remote-endpoint.md \
   docs/editions/opc-personal/plur-memory-layer.md \
   docs/editions/opc-personal/a2a-expansion-pi5.md \
@@ -124,16 +124,16 @@ print_header "Version"
 if [ -f VERSION ]; then
   v="$(cat VERSION)"
   printf 'PASS VERSION=%s\n' "$v"
-  if [ "$v" = "0.20.1" ]; then
-    printf 'PASS VERSION matches 0.20.1\n'
+  if [ "$v" = "0.20.2" ]; then
+    printf 'PASS VERSION matches 0.20.2\n'
   else
-    printf 'FAIL VERSION is not 0.20.1\n'
+    printf 'FAIL VERSION is not 0.20.2\n'
     ISSUES=$((ISSUES + 1))
   fi
 fi
 
 check_edition_profiles editions/generic secretary coordinator researcher builder writer
-check_edition_profiles editions/opc-personal secretary coordinator researcher writer builder runes-holder aeon-builder nim-researcher
+check_edition_profiles editions/opc-personal secretary coordinator researcher writer builder runes-holder aeon-builder opencode-researcher
 
 print_header "Required current mainline scripts"
 for s in \
@@ -144,7 +144,7 @@ for s in \
   scripts/m0-capability-check.sh \
   scripts/setup-plur.sh \
   scripts/setup-feishu-gateway.sh \
-  scripts/setup-nim-moa-profile.sh \
+  scripts/setup-opencode-moa-profile.sh \
   scripts/jobs-json-init.sh \
   scripts/approvals-deny-init.sh \
   scripts/sync-soul-to-profiles.sh

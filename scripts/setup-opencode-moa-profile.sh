@@ -1,23 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# setup-nim-moa-profile.sh — nim-researcher MoA preset（D5 / M6b 實測）
+# setup-opencode-moa-profile.sh — opencode-researcher MoA preset（D5 / M6b 實測）
 #
-# 設計：在 K6 上，把 nim-researcher profile 的 config.yaml 設定 MoA preset：
-#   reference = NVIDIA NIM meta/llama-3.3-70b-instruct（provider nvidia，非 nim）
+# 設計：在 K6 上，把 opencode-researcher profile 的 config.yaml 設定 MoA preset：
+#   reference = OpenCode Go deepseek-v4.1-flash（provider opencode-go，讀 OPENCODE_GO_API_KEY）
 #   aggregator = 本機 custom agents-a1
 #   reference_max_tokens: 600 / fanout: user_turn
+#
+# reference provider 為可抽換概念：目前部署用 OpenCode Go；亦可改配
+# NIM 或其他第三方 OpenAI-compatible API，不需變動本 script 結構。
 #
 # dry-run 預設 + backup-before-write；不含真實 secret。
 #
 # 執行方式：
-#   bash scripts/setup-nim-moa-profile.sh              # dry-run
-#   bash scripts/setup-nim-moa-profile.sh --apply      # 寫入 config
-#   HERMES_PROFILES_ROOT=... bash scripts/setup-nim-moa-profile.sh
+#   bash scripts/setup-opencode-moa-profile.sh              # dry-run
+#   bash scripts/setup-opencode-moa-profile.sh --apply      # 寫入 config
+#   HERMES_PROFILES_ROOT=... bash scripts/setup-opencode-moa-profile.sh
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROFILES_ROOT="${HERMES_PROFILES_ROOT:-$HOME/.hermes/profiles}"
-PROFILE="nim-researcher"
+PROFILE="opencode-researcher"
 CONFIG_FILE="$PROFILES_ROOT/$PROFILE/config.yaml"
 APPLY=0
 
@@ -27,15 +30,17 @@ AGGREGATOR_MODEL="${AGGREGATOR_MODEL:-agents-a1}"
 usage() {
   cat <<'USAGE'
 Usage:
-  ./scripts/setup-nim-moa-profile.sh [--apply]
+  ./scripts/setup-opencode-moa-profile.sh [--apply]
 
 Default behavior:
-  - Dry-run only: reports the MoA preset that would be written to nim-researcher config.
-  - Uses provider nvidia (reads NVIDIA_API_KEY) — NOT nim (NIM_API_KEY does not exist).
+  - Dry-run only: reports the MoA preset that would be written to opencode-researcher config.
+  - Uses provider opencode-go (reads OPENCODE_GO_API_KEY) — reference = OpenCode Go
+    deepseek-v4.1-flash. Reference provider is swappable (NIM / other API) without
+    changing this profile structure.
 
 Options:
   --apply
-      Write the moa.presets.nim-researcher block (backup-before-write).
+      Write the moa.presets.opencode-researcher block (backup-before-write).
 
 Environment:
   HERMES_PROFILES_ROOT   Default: $HOME/.hermes/profiles
@@ -44,7 +49,7 @@ Environment:
 
 Boundary:
   This configures the MoA preset only. The per-task trigger cap (<=3, D5b) is
-  enforced via jobs.json moa_trigger_count + nim-researcher SOUL, not here.
+  enforced via jobs.json moa_trigger_count + opencode-researcher SOUL, not here.
 USAGE
 }
 
@@ -67,7 +72,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 if [ ! -f "$CONFIG_FILE" ]; then
-  echo "FAIL nim-researcher config missing: $CONFIG_FILE" >&2
+  echo "FAIL opencode-researcher config missing: $CONFIG_FILE" >&2
   exit 1
 fi
 
@@ -80,7 +85,7 @@ need_cmd() {
 }
 need_cmd python3
 
-printf 'setup-nim-moa-profile.sh (v0.20.0) — MoA preset for nim-researcher\n'
+printf 'setup-opencode-moa-profile.sh (v0.20.2) — MoA preset for opencode-researcher\n'
 printf 'Config: %s\n' "$CONFIG_FILE"
 printf 'Aggregator: %s @ %s\n' "$AGGREGATOR_MODEL" "$AGGREGATOR_BASE_URL"
 printf 'Apply: %s\n\n' "$APPLY"
@@ -100,10 +105,10 @@ text = path.read_text(encoding="utf-8")
 block = (
     "\nmoa:\n"
     "  presets:\n"
-    "    nim-researcher:\n"
+    "    opencode-researcher:\n"
     "      reference_models:\n"
-    "        - provider: nvidia\n"
-    f"          model: meta/llama-3.3-70b-instruct\n"
+    "        - provider: opencode-go\n"
+    f"          model: deepseek-v4.1-flash\n"
     "      aggregator:\n"
     "        provider: custom\n"
     f"        model: {model}\n"
@@ -112,7 +117,7 @@ block = (
     "      fanout: user_turn\n"
 )
 
-if "nim-researcher:" in text and "meta/llama-3.3-70b-instruct" in text:
+if "opencode-researcher:" in text and "deepseek-v4.1-flash" in text:
     print("ACTION already present", file=sys.stderr)
     sys.stdout.write(text)
     sys.exit(0)
@@ -121,7 +126,7 @@ if "nim-researcher:" in text and "meta/llama-3.3-70b-instruct" in text:
 if not text.endswith("\n"):
     text += "\n"
 text += block
-print("ACTION append moa.presets.nim-researcher", file=sys.stderr)
+print("ACTION append moa.presets.opencode-researcher", file=sys.stderr)
 sys.stdout.write(text)
 sys.exit(10)
 PY
@@ -134,16 +139,16 @@ fi
 action="$(cat "$report_file" | tail -n 1 || true)"
 case "$action" in
   ACTION\ already\ present*)
-    printf 'PASS nim-researcher MoA preset already present\n'
+    printf 'PASS opencode-researcher MoA preset already present\n'
     ;;
-  ACTION\ append\ moa.presets.nim-researcher*)
+  ACTION\ append\ moa.presets.opencode-researcher*)
     if [ "$APPLY" -eq 1 ]; then
       backup="$CONFIG_FILE.bak.$(date +%Y%m%d%H%M%S)"
       cp "$CONFIG_FILE" "$backup"
       cat "$tmp_file" >"$CONFIG_FILE"
       printf 'PASS MoA preset written; backup=%s\n' "$backup"
     else
-      printf 'INFO dry-run would append MoA preset to nim-researcher config\n'
+      printf 'INFO dry-run would append MoA preset to opencode-researcher config\n'
     fi
     ;;
   *)
@@ -168,5 +173,5 @@ esac
 rm -f "$tmp_file" "$report_file"
 
 printf '\nVerify with:\n'
-printf '  hermes -p nim-researcher chat -Q -q "<prompt>" -m moa:nim-researcher\n'
+printf '  hermes -p opencode-researcher chat -Q -q "<prompt>" -m moa:opencode-researcher\n'
 printf '  # or moa-trace to confirm reference fan-out + aggregator convergence (M6b)\n'

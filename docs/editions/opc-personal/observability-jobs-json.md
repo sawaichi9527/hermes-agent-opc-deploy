@@ -27,7 +27,7 @@
 ```
 
 計數欄：
-- `moa_trigger_count` — nim-researcher 每任務 MoA 觸發數（**≤3**，D5b / caveat 3）。
+- `moa_trigger_count` — opencode-researcher 每任務 MoA 觸發數（**≤3**，D5b / caveat 3）。
 - `daily_token_used` — 每日 token cap（G-B2）。
 
 ## approval_state（D15 / D16）
@@ -57,5 +57,5 @@ rejected       # 卡片駁回
 ## 驗證（M4 PASS）
 
 - jobs.json 建立於 `~/.hermes/opc/jobs.json`（v4.1 欄位完整）。
-- coordinator SOUL 讀取 + D5a reroute 驗證（12-sources → nim reroute 正確）。
+- coordinator SOUL 讀取 + D5a reroute 驗證（12-sources → opencode-researcher reroute 正確）。
 - cron 端到端 succeeded + deliver origin。
