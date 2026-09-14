@@ -11,7 +11,7 @@ Hermes 原生 profile 客製化與部署指南 repo。本 repo 是 Freelancer �
 | | GENERIC（給一般人參考） | OPC-PERSONAL（本藍圖 8-profile） |
 |---|---|---|
 | 角色 | 5（secretary, coordinator, researcher, builder, writer） | 8（5 core + runes-holder + aeon-builder + opencode-researcher） |
-| 算力預設 | 雲端（provider **placeholder**，使用者自選） | Strix Halo 本機 `agent-a1` + DGX vLLM 遠端實作 + OpenCode Go reference 顧問（provider 可抽換，見 `opencode-researcher-moa-profile.md`） |
+| 算力預設 | 雲端（provider **placeholder**，使用者自選） | Strix Halo 本機 `ornith-1.5-35b-a3b`（aggregator）+ DGX vLLM 遠端實作（aeon-builder）+ OpenCode Go reference 顧問（provider 可抽換，見 `opencode-researcher-moa-profile.md`） |
 | secretary 綁定 | 不綁 Lark；`gateway setup` 多選平台 | Lark/Feishu |
 | 記憶 | 1 層（native only） | 3 層（native + Plur + Runes） |
 | cron 治理 | 無 | 雙檔 `rss_seeds.json`/`rss_suggestions.json` + pre_approved + governance audit cron |

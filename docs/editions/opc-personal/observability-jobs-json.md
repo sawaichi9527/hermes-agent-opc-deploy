@@ -16,7 +16,7 @@
 {
   "task_id": "uuid",
   "profile": "builder",
-  "model_used": "agent-a1",
+  "model_used": "ornith-1.5-35b-a3b",
   "started_at": "2026-08-14T21:00:00+08:00",
   "last_ping_at": "2026-08-14T21:01:00+08:00",
   "status": "running",

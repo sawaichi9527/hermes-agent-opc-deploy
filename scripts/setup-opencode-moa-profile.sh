@@ -5,7 +5,7 @@ set -euo pipefail
 #
 # 設計：在 K6 上，把 opencode-researcher profile 的 config.yaml 設定 MoA preset：
 #   reference = OpenCode Go deepseek-v4.1-flash（provider opencode-go，讀 OPENCODE_GO_API_KEY）
-#   aggregator = 本機 custom agents-a1
+#   aggregator = 本機 custom ornith-1.5-35b-a3b
 #   reference_max_tokens: 600 / fanout: user_turn
 #
 # reference provider 為可抽換概念：目前部署用 OpenCode Go；亦可改配
@@ -25,7 +25,7 @@ CONFIG_FILE="$PROFILES_ROOT/$PROFILE/config.yaml"
 APPLY=0
 
 AGGREGATOR_BASE_URL="${AGGREGATOR_BASE_URL:-http://192.168.23.217:1234/v1}"
-AGGREGATOR_MODEL="${AGGREGATOR_MODEL:-agents-a1}"
+AGGREGATOR_MODEL="${AGGREGATOR_MODEL:-ornith-1.5-35b-a3b}"
 
 usage() {
   cat <<'USAGE'
@@ -45,7 +45,7 @@ Options:
 Environment:
   HERMES_PROFILES_ROOT   Default: $HOME/.hermes/profiles
   AGGREGATOR_BASE_URL    Default: http://192.168.23.217:1234/v1
-  AGGREGATOR_MODEL       Default: agents-a1
+  AGGREGATOR_MODEL       Default: ornith-1.5-35b-a3b
 
 Boundary:
   This configures the MoA preset only. The per-task trigger cap (<=3, D5b) is

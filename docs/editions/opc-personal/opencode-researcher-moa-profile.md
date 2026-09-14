@@ -6,7 +6,7 @@
 
 - 只在 **coordinator reroute（D5a）** 時出動：researcher 回報 `evidence_urls` 長度 **>10** → coordinator 下令 → opencode-researcher 拿 researcher 已蒐的 source list 當 **bootstrap，不重抓**。
 - researcher **不自派** opencode-researcher（D3 序列化，無 dispatcher）。
-- reference provider（遠端 LLM API）只出建議（reference）；本機 agent-a1（aggregator）落地收斂。
+- reference provider（遠端 LLM API）只出建議（reference）；本機 ornith-1.5-35b-a3b（aggregator）落地收斂。
 
 ## MoA preset（M6b 實測驗證；2026-09-14 reference 換源）
 
@@ -16,7 +16,7 @@ preset: opencode-researcher
   reference_models:
     - { provider: opencode-go, model: deepseek-v4.1-flash }
   aggregator:
-    { provider: custom, model: agents-a1, base_url: http://192.168.23.217:1234/v1 }
+    { provider: custom, model: ornith-1.5-35b-a3b, base_url: http://192.168.23.217:1234/v1 }
   reference_max_tokens: 600
   fanout: user_turn
 ```

@@ -21,7 +21,7 @@ opencode-researcher 獨立第 8 profile，內部 MoA（D5/D5a/D5b）
 - 破壞性白名單：三級完整（L3 硬熔斷需 K6 wrapper，caveat 1）
 - cron 治理：雙檔 `rss_seeds.json`/`rss_suggestions.json` + pre_approved + governance audit cron
 - MoA / A2A：opencode-researcher 內部 MoA；A2A 留給未來 Pi 5（D6/D21）
-- 算力：Strix Halo 本機 `agent-a1` + DGX/NIM 遠端顧問
+- 算力：Strix Halo 本機 `ornith-1.5-35b-a3b`（aggregator）+ DGX/OpenCode Go 遠端顧問
 
 ## 目錄
 

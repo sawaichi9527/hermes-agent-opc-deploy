@@ -14,7 +14,7 @@ set -uo pipefail
 # M0 對應藍圖 §10：
 #   - hermes CLI / doctor / profile
 #   - skills（ppt-master / plur-memory）
-#   - curl agent-a1 / Spark vLLM / OpenCode Go 端點
+#   - curl 本機 aggregator（ornith）/ Spark vLLM / OpenCode Go 端點
 #   - secrets store 介面
 #
 # 註：L3 硬熔斷（caveat 1）與 L2 HITL（D20）需實作階段在工具層驗證，
@@ -24,8 +24,8 @@ HERMES_BIN="${HERMES_BIN:-}"
 HERMES_HOME="${HERMES_HOME:-/home/eye/.hermes}"
 SPARK_HOST="${SPARK_HOST:-192.168.23.215}"
 SPARK_PORT="${SPARK_PORT:-1234}"
-A1_HOST="${A1_HOST:-192.168.23.217}"
-A1_PORT="${A1_PORT:-1234}"
+AGG_HOST="${AGG_HOST:-192.168.23.217}"
+AGG_PORT="${AGG_PORT:-1234}"
 ZEN_BASE_URL="${ZEN_BASE_URL:-https://opencode.ai/zen/go/v1}"
 
 PASS=0
@@ -119,13 +119,13 @@ if [ -n "${HERMES_BIN}" ]; then
   fi
 fi
 
-# --- 7. agent-a1 端點（192.168.23.217:1234）---
+# --- 7. 本機 aggregator 端點（ornith，192.168.23.217:1234）---
 echo
-echo "== agent-a1 (${A1_HOST}:${A1_PORT}) =="
-a1_code="$(curl -s -m 8 -o /dev/null -w '%{http_code}' "http://${A1_HOST}:${A1_PORT}/v1/models" 2>&1 || true)"
-case "${a1_code}" in
-  200|401|403) pass "agent-a1 reachable (HTTP ${a1_code}; 401/403 需 api_key 屬正常)" ;;
-  *) fail "agent-a1 unreachable (HTTP ${a1_code})" ;;
+echo "== ornith aggregator (${AGG_HOST}:${AGG_PORT}) =="
+agg_code="$(curl -s -m 8 -o /dev/null -w '%{http_code}' "http://${AGG_HOST}:${AGG_PORT}/v1/models" 2>&1 || true)"
+case "${agg_code}" in
+  200|401|403) pass "ornith aggregator reachable (HTTP ${agg_code}; 401/403 需 api_key 屬正常)" ;;
+  *) fail "ornith aggregator unreachable (HTTP ${agg_code})" ;;
 esac
 
 # --- 8. Spark vLLM 端點（192.168.23.215:1234，D4/D8/D13）---
