@@ -28,7 +28,7 @@ Hermes 原生 profile 客製化與部署指南 repo。本 repo 是 Freelancer �
 README.md
 VERSION                        # 0.21.3
 docs/shared/                   # 共用文件（guarded-apply-contract、安全守則）
-docs/editions/{generic,opc-personal}/   # edition 專屬文件（opc-personal 已填 M8 內容；soul-vs-agents.md 標 SOUL/AGENTS 邊界；session-mechanism.md 標 session 機制；**kanban-dispatch.md 標 v0.21.3 多 profile 分派機制**）
+docs/editions/{generic,opc-personal}/   # edition 專屬文件（opc-personal 已填 M8 內容；soul-vs-agents.md 標 SOUL/AGENTS 邊界；session-mechanism.md 標 session 機制；**architecture-overview.md 通用架構（多 profile + kanban + plur，不含 Runes）**；**kanban-dispatch.md 標 v0.21.3 多 profile 分派機制**）
 docs/planning/                 # 規劃/設計文件（Hermes_OPC v4.1 藍圖、gap analysis、討論總結、handoff）
 docs/soul-token-audit.md       # 13 份 SOUL 模板 token 用量審計（2026-08-15 refine）
 scripts/                       # deploy / verify / setup 腳本
