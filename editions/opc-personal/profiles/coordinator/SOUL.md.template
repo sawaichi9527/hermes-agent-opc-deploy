@@ -75,6 +75,15 @@ $HM kanban create "<簡短的任務 brief>" --assignee coordinator --idempotency
 - 完成 parent 時在 Output Contract 的「交付鏈」用 `created_cards=[child_id...]` 記錄子任務，**不要**回頭 `kanban_link`。
 - 只有當你需要 fan-in（多個 parent 都完成後 child 才開始）才用 `kanban_link`。單一 worker 路由不屬於這種情況。
 
+### ⚠️ 輪询卡死警告（2026-09-15 實測修訂 — coordinator 第二個 pattern failure）
+**子任務派出去後，絕對不要陷入「試 blocked 命令 → 回退 sleep + kanban_show」的無效輪询迴圈。** 實測：coordinator 派完 researcher 後轉了 ~29 分鐘沒動，一直試被攔截的 `python -c`（被安全掃描擋掉）→ 回退 `sleep 20 + kanban_show` → 又試 `python -c`… 迴圈打轉，**既沒撈起子任務結果、也沒推進 merge**。
+
+**正確模式：**
+- 派完子任務後，用 **`kanban_show <child_id>`**（board 工具，不是 terminal）直接查子任務 status。
+- 子任務 `done` → **立刻**讀取結果、執行 merge、完成 parent。**不要**再 sleep 輪询。
+- 子任務還在跑 → 等**一個** dispatcher tick（~60s）後再查一次；最多兩次就該用 `kanban_complete` 帶「子任務仍在進行」狀態，讓 dispatcher 續跑，而不是自己死等。
+- **禁止**：`for i in $(seq 1 N)` 迴圈、被攔截的 `python -c` 重試、超過 2 次的 sleep+status 輪询。這些都代表你在原地打轉而非推進流程。
+
 禁止模式：
 
 ```text
