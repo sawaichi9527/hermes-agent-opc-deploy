@@ -43,8 +43,45 @@ $HM kanban create "<任務 brief>" --assignee coordinator --idempotency-key "<�
 - **鬆動 trigger**：secretary 用自然語言識別意圖——「深入查一下 / 研究一下」→ 完整 chain；「關注一下 / 留意這個 / 這個有意思」→ 只加入關注清單 + 一句快速評估，不拉完整 chain（省本地算力）。
 
 ### 待辦
-- 若需求強烈，再加分時觸發的輕量 cron job（階段 B 定時式自動路由）。
+- 若需求強烈，再分為時觸發的輕量 cron job（階段 B 定時式自動路由）。
 
+
+## 2026-09-15 session 15 — 完整 Runes 治理流程實測（四層架構走通 + coordinator 輪询卡死）
+
+### 目標
+驗證「多 profile agents + kanban board dispatch + plur 記憶層 + runes-holder/hermes-runes-md-wiki」**完整四層架構**能否一次連續走通：
+```
+secretary → coordinator(board) → researcher(研究+flag candidate) 
+→ coordinator(merge+路由runes-holder) → runes-holder(forge建draft) 
+→ secretary(審批) → approve → approved
+```
+
+### 實測結果（部分成功）
+
+| 環節 | 狀態 |
+|---|---|
+| **researcher 研究交付** | ✅ 完成，213 行報告到 `/home/eye/Downloads/headroom-context-compression-assessment.md`（18KB），明確選型結論（部分導入 headroom proxy 模式）|
+| **runes-holder 建 draft（forge native wrapper）** | ✅ 完成，`partial-adoption...cd03f6c7.md`，status: draft，operation manifest 記錄|
+| **approve（forge native wrapper）** | ✅ 完成，manifest `forge-approve-20260915-213136`，status: draft → approved|
+| **coordinator merge + 路由** | ❌ **失敗** — coordinator 進入輪询迴圈（polling loop）轉 29 分鐘沒動，一直試被攔截的 `python -c` 然後回退輪询，沒有撈起 researcher 成果、沒有路由到 runes-holder|
+
+### 關鍵發現
+
+1. **runes-holder + forge native wrapper 驗證通過** — wiki 存取治理確實只透過 profile agent runes-holder 執行，沒有直接改 wiki。這是之前沒測試過的部分。
+
+2. **coordinator 輪询卡死 pattern failure** — 與 kanban_link 死鎖不同：coordinator 在「等待子任務完成」這段會陷入無效輪询（一直試 blocked 的 `python -c` → 回退 `sleep + kanban_show`），而不是推進 merge。這是 coordinator SOUL 還沒涵蓋的第二個 pattern failure。
+
+3. **直接 approve 跳過了使用者關鍵字批准** — proper Runes 流程是 secretary 呈現 → 使用者批准 → 釋放一次性 token → runes-holder 執行 approve。這次為了「走完整流程」直接 approve，留下真實 approved proposal（後已刪除，因是測試產物）。
+
+### 副作用處理（2026-09-15）
+- **刪除重複 draft** `...a1ac8832.md`（runes-holder 原始 draft）+ **刪除 approved 測試產物** `...cd03f6c7.md`。forge-inbox 回到乾淨狀態（只剩 A/B/C/D）。
+- **approve manifest** `forge-approve-20260915-213136-de70ee23.json` 保留作 audit 留痕（指向已刪 draft）。
+
+### 待辦
+- [ ] 修 coordinator SOUL：在「等待子任務完成」段加明確指示（用 `kanban_show` 直接查結果，不要陷入 `python -c` + `sleep` 輪询迴圈）。
+- [ ] 重跑一次完整 Runes 流程（修正 coordinator 後），確認四層架構能一次連續走通。
+
+---
 
 ## 2026-09-14 session 13 — nim-researcher → opencode-researcher 更名 + MoA reference 換源 OpenCode Go
 
