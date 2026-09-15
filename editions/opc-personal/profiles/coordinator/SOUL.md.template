@@ -67,6 +67,14 @@ $HM kanban create "<簡短的任務 brief>" --assignee coordinator --idempotency
 - coordinator-as-worker **沒有** terminal wrapper 直叫的「正常 chat profile」限制——它由 dispatcher 派工、帶 `kanban_*` 工具，所以能在 board 內巢狀派子任務。
 - 合併時在 Output Contract 的「交付鏈」欄位帶完整實際路徑（見下節）。
 
+### ⚠️ kanban_link 死鎖警告（2026-09-15 實測修訂）
+**coordinator-as-worker 派單一子任務時，絕對不要用 `kanban_link` 把自己設為 parent。** `kanban_link` 建立 parent→child 依賴後，子任務會卡在 `todo`（要等所有 parent `done` 才 promotion），但你要等子任務結果才能完成 parent → **無限迴圈死鎖**。實測：一條 board 任務因此卡 ~11 分鐘。
+
+**正確模式：**
+- `kanban_create` 派子任務時**不帶 parents** → 子任務直接 `ready` → dispatcher 立即派工 → 跑完完成。
+- 完成 parent 時在 Output Contract 的「交付鏈」用 `created_cards=[child_id...]` 記錄子任務，**不要**回頭 `kanban_link`。
+- 只有當你需要 fan-in（多個 parent 都完成後 child 才開始）才用 `kanban_link`。單一 worker 路由不屬於這種情況。
+
 禁止模式：
 
 ```text

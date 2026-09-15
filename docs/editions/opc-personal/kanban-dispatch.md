@@ -52,6 +52,17 @@ $HM kanban stats | grep -E "running|ready"
 ```
 注意：tick 預設 60s（`dispatch_interval_seconds`）。建任務後等一個 tick 才派工。用 `sleep 90` 比 `sleep 30` 更穩。
 
+## 5b. kanban_link 死鎖（實測教訓，2026-09-15）
+
+**陷阱**：coordinator-as-worker 用 `kanban_link` 把自己設為子任務的 parent → 子任務卡在 `todo`（要等 parent `done` 才 promotion），但 parent 要等子任務結果才能完成 → **無限迴圈死鎖**（實測卡 ~11 分鐘）。
+
+**正確模式**：
+- `kanban_create` 派單一 worker 時**不帶 parents** → 子任務直接 `ready` → dispatcher 立即派工。
+- 完成 parent 時用 `created_cards=[child_id...]` 記錄，**不要**回頭 `kanban_link`。
+- `kanban_link` 只用於 fan-in（多個 parent 都完成後 child 才開始）。
+
+> 詳 `editions/opc-personal/profiles/coordinator/SOUL.md.template`「⚠️ kanban_link 死鎖警告」。
+
 ## 6. 還原指令（更新出問題時）
 ```bash
 BK=/home/eye/Downloads/hermes_upgrade_backup_*/
