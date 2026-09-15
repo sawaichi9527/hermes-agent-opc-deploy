@@ -112,6 +112,40 @@ secretary → coordinator(board) → researcher(研究+flag candidate)
 
 ---
 
+---
+
+## 2026-09-16 session 16 — coordinator lifecycle hardening（opencode-researcher 研究 → 實際寫入 SOUL）
+
+### 背景
+session 15 重測發現：coordinator merge 修正生效（不再輪询），但冒出兩個新 pattern failure——(1) **duplicate-spawned runes-holder**（`t_cdc2971e` + `t_fa89d613` 兩張卡、兩個 draft）；(2) **hung-worker 輪询復發**（對 lock 已過期但仍 heartbeating 的子任務空轉 ~1.8h）。coordinator SOUL 的「最多等一個 tick」只治好了 researcher child、沒治好 runes-holder child。
+
+### 分類與分派
+user 提問：「這是 builder 的問題嗎？要分給 aeon-builder 還是算力邏輯問題分給 opencode-researcher？」
+**判定：不是 builder/aeon-builder 的問題**——coordinator SOUL 的 pattern failure 是**行為/提示邏輯問題**（狀態管理規則怎麼寫），不是 code/shell/deploy bug，也不是算力問題。分派給 **opencode-researcher**（MoA reference 外部專家）研究「多 agent coordinator 任務生命週期管理的最佳實踐」。
+
+### 研究過程（board task t_40fad458，opencode-researcher）
+- 讀 live coordinator SOUL、handoff.md L85–111（session 15 實測 failure 紀錄）、**hermes-agent v0.21.3 原始碼**（`tools/kanban_tools.py`、`hermes_cli/kanban_db.py`、`kanban_db_dispatch.py`）。
+- **MoA reference 降級**：以 `moa:opencode-researcher` 呼叫外部 reference，~6.5min 無內容輸出（`Warning: Unknown toolsets: plur, plur-meta`），依 B4 政策標「reference 降級」，改以本機 aggregator 收斂。
+- **關鍵邊界發現（B1–B4）**：
+  - **B3**：`kanban_create` 原生冪等——對非 archived 同 key 任務直接回傳既有 id → **防重複派工有原生解**。
+  - **B1/B2**：coordinator-as-worker 不能標子卡 blocked、不能用 `kanban_list`（worker guard 只允許 mutate 自己的卡）→ 只能用「自己記的 child_id + `kanban_show`」。
+  - **B4**：子卡回收（lease 過期、crash、heartbeat 停滯）是 **dispatcher 的職責**，coordinator 端無任何回收手段。
+
+### 實際修復（寫入 coordinator SOUL，2026-09-16）
+研究建議 A+B+C 全部寫入 `editions/opc-personal/profiles/coordinator/SOUL.md.template`（繁中檢查已過，修正 3 行誤簡的「轮询」→「輪询」）：
+- **段落 A（新增）**：⚠️ 重複派工警告 — idempotent spawning。決定性 `idempotency_key="<parent>:<role>:<seq>"`、同一 role 單一在途子卡、child registry 落 board comment、`created_cards` 不得重複。
+- **段落 B（擴充輪询卡死警告）**：hung worker 判定（lease/heartbeat 四種組合）、等待段只有兩個出口（A. done→merge complete / B. hung→block 自己的 parent + 留證據）。處置邊界：不得重派同 role、不得標子卡 blocked/unblock、不得替它 complete。
+- **Maintenance Notes**：補「Lifecycle hardening (2026-09-16)」條目，記錄三條 pattern-failure 修訂來源（研究 t_40fad458）。
+
+### 同步與版本
+- sync-soul-to-profiles dry-run：僅 coordinator 需改（其他 7 profile 已 sync）。backup `SOUL.md.bak.20260916-011902`。
+- apply → live coordinator SOUL 已含新段落（grep 4 個新段命中）。
+- 研究輸出檔：`/home/eye/Downloads/coordinator-lifecycle-advisory-t_40fad458.md`（145 行，含每條建議的原始碼依據表）。
+
+### 待辦 / 未驗證
+- **段落 A–C 規則文字未經實跑驗證**（本任務為研究任務，不實作）。下次完整 Runes 流程實測時，重點觀察：(1) coordinator 是否用決定性 idempotency_key、(2) duplicate-spawn 是否被阻斷、(3) hung-worker 是否走「block 自己的 parent + 留證據」而非死等。
+- 研究標注「uncertain」：原始碼行號來自 run 39 讀取、`kanban_show` 是否回傳 lease/heartbeat 欄位未驗證（若無，tick 上限回退方案即唯一判準）。
+
 ## 2026-09-14 session 13 — nim-researcher → opencode-researcher 更名 + MoA reference 換源 OpenCode Go
 
 ### 變更內容（全部完成並驗證）

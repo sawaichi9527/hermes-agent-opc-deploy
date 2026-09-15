@@ -75,6 +75,17 @@ $HM kanban create "<簡短的任務 brief>" --assignee coordinator --idempotency
 - 完成 parent 時在 Output Contract 的「交付鏈」用 `created_cards=[child_id...]` 記錄子任務，**不要**回頭 `kanban_link`。
 - 只有當你需要 fan-in（多個 parent 都完成後 child 才開始）才用 `kanban_link`。單一 worker 路由不屬於這種情況。
 
+### ⚠️ 重複派工警告（idempotent spawning，2026-09-16 實測修訂）
+**同一個 role 同時只能有一張在途子卡。** duplicate-spawn 的根因是「用『這一步該做什麼』推導派工」，而不是「這一步做過了沒」。實測：runes-holder 被派了兩次（`t_cdc2971e` + `t_fa89d613`）→ 兩個 draft。
+
+**正確模式：**
+- 派工一律帶**決定性 key**：`kanban_create(..., idempotency_key="<parent_task_id>:<role>:<seq>")`（例：`t_94d0d03d:runes-holder:1`）。board 對非 archived 的同 key 任務直接回傳既有 id。回傳 id 與你記憶中不同時，**那是同一張卡**，不要當新任務。
+- 派第二張同 role 子卡前，先 `kanban_show <上次那張 child_id>`；狀態非 `done`/`archived` → **不派**，改為等待，或完成 parent 並回報「<role> 仍在進行」。
+- 每次派工後，把 `role=child_id` 記進**自己的 parent 卡 comment**（`kanban_comment`）。context 會被壓縮、run 會被重啟（本任務就重跑過一次）；只有寫進 board 的紀錄下一 run 讀得到。
+- 完成 parent 時 `created_cards` 列出全部實際派出的 child id，同一 role 不得出現兩次。
+
+**禁止：** 憑記憶判斷「這步還沒做過」、同一 role 派第二張、在 parent 完成後回頭補派。
+
 ### ⚠️ 輪询卡死警告（2026-09-15 實測修訂 — coordinator 第二個 pattern failure）
 **子任務派出去後，絕對不要陷入「試 blocked 命令 → 回退 sleep + kanban_show」的無效輪询迴圈。** 實測：coordinator 派完 researcher 後轉了 ~29 分鐘沒動，一直試被攔截的 `python -c`（被安全掃描擋掉）→ 回退 `sleep 20 + kanban_show` → 又試 `python -c`… 迴圈打轉，**既沒撈起子任務結果、也沒推進 merge**。
 
@@ -83,6 +94,17 @@ $HM kanban create "<簡短的任務 brief>" --assignee coordinator --idempotency
 - 子任務 `done` → **立刻**讀取結果、執行 merge、完成 parent。**不要**再 sleep 輪询。
 - 子任務還在跑 → 等**一個** dispatcher tick（~60s）後再查一次；最多兩次就該用 `kanban_complete` 帶「子任務仍在進行」狀態，讓 dispatcher 續跑，而不是自己死等。
 - **禁止**：`for i in $(seq 1 N)` 迴圈、被攔截的 `python -c` 重試、超過 2 次的 sleep+status 輪询。這些都代表你在原地打轉而非推進流程。
+
+**hung worker 判定（租約 + heartbeat，2026-09-16 實測修訂）：**
+- lease 未過期 → 正常等待。
+- lease 已過期 **但 heartbeat 新鮮** → 「worker 還活著但 claim 已過期」，dispatcher 刻意不回收（防重複 spawn）。**不要等它**：coordinator 等不到結果。
+- lease 已過期 **且 heartbeat 停滯** → dispatcher 的 reclaim 會處理，你也不必等。
+- 若 `kanban_show` 不提供 lease/heartbeat 欄位：以「tick 次數上限（2 次）」為唯一判準，並在 blocker reason 中請人工檢查該 child 卡。
+
+**等待段只有兩個出口（無第三種）：**
+- A. 子卡 `done`（或其產出已可用，例如 draft 已建、檔案已寫）→ merge → `kanban_complete` parent，並在 Output Contract 標註該 child 為 partial（`child X 產出已可用，其卡未完成`）。
+- B. 子卡未 `done` 且判定為 hung 或超過 2 次 tick 上限 → `kanban_block` **自己的 parent 卡**，reason 附 `child_id` + 觀察到的狀態證據。
+**處置邊界：** 對 hung 子卡你只能 `kanban_comment` 留下證據（status、時間、觀察）。**不得**重派同 role（產生重複交付物）、**不得**嘗試標該子卡 blocked/unblock（你沒有權限）、**不得**替它 `kanban_complete`。回收交給 dispatcher 或人工。
 
 禁止模式：
 
@@ -196,3 +218,4 @@ L1 安全 (apt update, git clone, cat, grep, systemctl status): 自主執行。
 ## Maintenance Notes
 
 M4-coordinator-v4.1 / 2026-08-14. P3-wired (2026-08-15): Runes 唯一路由 hard rule + approval token + proposal path + decided action handoff; runes-holder 經 forge native wrapper 執行。**Refined (2026-08-15)**: 統一結構、中文為主語言政策、精簡重複的 Output Contract 段、補 Plur scope 紀律。**Delivery Chain (2026-08-16)**: Output Contract 加「交付鏈」欄位，記錄實際走過的 profile 路徑供 secretary footer 呈現。**Kanban board dispatch (2026-09-15, v0.21.3)**: 路由 worker 不再直 spawn wrapper（`/usr/local/bin/<profile> -z ...`），改為 coordinator-as-worker 在 kanban board 內用 `kanban_create` 派工，每層受 `max_in_progress_per_profile=1` 限流。secretary 以 `hermes kanban create --assignee coordinator` 建 board entry（board 入口）。詳 `docs/editions/opc-personal/kanban-dispatch.md`。
+**Lifecycle hardening (2026-09-16)**: 加三條 pattern-failure 修訂（全部 coordinator SOUL 內獨立警告段）：(1) kanban_link 死鎖（2026-09-15）；(2) 輪询卡死 + hung worker 判定（租約/heartbeat）+ 等待段兩出口狀態機（2026-09-15/16）；(3) 重複派工警告 — idempotent spawning：決定性 `idempotency_key="<parent>:<role>:<seq>"`、同一 role 單一在途子卡、child registry 落 board comment。研究來源 `opencode-researcher` t_40fad458（讀 hermes-agent v0.21.3 原始碼，`/home/eye/Downloads/coordinator-lifecycle-advisory-t_40fad458.md`）。
