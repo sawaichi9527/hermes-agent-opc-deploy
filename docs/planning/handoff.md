@@ -499,6 +499,8 @@ secretary / coordinator / researcher / writer / builder / runes-holder / aeon-bu
 
 **deploy repo tag（2026-08-15）**：新增 `v0.20.0-m8`（annotated，HEAD 7c5c3b6，M8 階段二完成）已 push；`v0.20.0` 保留原指 bc9c9cb。
 
+**附帶修正（2026-09-15）：live opencode-researcher SOUL.md 殘留過期「OpenCode Zen」表述已修正為 OpenCode Go。** dry-run（`sync-soul-to-profiles.sh --edition opc-personal`）顯示 3 個 profile 會變（secretary / coordinator / opencode-researcher）。secretary + coordinator 是本次 kanban 遷移；opencode-researcher 的差異與 kanban 無關，是 MoA reference provider 命名分歧——repo template 本即 OpenCode Go（`opencode-go/deepseek-v4.1-flash`），但 live SOUL.md 仍寫 OpenCode Zen（`opencode` / `OPENCODE_ZEN_API_KEY`）。以 runtime 設定檔為準：`config.yaml` reference = `[{provider: opencode-go, model: deepseek-v4.1-flash}]`、`.env` 有 `OPENCODE_GO_API_KEY`、9/14 備份 `.env.bak.opencode-20260914-removezen`（已移除 Zen）。確認全部署走 OpenCode Go、無 Zen 訂閱，故將 live SOUL.md 同步為 Go（backup `SOUL.md.bak.20260915-165100`）。repo template 未改（本即對）。
+
 ## 4 個 caveat（實作前 live 驗，非設計缺口）
 
 1. L3 硬熔斷如何在 K6 工具層實作 — ✅ **收斂（M3）**：hermes 原生 HARDLINE_PATTERNS + `approvals.deny`，不需 shell wrapper
