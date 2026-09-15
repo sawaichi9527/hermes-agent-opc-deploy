@@ -146,6 +146,31 @@ user 提問：「這是 builder 的問題嗎？要分給 aeon-builder 還是算�
 - **段落 A–C 規則文字未經實跑驗證**（本任務為研究任務，不實作）。下次完整 Runes 流程實測時，重點觀察：(1) coordinator 是否用決定性 idempotency_key、(2) duplicate-spawn 是否被阻斷、(3) hung-worker 是否走「block 自己的 parent + 留證據」而非死等。
 - 研究標注「uncertain」：原始碼行號來自 run 39 讀取、`kanban_show` 是否回傳 lease/heartbeat 欄位未驗證（若無，tick 上限回退方案即唯一判準）。
 
+### 完整 Runes 流程實測（2026-09-16 01:27–01:55，board task t_6d69c735）
+**目的**：驗證 coordinator SOUL 三條 lifecycle hardening 規則實際生效。
+
+| 環節 | 結果 |
+|---|---|
+| **deliberate recall** | ✅ 觸發 10 engrams（headroom + complementary code-review-graph/codebase-memory-mcp）|
+| **researcher child 派發** | ✅ 單張子卡 `t_fb508c53`，帶決定性 `idempotency_key="t_6d69c735:researcher:1"` |
+| **等待段行為** | ✅ 走 `kanban_show` → done → merge，明確說「not a poll loop」「max 2 ticks」，無輪询迴圈、無被攔截的 `python -c` |
+| **researcher 交付** | ✅ 145 行報告 `/home/eye/Downloads/context-compression-mcp-research.md`（15.5KB）|
+| **coordinator merge** | ✅ 正確合併（確認 headroom MCP-server+proxy adoption、complementary-to-code-graphs、token-reduction claims self-reported-only）|
+| **Runes candidate flag** | ✅ flag candidate（未寫入 wiki），路由 runes-holder + approval token `R-1789494088-8348` |
+| **runes-holder child 派發** | ✅ 單張子卡 `t_b9c3b757`，帶決定性 `idempotency_key="t_6d69c735:runes-holder:1"` |
+| **forge draft 建立** | ✅ forge.py create-flat --write 建 draft（status: draft，不 approve），無直接 wiki 寫入 |
+| **duplicate-spawn** | ✅ 未觸發（board idempotency 保護，同一 role 各只派一次）|
+| **hung-worker 判定** | ⚠️ 本次未觸發（兩子卡均正常完成，heartbeat fresh）|
+
+**coordinator 自我報告三條規則驗證：**
+- 規則 1（idempotent spawning）：✅ 是（生效）— 決定性 key + role-level 單一在途 + child registry 落 board comment
+- 規則 2（hung-worker 判定 + 等待段两出口）：✅ 是（生效）— kanban_show → done → merge，無死等
+- 規則 3（串行派工 / 一次一 child）：✅ 是（生效）— researcher → merge → runes-holder 嚴格序列化
+
+**結論：三條 pattern-failure 修訂全部實測通過。四層架構（coordinator → researcher → coordinator merge → runes-holder → forge draft）完整連續走通，無死鎖、無重複派工、無輪询卡死。**
+
+**未觸發分支**：hung-worker 的「block 自己 parent + 留證據」路徑本次未遇到（兩子卡均正常完成）。下次若有 worker 真正 hang 住時再驗證該路徑。
+
 ## 2026-09-14 session 13 — nim-researcher → opencode-researcher 更名 + MoA reference 換源 OpenCode Go
 
 ### 變更內容（全部完成並驗證）
