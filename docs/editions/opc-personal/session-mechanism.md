@@ -1,6 +1,6 @@
 # Session 機制（gateway 持久 vs oneshot 每任務新 session）
 
-**確認日期**：2026-08-18。適用 hermes-agent **v0.20.1**。資料來源：K6（eye@192.168.23.214）hermes-agent 原始碼 + 各 profile `state.db` 實機資料交叉驗證。
+**確認日期**：2026-09-15。適用 hermes-agent **v0.21.3**。資料來源：K6（eye@192.168.23.214）hermes-agent 原始碼 + 各 profile `state.db` 實機資料交叉驗證。
 
 ## 結論（TL;DR）
 
@@ -48,7 +48,9 @@ cron_91d908e7d563_20260818_161214|cron|secretary
 
 ## 2. Coordinator / workers ＝ 每次指派全新 session（`-z` oneshot）
 
-SOUL 的實際呼叫方式 `/usr/local/bin/<profile> -z '<brief>' chat -Q` 是 **oneshot mode**（`hermes_cli/oneshot.py`：*"send a prompt, get the final content block, exit"*）。
+**入口已改走 kanban board（v0.21.3）**：secretary 不再直 spawn coordinator，而是 `hermes kanban create --assignee coordinator`（board entry）。但 dispatcher tick 唤醒的 coordinator-as-worker **仍是 oneshot mode**（`hermes_cli/oneshot.py`）——每次任務一個獨立 hermes process、一任務一 session。
+
+> ⚠️ 舊版直 spawn `/usr/local/bin/<profile> -z '<brief>' chat -Q`（v0.20.x）已弃用：它 bypass board、無法 enforce `max_in_progress_per_profile=1`。除非是 board dispatcher 派工，否則直 spawn wrapper 不會注入 `kanban_*` 工具（見 `kanban-dispatch.md` §4）。
 
 ### 機制
 

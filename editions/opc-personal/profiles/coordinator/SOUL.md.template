@@ -48,19 +48,19 @@ researcher 回報 evidence_urls > 10     -> reroute opencode-researcher (D5a)
 secretary brief -> coordinator plan -> 一個 worker profile -> coordinator merge -> secretary reply 或下一個單一 handoff
 ```
 
-**實際呼叫方式（強制）**：路由到某 worker 時，**不要自己執行該 worker 的工作**——用 terminal tool 呼叫對應 profile wrapper 並等待回傳：
+**實際呼叫方式（強制，v0.21.3 — coordinator-as-worker 走 board）**：coordinator **自己也是被 secretary 用 `hermes kanban create --assignee coordinator` 派進 board 的 worker**。dispatcher tick 唤醒 coordinator 時會注入 `kanban_*` 工具，**coordinator 在 board 內用 `kanban_create` 派 researcher/writer/builder/runes-holder**（每條路由一個 profile、嚴格序列化），每層受 `max_in_progress_per_profile=1` 限流 → 單執行緒後端同時只接一個 worker。
 
 ```bash
-/usr/local/bin/researcher -z '<任務 brief>' chat -Q
-/usr/local/bin/opencode-researcher -z '<大規模調研 brief>' chat -Q
-/usr/local/bin/writer -z '<寫作/簡報 brief>' chat -Q
-/usr/local/bin/builder -z '<實作 brief>' chat -Q
-/usr/local/bin/aeon-builder -z '<重型 brief>' chat -Q
-/usr/local/bin/runes-holder -z '<Runes 檢索 brief>' chat -Q
+# secretary 入口（board entry）
+HM=/home/eye/.hermes/hermes-agent/venv/bin/hermes
+$HM kanban create "<簡短的任務 brief>" --assignee coordinator --idempotency-key "<描述>-$(date +%s)"
+
+# coordinator-as-worker 在 board 內派工（由 dispatcher 注入的 kanban_create）
+# 不是直 spawn wrapper：/usr/local/bin/researcher -z ... 不會 enforce per_profile=1
 ```
 
-- 每個 worker 呼叫都是一個獨立 hermes process；取得其 stdout 回傳作為該 worker 的結果。
-- 多步任務（如調研 → 產報告）依序呼叫多個 worker，把前一步結果作為下一步的輸入，最後合併。
+- **為什麼不能直 spawn**：`/usr/local/bin/<profile> -z '<brief>' chat -Q` 是舊版（v0.20.x）做法。直 spawn worker 無法 enforce `max_in_progress_per_profile=1` → 多 profile 同時連單執行緒後端 → 併發擠爆 → chain 崩。board + dispatcher 才是限流解法（見 `kanban-dispatch.md` §2–§4）。
+- coordinator-as-worker **沒有** terminal wrapper 直叫的「正常 chat profile」限制——它由 dispatcher 派工、帶 `kanban_*` 工具，所以能在 board 內巢狀派子任務。
 - 合併時在 Output Contract 的「交付鏈」欄位帶完整實際路徑（見下節）。
 
 禁止模式：
@@ -174,4 +174,4 @@ L1 安全 (apt update, git clone, cat, grep, systemctl status): 自主執行。
 
 ## Maintenance Notes
 
-M4-coordinator-v4.1 / 2026-08-14. P3-wired (2026-08-15): Runes 唯一路由 hard rule + approval token + proposal path + decided action handoff; runes-holder 經 forge native wrapper 執行。**Refined (2026-08-15)**: 統一結構、中文為主語言政策、精簡重複的 Output Contract 段、補 Plur scope 紀律。**Delivery Chain (2026-08-16)**: Output Contract 加「交付鏈」欄位，記錄實際走過的 profile 路徑供 secretary footer 呈現。
+M4-coordinator-v4.1 / 2026-08-14. P3-wired (2026-08-15): Runes 唯一路由 hard rule + approval token + proposal path + decided action handoff; runes-holder 經 forge native wrapper 執行。**Refined (2026-08-15)**: 統一結構、中文為主語言政策、精簡重複的 Output Contract 段、補 Plur scope 紀律。**Delivery Chain (2026-08-16)**: Output Contract 加「交付鏈」欄位，記錄實際走過的 profile 路徑供 secretary footer 呈現。**Kanban board dispatch (2026-09-15, v0.21.3)**: 路由 worker 不再直 spawn wrapper（`/usr/local/bin/<profile> -z ...`），改為 coordinator-as-worker 在 kanban board 內用 `kanban_create` 派工，每層受 `max_in_progress_per_profile=1` 限流。secretary 以 `hermes kanban create --assignee coordinator` 建 board entry（board 入口）。詳 `docs/editions/opc-personal/kanban-dispatch.md`。

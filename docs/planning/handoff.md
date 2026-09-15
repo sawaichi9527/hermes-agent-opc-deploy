@@ -2,7 +2,49 @@
 
 **Session end:** 2026-09-14
 **Workspace:** `D:\Workspace\projects\freelancer-hermes-agent\`
-**狀態:** M0–M8 全完成；M8 完成後待辦全完成（2026-08-15）。**2026-08-15 session 2 完成 §9 開放目標評估（#3/#4/#6）；session 3 完成 P3 Runes 審批 UX 接線 + P3 v2 修正（一律使用 runes-shield 層 native wrapper）+ Plur scope 紀律 + 藍圖 §9 同步**。**2026-08-15 後續：C6 MoA turn cap（A2）+ B4 NIM 可靠性 3-strike（定案實作）+ #8(a) 舊 CLI deprecate（PR #7）+ B5 Lark 秒回標不處理；A1 殘物清理**。**session 4：13 份 SOUL 模板全量 refine（v0.20.1，統一結構/繁中化/補決策/去冗/generic 填空 + token 審計），commit `dde6c33` 已 push，K6 8 profile 已同步 + ping PASS（2026-08-16）**。**session 5（2026-08-16）：Plugin/Skill 盤點與分配——K6 Hermes 升級 v0.20.0→v0.20.1（v2026.8.13）、ppt-master v4.5.0→v4.7.0、rtk-rewrite 失效 plugin 移除、8 profile 分配 18 支 skill symlink（見下節）**。**session 6（2026-08-16）：rtk-rewrite 重裝（官方 PyPI v1.2.3 + rtk binary v0.45.0）+ Web backend 本地化——捨 ddgs、全域 firecrawl fallback + 搜尋 3 角色（researcher/opencode-researcher/secretary）search=SearXNG / extract=Firecrawl（見下節）**。**session 7（2026-08-16）：Docker SearXNG/Firecrawl 升級 + lark-cli（larksuite/cli 官方）整合——SearXNG v2026.8.14、Firecrawl 2026-08-15 build；lark-cli v1.0.87 安裝 + user OAuth（林卓翰）+ bind 到 secretary hermes app + 26 skills 掛 secretary/writer（見下節）**。**session 8（2026-08-16）：任務交付檢查鍊（Delivery Check Chain）footer——coordinator Output Contract 加「交付鏈」實際路徑欄位，secretary 回覆 footer 附 `[任務交付檢查鍊]`（見下節）**。**session 9（2026-08-16）：Lark 實測三大問題修復——(1) 修復 profile 層 plugins 缺 web-searxng/web-firecrawl + 8 profile wrappers 至 /usr/local/bin 實現真實多 process 串接；(2) 報告路徑限 Downloads/；(3) Lark 雲端交付自動選型 + footer 強制（見下節）**。**session 10（2026-08-17）：彈性單/多 agent 定案 + 複合任務硬規則 + 報告輸出強制 Downloads/——footer 已於 cron 驗證（含 `secretary->coordinator->researcher->coordinator->secretary` 完整鏈）；secretary/writer `terminal.cwd` 強制 Downloads/；複合任務（調研+產出）必須經 coordinator（見下節）**。**session 11（2026-08-18）：session 機制研究完成並回寫 deploy repo——兩種生命週期定案（secretary gateway = 持久 per-Lark-chat session；coordinator/所有 worker `-z` oneshot = 每任務全新 session；cron = `cron_<jobid>_<ts>` 新 session）；doc `docs/editions/opc-personal/session-mechanism.md` commit `a037dff` 已 push（見下節）**。**session 12（2026-08-25）：本地模型切換殘留診斷（agents-a1 疑似呼叫）——元凶 = secretary cron jobs.json 的 pinned model；建立「本地模型切換強制檢查清單」+ cron pin 修復已執行（4 entry → ornith，backup `.bak.20260825-100332`）（見下節）**。進入日常使用/後續優化階段。 **session 13（2026-09-14）：nim-researcher 更名 opencode-researcher + MoA reference 換源 **OpenCode Go**（reference `opencode-go:deepseek-v4.1-flash`，key `OPENCODE_GO_API_KEY`；deploy v0.20.2、wiki/gap 已同步並實證通過，見下節）****
+**狀態:** M0–M8 全完成；M8 完成後待辦全完成（2026-08-15）。**2026-08-15 session 2 完成 §9 開放目標評估（#3/#4/#6）；session 3 完成 P3 Runes 審批 UX 接線 + P3 v2 修正（一律使用 runes-shield 層 native wrapper）+ Plur scope 紀律 + 藍圖 §9 同步**。**2026-08-15 後續：C6 MoA turn cap（A2）+ B4 NIM 可靠性 3-strike（定案實作）+ #8(a) 舊 CLI deprecate（PR #7）+ B5 Lark 秒回標不處理；A1 殘物清理**。**session 4：13 份 SOUL 模板全量 refine（v0.20.1，統一結構/繁中化/補決策/去冗/generic 填空 + token 審計），commit `dde6c33` 已 push，K6 8 profile 已同步 + ping PASS（2026-08-16）**。**session 5（2026-08-16）：Plugin/Skill 盤點與分配——K6 Hermes 升級 v0.20.0→v0.20.1（v2026.8.13）、ppt-master v4.5.0→v4.7.0、rtk-rewrite 失效 plugin 移除、8 profile 分配 18 支 skill symlink（見下節）**。**session 6（2026-08-16）：rtk-rewrite 重裝（官方 PyPI v1.2.3 + rtk binary v0.45.0）+ Web backend 本地化——捨 ddgs、全域 firecrawl fallback + 搜尋 3 角色（researcher/opencode-researcher/secretary）search=SearXNG / extract=Firecrawl（見下節）**。**session 7（2026-08-16）：Docker SearXNG/Firecrawl 升級 + lark-cli（larksuite/cli 官方）整合——SearXNG v2026.8.14、Firecrawl 2026-08-15 build；lark-cli v1.0.87 安裝 + user OAuth（林卓翰）+ bind 到 secretary hermes app + 26 skills 掛 secretary/writer（見下節）**。**session 8（2026-08-16）：任務交付檢查鍊（Delivery Check Chain）footer——coordinator Output Contract 加「交付鏈」實際路徑欄位，secretary 回覆 footer 附 `[任務交付檢查鍊]`（見下節）**。**session 9（2026-08-16）：Lark 實測三大問題修復——(1) 修復 profile 層 plugins 缺 web-searxng/web-firecrawl + 8 profile wrappers 至 /usr/local/bin 實現真實多 process 串接；(2) 報告路徑限 Downloads/；(3) Lark 雲端交付自動選型 + footer 強制（見下節）**。**session 10（2026-08-17）：彈性單/多 agent 定案 + 複合任務硬規則 + 報告輸出強制 Downloads/——footer 已於 cron 驗證（含 `secretary->coordinator->researcher->coordinator->secretary` 完整鏈）；secretary/writer `terminal.cwd` 強制 Downloads/；複合任務（調研+產出）必須經 coordinator（見下節）**。**session 11（2026-08-18）：session 機制研究完成並回寫 deploy repo——兩種生命週期定案（secretary gateway = 持久 per-Lark-chat session；coordinator/所有 worker `-z` oneshot = 每任務全新 session；cron = `cron_<jobid>_<ts>` 新 session）；doc `docs/editions/opc-personal/session-mechanism.md` commit `a037dff` 已 push（見下節）**。**session 12（2026-08-25）：本地模型切換殘留診斷（agents-a1... [truncated]
+
+## 2026-09-15 session 14 — 多 profile 任務分派改走 kanban board（v0.21.3 對齊）
+
+### 背景
+deploy repo 停在 v0.20.2，SOUL/docs 全用「直 spawn wrapper」（`/usr/local/bin/<profile> -z '<brief>' chat -Q`）描述任務分派。但實際機上 hermes-agent 已是 **v0.21.3**，分派機制改為**走 kanban board**（secretary 是 board 入口）。這是 v0.20.x → v0.21.3 之間最大的流程差異，repo 文件完全沒提到 kanban / dispatcher / max_in_progress。
+
+### 根因（為什麼要改）
+Freelancer 環境有 **8 個 OPC worker profile** 全部統一連線**同一台單執行緒本地後端** `192.168.23.217:1234/v1`（ornith-1.5-35b-a3b）。多 profile 同時直 spawn → 併發擠爆單執行緒 → researcher 階段 timeout → chain 崩。
+
+**解法 = Kanban `max_in_progress_per_profile=1` + dispatcher 限流**，而非自建 gatekeeper proxy。
+
+### 關鍵事實（v0.21.3）
+1. **dispatcher 必須正常 tick**：`hermes kanban diagnostics` 無警報；建 running 測試 task 看是否派工。
+2. **`max_in_progress_per_profile=1` 真正 enforce**（v0.21.1 是 no-op，v0.21.3 才修好）。實測：4 個 researcher sleep task → **1 running + 3 ready**。巢狀也受限（coordinator 派 3 個 researcher → 1 running + 2 ready）。
+3. **coordinator-as-worker 必須有 kanban 工具**：`kanban_*` 工具只在 dispatcher 派工時自動注入（HERMES_KANBAN_TASK env）。terminal 直叫的 coordinator 是「正常 chat profile」，**沒有 kanban_* 工具**。故 secretary 必須當 board 入口。
+
+### 正式流程
+```bash
+HM=/home/eye/.hermes/hermes-agent/venv/bin/hermes
+# secretary 入口（board entry）
+$HM kanban create "<任務 brief>" --assignee coordinator --idempotency-key "<描述>-$(date +%s)"
+# dispatcher 60s tick 唤醒 coordinator-as-worker（帶 kanban_* 工具）
+# coordinator 在 board 內用 kanban_create 派 researcher/writer，每層受 per_profile=1 限流
+```
+
+### 變更內容（全部完成並驗證）
+- **新增 doc**：`docs/editions/opc-personal/kanban-dispatch.md`（v0.21.3 多 profile 分派單一事實來源：根因、關鍵前提、版本陷阱、正式流程、觀察驗證、還原指令、Cron 與 board 關係、繁中閘門、取捨記錄）。
+- **secretary SOUL**：Routing「實際呼叫方式」從直 spawn coordinator 改為 `hermes kanban create --assignee coordinator`（board entry）+ 解釋為什麼不能直 spawn。
+- **coordinator SOUL**：Routing「實際呼叫方式」從直 spawn worker wrapper 改為 coordinator-as-worker 在 board 內用 `kanban_create` 派工。
+- **session-mechanism.md**：版本 v0.20.1 → v0.21.3；§2 補充入口改走 board（但 coordinator-as-worker 仍是 oneshot mode）。
+- **README.md / VERSION**：v0.20.0 → v0.21.3；layout + 狀態區新增 v0.21.3 條目。
+- **Cron 與 board 關係**（已在上一個 session 實作，此處回寫 repo）：3 個 cron job（情報推送/Forge 追蹤/繁中過濾器）是單 profile 自包含，**不走 board**。情報推送 job `91d908e7d563` prompt 加「爭用預檢」（scan 前先 `hermes kanban stats | grep running`，running>0 回 `[SILENT]` 讓後端）。情報推送 interval 已改 **every 90m**（與自動路由定時觸發 30m 節拍錯開）。
+- **話題關注清單**：`/home/eye/workspace/daily/topic-watchlist.json` + `watchlist_match.py`（情報員比對 keywords，命中即深度研究並推送；未命中走既有判定）。
+- **繁中閘門**：現行「繁中後置過濾器」（cron job `4e1a92d56868`）只盯情報推送輸出檔，管不到互動式自動路由。改由 secretary 當唯一交付點，用 `zh_check.py` 在交付前跑繁中檢查。
+
+### 取捨記錄（使用者已裁決）
+- **interval**：情報推送 job `91d908e7d563` 改 every 90m（取捨：情報更新慢半拍，但與自動路由時鐘節拍錯開、撞車機率幾乎為零）。
+- **鬆動 trigger**：secretary 用自然語言識別意圖——「深入查一下 / 研究一下」→ 完整 chain；「關注一下 / 留意這個 / 這個有意思」→ 只加入關注清單 + 一句快速評估，不拉完整 chain（省本地算力）。
+
+### 待辦
+- 若需求強烈，再加分時觸發的輕量 cron job（階段 B 定時式自動路由）。
+
 
 ## 2026-09-14 session 13 — nim-researcher → opencode-researcher 更名 + MoA reference 換源 OpenCode Go
 

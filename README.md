@@ -1,6 +1,6 @@
 # hermes-agent-opc-deploy
 
-**適用 hermes-agent v0.20.0**（D27：README 標 + `VERSION` 檔 + `git tag v0.20.0`）。
+**適用 hermes-agent **v0.21.3**（D27：README 標 + `VERSION` 檔 + `git tag v0.21.3`）。
 
 Hermes 原生 profile 客製化與部署指南 repo。本 repo 是 Freelancer 重灌的**單一事實來源**，同時提供 GENERIC edition 供一般人參考。
 
@@ -20,15 +20,15 @@ Hermes 原生 profile 客製化與部署指南 repo。本 repo 是 Freelancer �
 | 事實判斷分工 | 簡化三層（researcher / coordinator / user） | 完整五層（D22） |
 | secret 守則 | 共用 | 共用 |
 
-版本基準：本 repo 對應 hermes-agent **v0.20.0**；舊 v0.16/v0.17 內容整批保留於 `archive/v0.16-v0.17/`（含 M1–M7 驗證史）。
+版本基準：本 repo 對應 hermes-agent **v0.21.3**（2026-09-15）；舊 v0.16/v0.17/v0.20.x 內容整批保留於 `archive/v0.16-v0.17/`（含 M1–M8 驗證史）。
 
 ## Repository layout
 
 ```text
 README.md
-VERSION                        # 0.20.2
+VERSION                        # 0.21.3
 docs/shared/                   # 共用文件（guarded-apply-contract、安全守則）
-docs/editions/{generic,opc-personal}/   # edition 專屬文件（opc-personal 已填 M8 內容；soul-vs-agents.md 標 SOUL/AGENTS 邊界；session-mechanism.md 標 session 機制）
+docs/editions/{generic,opc-personal}/   # edition 專屬文件（opc-personal 已填 M8 內容；soul-vs-agents.md 標 SOUL/AGENTS 邊界；session-mechanism.md 標 session 機制；**kanban-dispatch.md 標 v0.21.3 多 profile 分派機制**）
 docs/planning/                 # 規劃/設計文件（Hermes_OPC v4.1 藍圖、gap analysis、討論總結、handoff）
 docs/soul-token-audit.md       # 13 份 SOUL 模板 token 用量審計（2026-08-15 refine）
 scripts/                       # deploy / verify / setup 腳本
@@ -44,6 +44,7 @@ config/                        # shared defaults
 - **階段二（M8 完成）**：填入 v4.1 補丁已驗證的 v0.20.0 內容——8 個 SOUL 模板、`docs/editions/opc-personal/` 8 篇、setup 腳本 5 支 + `set-local-model-name.sh` 更新、README 同步。
 - **v0.20.1（2026-08-15）**：13 份 SOUL 模板全量 refine——統一結構/語言政策（繁中為主）、補齊 2026-08-15 決策（Plur scope 紀律、C6/B4、#8(a)）、補 Fact Division、opc-personal 去冗（chars −13.7%）、generic 5 檔骨架填空；token 對照見 `docs/soul-token-audit.md`。
 - **v0.20.2（2026-09-14）**：第 8 profile 更名 `nim-researcher` → `opencode-researcher`；MoA reference 換源 Nvidia NIM → OpenCode Go（`opencode-go` / `deepseek-v4.1-flash`），key `NVIDIA_API_KEY` → `OPENCODE_GO_API_KEY`；reference provider 概念文檔保留 NIM/opencode-go/其他 API 抽換彈性。K6 實機已完成同步。
+- **v0.21.3（2026-09-15）**：多 profile 任務分派由「直 spawn wrapper」（`/usr/local/bin/<profile> -z ...`）改為**走 kanban board**（secretary 是 board 入口，`hermes kanban create --assignee coordinator`）。`max_in_progress_per_profile=1` 真正 enforce（v0.21.3 實測：4 researcher → 1 running + 3 ready），限流單執行緒後端防 chain 崩。新增 `kanban-dispatch.md`；secretary/coordinator SOUL routing 段、session-mechanism、README 同步。Cron job（情報推送/Forge 追蹤/繁中過濾器）維持單 profile 自包含、不走 board；情報推送加「爭用預檢」（scan 前先 `kanban stats`，running>0 回 `[SILENT]`）。新增話題關注清單 `topic-watchlist.json` + `watchlist_match.py`（情報員比對 keywords，命中即深度研究）。繁中閘門改由 secretary 當唯一交付點（`zh_check.py`）。情報推送 interval 改 every 90m。
 
 ## OPC-PERSONAL setup 腳本（K6 執行）
 

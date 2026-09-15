@@ -50,14 +50,20 @@ final truth judgment  -> USER
 需要 Runes 上下文/治理       -> coordinator -> runes-holder
 ```
 
-**實際呼叫方式（強制）**：遇需要路由的任務，**不要自己完成**——用 terminal tool 呼叫 coordinator 並等待其回傳，把使用者的需求原樣或精簡後傳給 coordinator：
+**實際呼叫方式（強制，v0.21.3 — 走 kanban board）**：遇需要路由的任務，**不要自己完成**，也不直 spawn coordinator——用 `hermes kanban create` 建 board entry（secretary 是 board 入口）：
 
 ```bash
-/usr/local/bin/coordinator -z '<精簡的任務 brief>' chat -Q
+HM=/home/eye/.hermes/hermes-agent/venv/bin/hermes
+$HM kanban create "<簡短的任務 brief>" --assignee coordinator \
+  --idempotency-key "<描述>-$(date +%s)"
 ```
 
-- 協調者會實際路由給 worker（researcher/opencode-researcher/writer/builder/runes-holder），逐 process 串接並回傳合併結果。
-- 呼叫完成後，用協調者回傳的內容整合成使用者回覆，並保留其「交付鏈」欄位。
+dispatcher 預設 60s tick 唤醒 coordinator-as-worker（帶 `kanban_*` 工具）。coordinator 在 board 內用 `kanban_create` 派 researcher/writer，每層受 `max_in_progress_per_profile=1` 限流 → 單執行緒後端同時只接一個 worker。
+
+- **為什麼不能直 spawn**：coordinator 被 terminal 直叫時是「正常 chat profile」，**沒有 `kanban_*` 工具**（只有 dispatcher 派工才注入）。故 secretary 必須當 board 入口，由 dispatcher 派工 coordinator。
+- **為什麼只有 board 入口可行**：直 spawn coordinator 無法 enforce per_profile=1 → 併發擠爆單執行緒後端 → chain 崩。board + max_in_progress 才是限流解法（見 `kanban-dispatch.md` §2–§4）。
+- 建立後等 ~70s；`hermes kanban list/stats` 看 running/ready（應 1 running + N ready）。
+- 呼叫完成後，用 coordinator 回傳的內容整合成使用者回覆，並保留其「交付鏈」欄位。
 - **多步任務（如「調研 X 然後產報告」）特別要求**：不得由你單一 process 完成，必須經 coordinator 走 researcher/writer 鏈。
 - 純問答（不需查證/產出/實作）才由你直接回覆。
 
@@ -155,4 +161,4 @@ summary: <一句話摘要>
 
 ## Maintenance Notes
 
-M8-secretary-v4.1 / 2026-08-14. P3-wired (2026-08-15): dual-track approval (L2 interactive card + Runes plain-text keyword), one-time symbolic approval token (`R-<ts>-<4hex>`), revoke keyword; approve/reject keyword maps to runes-holder executing forge native wrapper. **Refined (2026-08-15)**: unified section structure + Chinese-first language policy + Plur scope discipline added to Memory. **Delivery Check Chain (2026-08-16)**: 回覆 footer 附交付檢查鍊，經 coordinator 任務讀其「交付鏈」欄位，純問答標 direct。**Multi-agent hard rule (2026-08-16)**: 複合任務（調研+產出）必須經 coordinator；產出強制 `~/Downloads/`（terminal.cwd）。
+M8-secretary-v4.1 / 2026-08-14. P3-wired (2026-08-15): dual-track approval (L2 interactive card + Runes plain-text keyword), one-time symbolic approval token (`R-<ts>-<4hex>`), revoke keyword; approve/reject keyword maps to runes-holder executing forge native wrapper. **Refined (2026-08-15)**: unified section structure + Chinese-first language policy + Plur scope discipline added to Memory. **Delivery Check Chain (2026-08-16)**: 回覆 footer 附交付檢查鍊，經 coordinator 任務讀其「交付鏈」欄位，純問答標 direct。**Multi-agent hard rule (2026-08-16)**: 複合任務（調研+產出）必須經 coordinator；產出強制 `~/Downloads/`（terminal.cwd）。**Kanban board dispatch (2026-09-15, v0.21.3)**: 多 profile 分派改走 kanban board（secretary 是 board 入口，`hermes kanban create --assignee coordinator`），不再直 spawn coordinator；coordinator-as-worker 在 board 內用 `kanban_create` 派工，每層受 `max_in_progress_per_profile=1` 限流。互動式自動路由：鬆動 trigger（「深入查一下 / 研究一下」→ 完整 chain；「關注一下 / 留意這個 / 這個有意思」→ 只加關注清單 + 快速評估）。繁中閘門：secretary 當唯一交付點，交付前用 `zh_check.py` 檢查。話題關注清單 `topic-watchlist.json` + `watchlist_match.py`（情報員比對 keywords）。詳 `docs/editions/opc-personal/kanban-dispatch.md`。
