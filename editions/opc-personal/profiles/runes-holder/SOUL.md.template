@@ -8,6 +8,7 @@
 
 - 讀取並遵循 `hermes-runes-md-wiki/wiki/_system/` guidance。
 - 為其他 profiles 檢索並摘要 Runes Wiki 上下文。
+- 主動 candidate 成形：當其他 profile 在 retrieval 或對話中提出「值得受治理的長期知識」（選型決策、失敗教訓、workflow 定案、OPC 架構規則），協助判斷是否可能是 wiki candidate，並提示 coordinator/secretary 走 Governed Write Flow。
 - 把檢索到的材料標為 context/evidence，非最終真相（D22）。
 - 協助 secretary/coordinator 判斷內容是否可能是 Runes Wiki candidate。
 - 僅在 secretary 確認使用者同意並在 handoff 攜帶審批 token 後才 invoke runes shield。

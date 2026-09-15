@@ -94,6 +94,25 @@ rm -rf ~/.hermes/profiles && cp -r $BK/profiles ~/.hermes/profiles
 - **interval**：情報推送 job `91d908e7d563` 已改為 **every 90m**（與自動路由定時觸發 30m 節拍錯開，撞車機率幾乎為零）。取捨：情報更新慢半拍，但後端更順。
 - **鬆動 trigger**：secretary 用自然語言識別意圖——「深入查一下 / 研究一下」→ 完整 chain（board 分派）；「關注一下 / 留意這個 / 這個有意思」→ 只加入關注清單 + 一句快速評估，不拉完整 chain（省本地算力）。
 
+## 10. 記憶層整合（Plur + Runes 在分派中的應用）
+
+kanban board 分派只解決「誰來做、併發控制」，不直接處理「記憶」。兩層記憶堆疊在分派流程中的定位：
+
+### Plur（短/中期跨角色共享記憶）
+- **自動注入**：`plur-hermes` plugin 的 `pre_llm_call` hook 已在每次 LLM 前 inject 相關 engram（hybrid search: BM25 + embeddings）。這是現行主要機制，不需要手動調 tool。
+- **主動 recall（deliberate recall）**：coordinator 對**高價值/跨領域任務**在產出 handoff packet 前跑 `plur_recall --scope project:freelancer --query "<任務主題>"`，把自動注入可能漏掉的跨領域經驗（既有選型、失敗教訓、workflow 定案）帶進每個 worker 的 handoff。這是對自動注入的**補充**，不是取代。
+- **成本取捨**：deliberate recall 增加一次 prefill（你已接受為地端約束）。chain 已長時可只在高價值任務才主動 recall，一般任務靠自動注入即可。
+- **Scope 紀律**：新 shared learns 一律 `project:freelancer`（不要散落 `global`）；關鍵長期規則用 `plur promote`（retrieval_strength 0.7）避免衰減。
+
+### Runes MD Wiki（長期受治理證據）
+- **唯讀 retrieval**：只有當任務明確需要 Runes context（如 OPC 架構決策、既有治理規則）才路由 runes-holder（coordinator §Runes 唯一路由 hard rule）。一般任務不碰 wiki。
+- **沉澱觸發**：任務完成後，coordinator 判斷本次是否有「值得受治理的長期知識」（選型決策、失敗教訓、workflow 定案），若有則產出 wiki candidate 經 secretary 審批（runes-holder Governed Write Flow）。這是把「每次任務的經驗」系統化轉成 governed knowledge 的機制。
+- **Downsink**：Runes 可用 + 已批准 → candidate 經 forge native wrapper 下沉；未批准 → 不硬寫 wiki，回 coordinator 標「無 Runes 治理佐證」，PLUR / native memory 扛責。
+
+### 邊界（何時不碰）
+- Plur：不把 raw conversation / secrets / full logs 寫進 engram（scope 紀律 + safety boundary）。
+- Runes：未批准提案不當 trusted memory；raw conversation / secrets 不複製進 wiki candidate。
+
 ---
 
-*本文件為 v0.21.3 的 kanban board dispatch 單一事實來源。核心守則：secretary 是 board 入口、dispatcher enforce per_profile=1、cron 不走 board、繁中由 secretary 當閘門。*
+*本文件為 v0.21.3 的 kanban board dispatch 單一事實來源。核心守則：secretary 是 board 入口、dispatcher enforce per_profile=1、cron 不走 board、繁中由 secretary 當閘門、Plur 自動注入 + deliberate recall 補充、Runes 按需 retrieval + 沉澱觸發。*

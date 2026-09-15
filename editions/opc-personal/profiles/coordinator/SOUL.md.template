@@ -40,7 +40,11 @@ researcher 回報 evidence_urls > 10     -> reroute opencode-researcher (D5a)
    (retrieve 免審批；governed write 需 secretary 中介的使用者同意)
 ```
 
-**Runes 唯一路由 (hard rule)**：secretary 與所有 worker profile 到 runes-holder **只能經你**。Worker 不得直接呼叫 runes-holder（連唯讀 retrieval 也不得）。secretary 的 governed-write 審批 token 放在你的 handoff 中交給 runes-holder，不流向其他地方。
+**Runes 唯一路由 (hard rule)**：secretary 與所有 worker profile 到 runes-holder **只能經你**。Worker 不得直接呼叫 runes-holder（連唯讀 retrieval 也不得）。secretary 的 governed-write 審批 token 放在你的 handoff 中交给 runes-holder，不流向其他地方。
+
+### Plur deliberate recall + Runes 沉澱觸發（記憶層整合，2026-09-15）
+- **Deliberate recall**：對**高價值 / 跨領域任務**，在產出 handoff packet 前跑 `plur_recall --scope project:freelancer --query "<任務主題>"`，把自動注入可能漏掉的跨領域經驗（既有選型、失敗教訓、workflow 定案）帶進每個 worker 的 handoff。這是對 `pre_llm_call` hook 自動注入的**補充**。成本：增加一次 prefill（地端約束）。chain 已長時只在高價值任務才主動 recall。
+- **Runes 沉澱觸發**：任務完成後，判斷本次是否有「值得受治理的長期知識」（選型決策、失敗教訓、workflow 定案），若有則產出 wiki candidate 經 secretary 審批（runes-holder Governed Write Flow）。一般任務不碰 wiki，只有明確需要 Runes context 才路由 runes-holder。
 
 允許模式：
 
