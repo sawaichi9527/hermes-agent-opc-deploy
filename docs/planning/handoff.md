@@ -81,6 +81,35 @@ secretary → coordinator(board) → researcher(研究+flag candidate)
 - [ ] 修 coordinator SOUL：在「等待子任務完成」段加明確指示（用 `kanban_show` 直接查結果，不要陷入 `python -c` + `sleep` 輪询迴圈）。
 - [ ] 重跑一次完整 Runes 流程（修正 coordinator 後），確認四層架構能一次連續走通。
 
+
+### 重測（2026-09-15 22:39–次日 00:24，第二次）
+
+**前置修正**：coordinator SOUL 新增「輪询卡死警告」（第二個 pattern failure），指示派完子任務後用 `kanban_show`（board 工具）直接查 status、done 立刻 merge、最多等一個 tick 再查一次。同步 live profile（backup `SOUL.md.bak.20260915-220000`）、commit `fe45340` push main。
+
+**重測任務**：`t_94d0d03d`（完整 Runes 治理流程，第二次）。
+
+| 環節 | 狀態 |
+|---|---|
+| **deliberate recall** | ✅ coordinator 分派前觸發 plur_recall |
+| **researcher 研究交付** | ✅ 完成，223 行報告到 `/home/eye/Downloads/headroom-fit-research.md`（20KB），adopt-with-caveats（proxy 為主 + MCP tools 為輔）|
+| **coordinator merge** | ✅ 正確合併（列出 savings 數字 conflict、CVE-2026-66605 歸屬 conflict），**沒有**再陷入輪询迴圈 |
+| **coordinator 路由 runes-holder** | ⚠️ **duplicate-spawned** — coordinator 在已有 runes-holder 完成後**又派了一次**（`t_cdc2971e` + `t_fa89d613`），產生兩個 draft |
+| **runes-holder 建 draft（forge native wrapper）** | ✅ 兩次都成功建 draft，但重複 |
+| **coordinator 完成 parent** | ❌ **卡死 ~1.8h** — coordinator 又陷入輪询迴圈等待一個 lock 已過期但仍 heartbeating 的 hung worker（`t_fa89d613`），手動 block + archive |
+
+**重測發現（新增 pattern failures）：**
+
+1. **coordinator merge 修正生效** — 第一次的輪询卡死已修好，coordinator 正確合併研究成果並路由 runes-holder。
+2. **duplicate-spawned runes-holder** — coordinator 在已有 runes-holder 完成後又派第二次。這是第三個 pattern failure（coordinator SOUL 尚未涵蓋）。
+3. **hung worker 輪询卡死復發** — coordinator 對 lock 已過期但仍 heartbeating 的子任務又陷入輪询，轉了 ~1.8h。修正只治好了 researcher child、沒治好 runes-holder child 的等待處理。
+
+**副作用處理（2026-09-16）：**
+- 刪除較新的重複 draft `...22c78b9a.md`，保留較早的 `...2e8a7fd8.md`（status: draft）。
+- archive 三個已完成/卡死的 board 任務（`t_94d0d03d`、`t_cdc2971e`、`t_fa89d613`）。
+- forge-inbox 現剩一個 headroom draft（status: draft，pending human review）。
+
+**結論：四層架構的 researcher + runes-holder+forge 兩段各自驗證通過，但「coordinator 串接整條 chain」仍無法一次連續走通。** 已修正 1/3 個 pattern failure（merge 不再輪询），剩 duplicate-spawn + hung-worker 輪询兩個待修。
+
 ---
 
 ## 2026-09-14 session 13 — nim-researcher → opencode-researcher 更名 + MoA reference 換源 OpenCode Go
