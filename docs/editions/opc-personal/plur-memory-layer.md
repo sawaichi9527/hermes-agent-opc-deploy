@@ -1,14 +1,14 @@
 # Plur 記憶層（D7，M7 實測）
 
-**適用 hermes-agent v0.20.0**。三層記憶堆疊（native + Plur + Runes）的中層：跨角色共享、ACT-R 衰減、中期 lifecycle。
+**適用 hermes-agent v0.21.3**。三層記憶堆疊（native + Plur + Runes）的中層：跨角色共享、ACT-R 衰減、中期 lifecycle。
 
 ## 組成（M7 實測確認）
 
 | 元件 | 版本 / 型態 | 角色 |
 |---|---|---|
-| `plur-hermes` | pip plugin **0.17.2** | 註冊 `pre_llm_call` / `post_llm_call` hooks，自動 learn / inject |
-| `@plur-ai/cli` | npm global **0.9.4**（既有） | CLI bridge；`~/.plur/` 儲存 |
-| `~/.plur/` | engrams（M7 實測：**40 engrams / 1224 episodes**） | 共享記憶本體 |
+|| `plur-hermes` | pip plugin **0.19.4**（2026-08-31 升級自 0.17.2）| 註冊 `pre_llm_call` / `post_llm_call` hooks，自動 learn / inject |
+|| `@plur-ai/cli` | npm global **0.19.4**（2026-09-16 升級自 0.9.4）| CLI bridge；`~/.plur/` 儲存 |
+|| `~/.plur/` | engrams（2026-09-16 實測：**128 engrams**） | 共享記憶本體 |
 
 > **skill vs pip 修正**：plur-memory 是 hermes **skill 形態**（`~/.hermes/skills/plur-memory.SKILL.md`，M0 確認）；`plur-hermes` 是 **pip plugin**（M7 補裝，原缺 Hermes plugin）。兩者都需存在。
 
@@ -51,6 +51,36 @@ CLI 0.9.4 無「scope 命中永遠注入」逃生門；recall 的 `--scope` 不�
 5. 第三方 RAG / Obsidian
 6. Web 公開來源
 ```
+
+## 兩條整合路徑實驗（2026-09-16，v0.21.3）——原生 MemoryProvider 對 plur 無效
+
+plur-hermes 0.19.x 同時宣告兩個 entry point：`hermes_agent.plugins`（舊插件路徑）與 `hermes_agent.memory_providers`（新原生路徑）。後者透過 config `memory.provider: plur` 啟用，理論上讓 plur 以 Hermes MemoryProvider ABC 的第一方身分出現。
+
+**實測結論：原生 MemoryProvider 路徑對 plur 完全無效，插件路徑才是唯一實際運作的路徑。**
+
+### 實驗與證據
+- 2026-09-16 在 secretary profile 加 `memory.provider: plur`（保留 `plugins.enabled: [plur]`，雙路徑並存），觀察 agent.log：
+  ```
+  WARNING hermes_cli.plugins: Plugin 'plur' tried to register a memory provider 
+       that does not inherit from MemoryProvider. Ignoring.
+  INFO plur_hermes: PLUR MemoryProvider registered (hermes_agent.memory_providers path)
+  ```
+- 原始碼實證：Hermes `register_memory_provider()`（`hermes_cli/plugins.py`）有 `_wrong_type` 檢查，要求 provider 必須繼承 `MemoryProvider(ABC)`。但 plur 的 `PlurMemoryProvider`（`plur_hermes/memory_provider.py:397`）是**plain class、故意不繼承 ABC**——這是 zero-dependency guarantee 的設計：讓 plur-hermes 不把 hermes_agent 當硬依賴。
+- 結果：原生路徑被 Hermes **忽略**，`_memory_provider` 未被設定；inject/learn/feedback 全部由插件路徑（`plugins.enabled: [plur]`）的 `pre_llm_call` / `post_llm_call` hooks 處理。
+
+### 對現況的影響
+| 項目 | 狀態 |
+|---|---|
+| inject / learn / feedback | ✅ 全部由插件路徑 hooks 處理（唯一實際生效）|
+| system_prompt_block()（system prompt 加一行 PLUR status）| ❌ 不出現（原生路徑被忽略）|
+| `hermes plugins --memory` 列出 plur | ❌ 不會列出（未成功註冊）|
+| `memory.provider: plur` 設定值 | ⚪ **零功能效果**——改了也無用，且 log 多一行 WARNING |
+
+### 決策與維護
+- **維持現狀**：`plugins.enabled: [plur]` 保留、`memory.provider` 保持 `''`。
+- **不要**設 `memory.provider: plur`——除了 log 多一行 WARNING、無實際效益，反而可能讓未來的操作者誤解「原生路徑已啟用」。
+- 這是 plur 團隊的零依賴設計，不是本機環境的問題；多 profile + kanban + L1 記憶層架構**完全不用改**。
+- 升級記錄：plur-hermes 0.17.2 → 0.19.4（2026-08-31）、`@plur-ai/cli` 0.9.4 → 0.19.4（2026-09-16）。升級前已完整備份 `~/.plur/` 與 config，128 engrams 零遺失。
 
 ## 備份策略
 
