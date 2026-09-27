@@ -696,6 +696,43 @@ systemctl --user daemon-reload
 ### 待辦
 - 若需要，把 drop-in 目錄清掉（目前保留，避免動 systemd state）。
 
+## 2026-09-27 session 18 — gateway 升級經驗回寫 + memory 監控機制
+
+### 背景
+session 17 的 migrate 前後遇到兩個問題，但都還沒完整回寫 deploy repo：
+1. **worker spawn python-path bug**（ModuleNotFoundError）— 已補進 `gateway-multiplex.md`（commit `d42c4e7`）。
+2. **native memory 2,200 char 上限發現 + 監控工具** — 只存在 secretary 本地 memory + 新 skill，還沒進 repo。
+
+### 執行
+- **新增 doc**：`docs/editions/opc-personal/gateway-multiplex-upgrade.md`（86 行）— v0.21.3 → v0.21.5 升級經驗單一事實來源，收兩個問題 + 教訓 + 收斂成果。
+- **README.md**：layout index 加新 doc + status log gateway multiplex 條目指向它。
+- **memory-management skill**（secretary）：新增「相關文件」段指向本檔（含記憶分層原則）。
+
+### 兩個問題與教訓
+1. **Worker spawn python-path bug**
+   - 根因：multiplexer 跑 standalone `tools/python-3.14` shim，dispatcher spawn worker 用 `sys.executable -m hermes_cli.main` → worker 找不到 `hermes_cli`/`ruamel`（依賴在 venv）。
+   - 修法：drop-in `override.conf` 加 `Environment="HERMES_BIN=/home/eye/.hermes/hermes-agent/venv/bin/hermes"`，spawn 走 venv shim。已驗證 worker 不再崩。
+   - ⚠️ **教訓**：不要手動改 `.service` 檔加 HERMES_BIN——`hermes gateway restart` 從 `generate_systemd_unit()` 模板重生成 unit 蓋掉它；drop-in 才不被蓋。
+
+2. **Native memory 上限發現**
+   - 2,200 chars（MEMORY.md）/ 1,375 chars（USER.md）是**程式碼預設值**（`config_defaults.py:1296`），**非官方文件明文**。官方文件（llms.txt）完全沒提。memory **不會自動壓縮**——超限時 `memory` 工具直接回傳錯誤。
+   - GitHub Issue #5320（open, P3 cosmetic）提過調高預設值 + context-aware 自動縮放，但尚未合併。
+   - ⚠️ **教訓**：不要盲目調高 `memory_char_limit`（增加 prefill 開銷，本地有限算力環境要接受的現實）。記憶分層要對：部署/架構事實沉 repo docs；程序/工作流沉 skill；plur 只放跨角色經驗。
+
+### 收斂成果
+| 項目 | 原本 | 精簡後 | 去向 |
+|---|---|---|---|
+| Gateway 現行架構條目 | 792 chars | 230 chars | 細節沉到 `gateway-multiplex.md`（含 spawn fix） |
+| kanban enforcement 條目 | 707 chars | 移除 | 已在 `kanban-backend-concurrency` skill |
+| **memory 使用率** | 98%（2,168/2,200） | 51%（1,139/2,200） | 無事實丟失，只是沉到對應層 |
+
+### 監控機制
+`memory-management` skill + `memory-diagnose.py`：當 memory ≥95% 時跑腳本 → 找出佔最多空間的條目（含大小/年齡/是否 ≥20% budget）→ 依「合併大條目 / 精簡舊條目 / 移進 skill/repo / 刪除過時」收斂。不需要 cron；memory 爆掉是即時的，當下處理即可。
+
+### 版本
+- commit `d42c4e7`（worker spawn bug 章節）+ `b59b172`（升級經驗 doc + README 同步），已 push origin main。
+
+
 ## 下個 session 進入指引
 
 讀本 handoff → 藍圖 v4.1（自足）→ **M0–M8 全部完成；§9 #3/#4/#6 完成、#5（Runes 審批 UX）已接線完成（P3 v2 native wrapper）；C6 MoA turn cap、B4 NIM 可靠性 3-strike、#8(a) 舊 CLI deprecate、A1 清理、B5 標不處理全完成（2026-08-15）**。**hermes-runes-md-wiki 現行 main = v0.7.6-dev（PR #6/#7 merged）；runes-holder 一律經 runes-shield 層 native wrapper 操作**。**deploy repo 13 SOUL 已 refine（v0.20.1，commit `dde6c33` 已 push）且 K6 8 profile 已同步（2026-08-16，backup `.bak.20260816-033622`，ping PASS）**。**2026-08-16 session 5–7 完成：K6 Hermes v0.20.1（v2026.8.13）+ 18 支 skill symlink 分配；rtk-rewrite v1.2.3 (PyPI) + rtk binary v0.45.0；Web backend 本地化（捨 ddgs → 全域 firecrawl fallback + 搜尋 3 角色 search=SearXNG/extract=Firecrawl，Docker SearXNG v2026.8.14 / Firecrawl 2026-08-15）；lark-cli v1.0.87 整合（user OAuth 林卓翰 + bind secretary hermes app `cli_aaabd1f1bc38de18` + secretary/writer 26 skills）；session 8 任務交付檢查鍊（coordinator 交付鏈欄位 + secretary footer `[任務交付檢查鍊]`，commit `67981a5`）；session 9 修復 Lark 實測三大問題（profile 層 plugins 補 web-searxng/firecrawl + `/usr/local/bin/<profile>` wrappers 實現真實多 process 串接 + 報告限 `~/Downloads/` + Lark Drive/Base 雲端交付自動選型 + footer 強制，commit `ef98a4e`）；session 10 彈性單/多 agent 定案 + 複合任務硬規則 + secretary/writer `terminal.cwd=~/Downloads/`（commit `5d5a30e`）**。**此後進入正式日常使用 / 後續優化階段**。**2026-09-27 gateway 改走 default-profile multiplexer**（`hermes gateway migrate --multiplex` → `multiplex_profiles: true`），default multiplexer（`hermes-gateway.service`，systemd user）統一服務全部 9 profile（含 secretary）；M3 secretary 獨立 gateway service 已 stop+uninstall。重啟 PC 後 default gateway 自動拉起、9 profile 全服務。詳 `docs/editions/opc-personal/gateway-multiplex.md`，deploy repo tag **v0.21.5**。下次優先：#8(b) 可選 bridge（queue 顯示真實 forge-inbox 候選）、#8(c) indexes/links 實作、#17（SLO 定案，日常累積 tool-mediated 樣本）、#18（P2(d) 跨週複查 09-12）。候選方向：aeon-builder DGX 切換窗口協調（D12 手動觀察）、備份還原演練（#7 標記不處理）。**B5 Lark 秒回優化已標不處理**。Plur scope 紀律為持續遵守項（project:freelancer + promote + 英文關鍵字）。
