@@ -85,7 +85,7 @@ PROFILE_LIST=aeon-builder MODEL_NAME=qwen3.6-27b \
   bash scripts/set-local-model-name.sh --apply --verify   # aeon-builder 切換 + 身分驗證（D13）
 ```
 
-> **Gateway 接管（M3，現已由 multiplex 取代）**：`setup-feishu-gateway.sh --apply --confirm REAL_FEISHU_GATEWAY_TAKEOVER` 是 M3 單 profile gateway 接管腳本，**現行架構不再使用**。現行用 `hermes gateway migrate --multiplex`（見 `gateway-multiplex.md`）。保留該腳本作為歷史參考。
+> **Gateway 接管（M3，現已由 multiplex 取代）**：`setup-feishu-gateway.sh --apply --confirm REAL_FEISHU_GATEWAY_TAKEOVER` 是 M3 單 profile gateway 接管腳本，**現行架構不再使用**。**Approval timeout 調高至 3600s**（2026-09-27，secretary profile `approvals.timeout`）：hermes-agent 與本地算力（LM Studio / Ornith-1.5-35b-a3b）專屬於使用者獨用、無他人可調用，故把 dangerous command approval 窗口從原 60s 拉到 1 小時。行為不變：命令仍需按按鈕才執行、timeout 仍 fail-closed，不會因窗口大而自動批准。runtime 即時讀（非啟動載入），改完不用重啟 gateway。每次 approval 單次機會、無自動重試；離場 >1h 仍會過期需重發。現行用 `hermes gateway migrate --multiplex`（見 `gateway-multiplex.md`）。保留該腳本作為歷史參考。
 
 ## 基本驗證
 

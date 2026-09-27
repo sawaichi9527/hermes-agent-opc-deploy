@@ -733,6 +733,52 @@ session 17 的 migrate 前後遇到兩個問題，但都還沒完整回寫 deplo
 - commit `d42c4e7`（worker spawn bug 章節）+ `b59b172`（升級經驗 doc + README 同步），已 push origin main。
 
 
+## 2026-09-27 session 19 — approval timeout 調高至 3600s（1 小時）
+
+### 背景
+session 18 的 gateway 升級經驗中，研究 hermes-agent 的 dangerous command approval timeout。
+發現：`approvals.timeout` 預設 300s、原 config 設為 60s。但 60s 太短——使用者不在 Lark 前、
+注意力回到窗時卡片經常已 expire（本地 prefill 慢，每次 turn 耗時數分鐘）。
+
+### 機制查證（原始碼）
+- **完全可配置**：來源 `config.yaml` 的 `approvals.timeout`。
+  路徑：`config.yaml approvals.timeout` → `tools/approval_context.py:_get_approval_timeout()`（預設 300s）
+  → `gateway/platforms/base_exec_approval.py:approval_timeout_seconds()`（Feishu 卡片走這裡）。
+- **沒有實際上限會擋你**：唯一 clamp 是 `MAX_SAFE_TIMEOUT_S`（約一年），防止 macOS 上 `time_t` 溢位崩
+  `Thread.join`——調高到幾百秒、幾分鐘都安全。
+- **官方文件**：各 auxiliary task 的 timeout 皆可配置（seconds）。Substack 技術分析與官方 config doc 印證
+  300s 是現代預設值。原始碼註解明說「60s proved too tight for Telegram/Discord push notifications」。
+
+### ⚠️ 關鍵：機制本身沒有自動重試
+- Approval 是「**一次一卡、單次機會**」，不是會重發的佇列。卡片發出到 `approvals.timeout` 結束，
+  只有這段窗口能按。timeout 後卡片原地改成「已過期」通知、按鈕移除、命令 fail-closed（不跑）。
+- 原始碼明說「no re-send」（`run_turn_runner.py:1494-1503`）——即使發卡本身逾時也不重發
+  （避免重複卡片 + orphaned `/approve`）。要再試得發**新訊息**重觸發。
+- 結論：**timeout 越大，「不在螢幕前」時仍能按到的機率越高**——因為沒有重試可補，全靠這一次窗口長度。
+
+### 使用者裁決
+設 **3600s（1 小時）**。理由：hermes-agent 與本地算力（LM Studio / Ornith-1.5-35b-a3b）
+專屬於使用者獨用、無他人可調用，故「一直等到我選擇同意」是正常的。行為不變——命令仍需按按鈕才執行、
+timeout 仍 fail-closed，不會因窗口大而自動批准任何东西。
+
+### 執行
+```bash
+hermes config set approvals.timeout 3600
+```
+**runtime 即時讀**（`_get_approval_timeout()` 每次 prompt 現場讀），改完不用重啟 gateway。
+已驗證：`_get_approval_timeout()` 回傳 3600。secretary profile `approvals.timeout` = 3600
+（全域 `~/.hermes/config.yaml` 仍為 60，但 multiplexer 架構下 secretary turn 用 secretary profile config）。
+
+### 實務提醒
+- 每次 approval 單次機會、無自動重試；離場 >1h 仍會過期，需發新訊息重發。
+- `cron_mode: approve`（secretary profile）與 approval timeout 是兩回事——排程任務的破壞性命令自動批准，保持原樣。
+
+### 版本
+- config 變更：`~/.hermes/profiles/secretary/config.yaml` `approvals.timeout: 60 → 3600`。
+- 經驗記錄於本檔 session 19 + `gateway-multiplex-upgrade.md`（新增「approval timeout 研究」段）。
+
+---
+
 ## 下個 session 進入指引
 
 讀本 handoff → 藍圖 v4.1（自足）→ **M0–M8 全部完成；§9 #3/#4/#6 完成、#5（Runes 審批 UX）已接線完成（P3 v2 native wrapper）；C6 MoA turn cap、B4 NIM 可靠性 3-strike、#8(a) 舊 CLI deprecate、A1 清理、B5 標不處理全完成（2026-08-15）**。**hermes-runes-md-wiki 現行 main = v0.7.6-dev（PR #6/#7 merged）；runes-holder 一律經 runes-shield 層 native wrapper 操作**。**deploy repo 13 SOUL 已 refine（v0.20.1，commit `dde6c33` 已 push）且 K6 8 profile 已同步（2026-08-16，backup `.bak.20260816-033622`，ping PASS）**。**2026-08-16 session 5–7 完成：K6 Hermes v0.20.1（v2026.8.13）+ 18 支 skill symlink 分配；rtk-rewrite v1.2.3 (PyPI) + rtk binary v0.45.0；Web backend 本地化（捨 ddgs → 全域 firecrawl fallback + 搜尋 3 角色 search=SearXNG/extract=Firecrawl，Docker SearXNG v2026.8.14 / Firecrawl 2026-08-15）；lark-cli v1.0.87 整合（user OAuth 林卓翰 + bind secretary hermes app `cli_aaabd1f1bc38de18` + secretary/writer 26 skills）；session 8 任務交付檢查鍊（coordinator 交付鏈欄位 + secretary footer `[任務交付檢查鍊]`，commit `67981a5`）；session 9 修復 Lark 實測三大問題（profile 層 plugins 補 web-searxng/firecrawl + `/usr/local/bin/<profile>` wrappers 實現真實多 process 串接 + 報告限 `~/Downloads/` + Lark Drive/Base 雲端交付自動選型 + footer 強制，commit `ef98a4e`）；session 10 彈性單/多 agent 定案 + 複合任務硬規則 + secretary/writer `terminal.cwd=~/Downloads/`（commit `5d5a30e`）**。**此後進入正式日常使用 / 後續優化階段**。**2026-09-27 gateway 改走 default-profile multiplexer**（`hermes gateway migrate --multiplex` → `multiplex_profiles: true`），default multiplexer（`hermes-gateway.service`，systemd user）統一服務全部 9 profile（含 secretary）；M3 secretary 獨立 gateway service 已 stop+uninstall。重啟 PC 後 default gateway 自動拉起、9 profile 全服務。詳 `docs/editions/opc-personal/gateway-multiplex.md`，deploy repo tag **v0.21.5**。下次優先：#8(b) 可選 bridge（queue 顯示真實 forge-inbox 候選）、#8(c) indexes/links 實作、#17（SLO 定案，日常累積 tool-mediated 樣本）、#18（P2(d) 跨週複查 09-12）。候選方向：aeon-builder DGX 切換窗口協調（D12 手動觀察）、備份還原演練（#7 標記不處理）。**B5 Lark 秒回優化已標不處理**。Plur scope 紀律為持續遵守項（project:freelancer + promote + 英文關鍵字）。
