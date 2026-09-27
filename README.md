@@ -1,6 +1,6 @@
 # hermes-agent-opc-deploy
 
-**適用 hermes-agent **v0.21.5**（D27：README 標 + `VERSION` 檔 + `git tag v0.21.5`）。**最近更新：2026-09-27 gateway 改走 default-profile multiplexer。**
+**適用 hermes-agent **v0.21.5**（D27：README 標 + `VERSION` 檔 + `git tag v0.21.5`）。**最近更新：2026-09-28 cron external worker ruamel crash 修復（venv interpreter）。**
 
 Hermes 原生 profile 客製化與部署指南 repo。本 repo 是 Freelancer 重灌的**單一事實來源**，同時提供 GENERIC edition 供一般人參考。
 
@@ -47,6 +47,7 @@ docs/editions/{generic,opc-personal}/   # edition 專屬文件：
   session-mechanism.md         # session 生命週期（secretary 持久 / worker oneshot）
   kanban-dispatch.md           # v0.21.3+ 多 profile 分派機制
   cron-governance.md           # cron 治理（D14–D21）
+  cron-ruamel-interpreter-fix.md # ★cron external worker ruamel crash 修復（venv interpreter，含 hermes update 後重放 diff）
   plur-memory-layer.md         # Plur 跨角色記憶層
   runes-approval-ux.md         # Runes 審批 UX
   runes-governance-architecture.md  # 完整四層治理架構（多 profile + kanban + Plur + runes-holder）
@@ -72,6 +73,8 @@ config/                        # shared defaults
 - **runes-governance-architecture.md（2026-09-16）**：新增完整四層治理架構文件 `docs/editions/opc-personal/runes-governance-architecture.md`——把多 profile + kanban + Plur + runes-holder/hermes-runes-md-wiki 串成單一事實來源，含完整 Runes 治理流程（2026-09-16 實測通過，board task t_6d69c735）、coordinator SOUL lifecycle hardening 三條規則驗證表、記憶來源優先級、下沉/回退。與通用版 `architecture-overview.md`（不含 Runes）並存；`runes-approval-ux.md` / `plur-memory-layer.md` 保留為細部參考。README layout 同步。
 - **gateway multiplex（2026-09-27，v0.21.5）**：`hermes gateway migrate --multiplex` → `gateway.multiplex_profiles: true`。default-profile multiplexer（`hermes-gateway.service`，systemd user）統一服務全部 9 profile（含 secretary）。M3 的 secretary 獨立 gateway（`hermes-gateway-secretary.service` + systemd linger）已 stop + uninstall。重啟 PC 後 default gateway 自動拉起、9 profile 全服務。新增 `docs/editions/opc-personal/gateway-multiplex.md`（gateway 架構單一事實來源）；session-mechanism.md / cron-governance.md / skill-allocation.md 同步更新，M3 單 profile gateway 架構保留為歷史。**升級過程踩到的坑（worker spawn python-path bug、native memory 2,200 char 上限發現與收斂）記錄於 `gateway-multiplex-upgrade.md`。**
 
+- **cron external worker ruamel crash 修復（2026-09-28）**：Default multiplex gateway 跑在 store interpreter（standalone python-3.14），其 site-packages 缺 `ruamel.yaml`。cron external worker 用 `sys.executable` 繼承 gateway interpreter → 每小時崩（3/4 job：定向情報推送 + 繁中过滤器 x2）。修法：`cron/scheduler.py` 加 `_cron_worker_interpreter()` 讀 `$HERMES_BIN` 推導 venv python3（跟 kanban dispatcher 同模式），重啟後全部恢復。
+⚠️ **這是 hermes-agent source patch（git-tracked），`hermes update` 會蓋掉。** 重放方式見 `docs/editions/opc-personal/cron-ruamel-interpreter-fix.md`：`git checkout cron/scheduler.py && git apply /tmp/cron_ruamel_fix.patch` + gateway restart。Patch commit（hermes-agent 本機）= `0df6ea6e84`（未 push upstream，sawaichi9527 無 NousResearch/hermes-agent 寫入權限）。
 ## OPC-PERSONAL setup 腳本（執行）
 
 ```bash

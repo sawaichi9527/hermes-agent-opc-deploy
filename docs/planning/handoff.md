@@ -778,11 +778,51 @@ hermes config set approvals.timeout 3600
 - 經驗記錄於本檔 session 19 + `gateway-multiplex-upgrade.md`（新增「approval timeout 研究」段）。
 
 ---
+## 2026-09-28 session 20 — cron external worker ruamel crash 修復（venv interpreter）
+
+### 背景
+檢查既有 cron job 是否受 v0.21.5 升級與新 multiplex 架構影響。發現：3/4 cron job 每小時崩潰，錯誤完全相同——`ModuleNotFoundError: No module named 'ruamel'`。
+
+| Job ID | 名稱 | Schedule | Last run（修復前）|
+|---|---|---|---|
+| `91d908e7d563` | 定向情報推送 | every 90m | ❌ error（連崩 2-3 次）|
+| `4e1a92d56868` | 繁中後置過濾器（純腳本）| every 60m | ❌ error（連崩 4 次）|
+| `3c4b65e4a2c6` | 繁中後置過濾器（Forge）| every 60m | ❌ error（連崩 4-5 次）|
+| `8dc524193079` | Forge Guardrails | every 1440m | ✅ ok（原本就没崩）|
+
+### 根因查證
+**Gateway multiplexer 跑在 store interpreter（standalone python-3.14），cron worker 用 `sys.executable` 繼承它。**
+- store interpreter 的 site-packages **沒有** hermes 依賴（如 `ruamel.yaml`）。
+- cron external worker（`cron/scheduler.py:_launch_external_cron_worker`）寫死 `sys.executable -m cron.scheduler`，**不會檢查 `$HERMES_BIN`**。
+- 對照：kanban dispatcher（`hermes_cli/kanban_db_dispatch.py:2549`）**已經**會讀 `$HERMES_BIN` 解析 venv，所以 kanban worker 正常；cron **沒有** → 崩。
+- Gateway 在 01:22 啟動時已把舊 `cron/scheduler.py` 載入記憶體，`sys.executable` 是啟動時決定的——**磁碟改動不會影響已在記憶體的舊程式碼，必須重啟 gateway**。
+
+### 修法（方案 A：patch source）
+在 `cron/scheduler.py` 新增 `_cron_worker_interpreter()`，讀 `$HERMES_BIN` 推導 venv python3（跟 kanban 同模式）。venv/bin/hermes 是 shell 腳本，內部 exec `$(dirname "$0")/python3`，所以從 `$HERMES_BIN` 同目錄找 `python3` 即可。cron worker 已經會 pin PYTHONPATH 到 repo_root + cwd=repo_root，所以只要 interpreter 對就能找到 ruamel。
+
+⚠️ **方案 B（改 launcher shim）已排除**：launcher shim（`.hermes/bin/hermes`）每次 gateway 重啟會從 PM `facts.json` 自動重建，直接改檔無效（重啟就被蓋回 standalone python-3.14）。
+
+### 執行與驗證
+```bash
+# 1. patch cron/scheduler.py（本地 commit 0df6ea6e84，未 push upstream）
+# 2. 手動重啟 gateway（systemctl --user restart hermes-gateway.service，從 gateway 外的 shell）
+# 3. 手動觸發驗證：hermes -p secretary cron run <job_id>
+```
+**驗證結果**：重啟後 02:05 繁中过滤器（4e1a92d56868）成功产出输出档 `output/4e1a92d56868/2026-09-28_02-05-19.md`；Forge 變體（3c4b65e4a2c6）手動觸發 "Ran now: succeeded"；定向情報推送（91d908e7d563）手動觸發跑完無 ruamel 錯誤。incidents 表所有「Last seen」都在重啟前，重啟後零新 incident。
+
+### ⚠️ 重要：hermes update 會蓋掉這個 patch
+`cron/scheduler.py` 是 hermes-agent source（git-tracked）。下次 `hermes update` 會 checkout 新版本，patch 消失。重放方式見 `docs/editions/opc-personal/cron-ruamel-interpreter-fix.md`：`git checkout cron/scheduler.py && git apply /tmp/cron_ruamel_fix.patch` + gateway restart。
+
+### 版本
+- **source patch**：`~/.hermes/hermes-agent/cron/scheduler.py`（本地 commit `0df6ea6e84`，未 push upstream——sawaichi9527 無 NousResearch/hermes-agent 寫入權限）。
+- **經驗回寫 fork**：`hermes-agent-opc-deploy` repo commit `b96dba7`（新增 `docs/editions/opc-personal/cron-ruamel-interpreter-fix.md`，含完整 diff + 重放步驟），已 push origin main。
+
+---
 
 ## 下個 session 進入指引
 
 讀本 handoff → 藍圖 v4.1（自足）→ **M0–M8 全部完成；§9 #3/#4/#6 完成、#5（Runes 審批 UX）已接線完成（P3 v2 native wrapper）；C6 MoA turn cap、B4 NIM 可靠性 3-strike、#8(a) 舊 CLI deprecate、A1 清理、B5 標不處理全完成（2026-08-15）**。**hermes-runes-md-wiki 現行 main = v0.7.6-dev（PR #6/#7 merged）；runes-holder 一律經 runes-shield 層 native wrapper 操作**。**deploy repo 13 SOUL 已 refine（v0.20.1，commit `dde6c33` 已 push）且 K6 8 profile 已同步（2026-08-16，backup `.bak.20260816-033622`，ping PASS）**。**2026-08-16 session 5–7 完成：K6 Hermes v0.20.1（v2026.8.13）+ 18 支 skill symlink 分配；rtk-rewrite v1.2.3 (PyPI) + rtk binary v0.45.0；Web backend 本地化（捨 ddgs → 全域 firecrawl fallback + 搜尋 3 角色 search=SearXNG/extract=Firecrawl，Docker SearXNG v2026.8.14 / Firecrawl 2026-08-15）；lark-cli v1.0.87 整合（user OAuth 林卓翰 + bind secretary hermes app `cli_aaabd1f1bc38de18` + secretary/writer 26 skills）；session 8 任務交付檢查鍊（coordinator 交付鏈欄位 + secretary footer `[任務交付檢查鍊]`，commit `67981a5`）；session 9 修復 Lark 實測三大問題（profile 層 plugins 補 web-searxng/firecrawl + `/usr/local/bin/<profile>` wrappers 實現真實多 process 串接 + 報告限 `~/Downloads/` + Lark Drive/Base 雲端交付自動選型 + footer 強制，commit `ef98a4e`）；session 10 彈性單/多 agent 定案 + 複合任務硬規則 + secretary/writer `terminal.cwd=~/Downloads/`（commit `5d5a30e`）**。**此後進入正式日常使用 / 後續優化階段**。**2026-09-27 gateway 改走 default-profile multiplexer**（`hermes gateway migrate --multiplex` → `multiplex_profiles: true`），default multiplexer（`hermes-gateway.service`，systemd user）統一服務全部 9 profile（含 secretary）；M3 secretary 獨立 gateway service 已 stop+uninstall。重啟 PC 後 default gateway 自動拉起、9 profile 全服務。詳 `docs/editions/opc-personal/gateway-multiplex.md`，deploy repo tag **v0.21.5**。下次優先：#8(b) 可選 bridge（queue 顯示真實 forge-inbox 候選）、#8(c) indexes/links 實作、#17（SLO 定案，日常累積 tool-mediated 樣本）、#18（P2(d) 跨週複查 09-12）。候選方向：aeon-builder DGX 切換窗口協調（D12 手動觀察）、備份還原演練（#7 標記不處理）。**B5 Lark 秒回優化已標不處理**。Plur scope 紀律為持續遵守項（project:freelancer + promote + 英文關鍵字）。
 
-SSH 免密金鑰 `~/.ssh/id_k6_backup` 可直連 K6（eye@192.168.23.214）；**gateway 現行架構 = default-profile multiplexer**（`hermes-gateway.service`，systemd user，`multiplex_profiles: true`），統一服務全部 9 profile（含 secretary）。M3 的 `hermes-gateway-secretary.service` + systemd linger 已於 2026-09-27 migrate 時 stop+uninstall；剩 `~/.config/systemd/user/hermes-gateway-secretary.service.d/` drop-in 可選清。cron 2 jobs = `91d908e7d563`（定向情報推送，**90m**）/ `8dc524193079`（Forge Guardrails，1440m，thread_id 已清）；jobs.json = `~/.hermes/opc/jobs.json`；deploy repo 本機 clone 見 README「接手指引」。
+SSH 免密金鑰 `~/.ssh/id_k6_backup` 可直連 K6（eye@192.168.23.214）；**gateway 現行架構 = default-profile multiplexer**（`hermes-gateway.service`，systemd user，`multiplex_profiles: true`），統一服務全部 9 profile（含 secretary）。M3 的 `hermes-gateway-secretary.service` + systemd linger 已於 2026-09-27 migrate 時 stop+uninstall；剩 `~/.config/systemd/user/hermes-gateway-secretary.service.d/` drop-in 可選清。cron **4** jobs = `91d908e7d563`（定向情報推送，**90m**）/ `4e1a92d56868`（繁中後置過濾器・純腳本，60m）/ `3c4b65e4a2c6`（繁中後置過濾器・Forge，60m）/ `8dc524193079`（Forge Guardrails，1440m，thread_id 已清）；jobs.json = `~/.hermes/opc/jobs.json`；deploy repo 本機 clone 見 README「接手指引」。**⚠️ cron external worker ruamel crash 已修（session 20）：patch 在 hermes-agent source `cron/scheduler.py`（commit `0df6ea6e84`，未 push upstream），`hermes update` 會蓋掉——重放見 `docs/editions/opc-personal/cron-ruamel-interpreter-fix.md`（`git checkout cron/scheduler.py && git apply /tmp/cron_ruamel_fix.patch` + gateway restart）。
 
 > 重要變更提醒：secretary config 已設 `approvals.cron_mode: approve` + `web.backend: ddgs` + `web/ddgs` plugin enabled（backup 檔詳 §SSH 機器資訊）。cron 現可執行 terminal/web_search（L3 hardline 仍硬擋）。
