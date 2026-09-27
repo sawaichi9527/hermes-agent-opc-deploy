@@ -70,6 +70,14 @@ rm -rf ~/.config/systemd/user/hermes-gateway-secretary.service.d
 systemctl --user daemon-reload
 ```
 
+## Worker spawn python-path bug 修正（2026-09-27）
+
+**症狀**：multiplexer 跑 standalone `tools/python-3.14` shim，dispatcher spawn worker 用 `sys.executable -m hermes_cli.main` → worker 找不到 `hermes_cli`/`ruamel`（依賴在 venv）。
+**根因**：spawn 用的 interpreter 是 standalone shim，不是 venv python。
+**修法**：drop-in override.conf 加 `Environment="HERMES_BIN=/home/eye/.hermes/hermes-agent/venv/bin/hermes"`，spawn 走 venv shim。
+⚠️ **不要手動改 `.service` 檔加 HERMES_BIN**——`hermes gateway restart` 從 `generate_systemd_unit()` 模板重生成 unit 蓋掉它；drop-in 才不被蓋。
+已驗證 worker 不再崩。
+
 ## 重灌流程更新（對應 README §重灌流程 step 7）
 
 舊：「重啟 secretary gateway；Lark 冒煙測試」
