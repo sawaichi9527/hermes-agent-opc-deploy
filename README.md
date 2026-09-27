@@ -51,6 +51,7 @@ docs/editions/{generic,opc-personal}/   # edition 專屬文件：
   runes-approval-ux.md         # Runes 審批 UX
   runes-governance-architecture.md  # 完整四層治理架構（多 profile + kanban + Plur + runes-holder）
   skill-allocation.md          # skill/plugin 分配與 inventory
+  gateway-multiplex-upgrade.md # ★升級經驗 v0.21.3→v0.21.5（worker spawn bug + memory 監控）
   soul-vs-agents.md            # SOUL/AGENTS 邊界
 docs/soul-token-audit.md       # 13 份 SOUL 模板 token 用量審計（2026-08-15 refine）
 scripts/                       # deploy / verify / setup 腳本
@@ -69,7 +70,7 @@ config/                        # shared defaults
 - **v0.21.3（2026-09-15）**：多 profile 任務分派由「直 spawn wrapper」（`/usr/local/bin/<profile> -z ...`）改為**走 kanban board**（secretary 是 board 入口，`hermes kanban create --assignee coordinator`）。`max_in_progress_per_profile=1` 真正 enforce（v0.21.3 實測：4 researcher → 1 running + 3 ready），限流單執行緒後端防 chain 崩。新增 `kanban-dispatch.md`；secretary/coordinator SOUL routing 段、session-mechanism、README 同步。Cron job（情報推送/Forge 追蹤/繁中過濾器）維持單 profile 自包含、不走 board；情報推送加「爭用預檢」（scan 前先 `kanban stats`，running>0 回 `[SILENT]`）。新增話題關注清單 `topic-watchlist.json` + `watchlist_match.py`（情報員比對 keywords，命中即深度研究）。繁中閘門改由 secretary 當唯一交付點（`zh_check.py`）。情報推送 interval 改 every 90m。
 - **plur MemoryProvider 路徑實驗（2026-09-16）**：驗證 `memory.provider: plur`（原生 MemoryProvider ABC 路徑）vs 現有插件路徑（`plugins.enabled: [plur]`）。**結論：原生路徑對 plur 無效**——plur-hermes 0.19.x 的 `PlurMemoryProvider` 故意不繼承 Hermes `MemoryProvider(ABC)`（零依賴設計），Hermes `_wrong_type` 檢查忽略之，inject/learn/feedback 全由插件 hooks 處理。已還原 `memory.provider` 為 `''`，維持現狀。多 profile + kanban + L1 記憶層架構不用改。詳 `plur-memory-layer.md`「兩條整合路徑實驗」段。plur-hermes 0.17.2→0.19.4、`@plur-ai/cli` 0.9.4→0.19.4 已升級（engrams 零遺失）。
 - **runes-governance-architecture.md（2026-09-16）**：新增完整四層治理架構文件 `docs/editions/opc-personal/runes-governance-architecture.md`——把多 profile + kanban + Plur + runes-holder/hermes-runes-md-wiki 串成單一事實來源，含完整 Runes 治理流程（2026-09-16 實測通過，board task t_6d69c735）、coordinator SOUL lifecycle hardening 三條規則驗證表、記憶來源優先級、下沉/回退。與通用版 `architecture-overview.md`（不含 Runes）並存；`runes-approval-ux.md` / `plur-memory-layer.md` 保留為細部參考。README layout 同步。
-- **gateway multiplex（2026-09-27，v0.21.5）**：`hermes gateway migrate --multiplex` → `gateway.multiplex_profiles: true`。default-profile multiplexer（`hermes-gateway.service`，systemd user）統一服務全部 9 profile（含 secretary）。M3 的 secretary 獨立 gateway（`hermes-gateway-secretary.service` + systemd linger）已 stop + uninstall。重啟 PC 後 default gateway 自動拉起、9 profile 全服務。新增 `docs/editions/opc-personal/gateway-multiplex.md`（gateway 架構單一事實來源）；session-mechanism.md / cron-governance.md / skill-allocation.md 同步更新，M3 單 profile gateway 架構保留為歷史。
+- **gateway multiplex（2026-09-27，v0.21.5）**：`hermes gateway migrate --multiplex` → `gateway.multiplex_profiles: true`。default-profile multiplexer（`hermes-gateway.service`，systemd user）統一服務全部 9 profile（含 secretary）。M3 的 secretary 獨立 gateway（`hermes-gateway-secretary.service` + systemd linger）已 stop + uninstall。重啟 PC 後 default gateway 自動拉起、9 profile 全服務。新增 `docs/editions/opc-personal/gateway-multiplex.md`（gateway 架構單一事實來源）；session-mechanism.md / cron-governance.md / skill-allocation.md 同步更新，M3 單 profile gateway 架構保留為歷史。**升級過程踩到的坑（worker spawn python-path bug、native memory 2,200 char 上限發現與收斂）記錄於 `gateway-multiplex-upgrade.md`。**
 
 ## OPC-PERSONAL setup 腳本（執行）
 
