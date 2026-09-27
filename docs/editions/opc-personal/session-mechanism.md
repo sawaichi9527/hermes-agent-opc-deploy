@@ -16,7 +16,7 @@ OPC 8-profile 系統存在**兩種截然不同的 session 生命週期**：
 
 ## 1. Secretary ＝ 持久 session per Lark chat（gateway）
 
-Secretary 以常駐 gateway 執行（`hermes-gateway-secretary.service`，Lark websocket）。
+Secretary 由 default-profile multiplexer 服務（`hermes-gateway.service`，systemd user；`gateway.multiplex_profiles: true`）。M3 的獨立 gateway（`hermes-gateway-secretary.service` + systemd linger）已於 2026-09-27 `hermes gateway migrate --multiplex` 時停用並 uninstall。詳細見 `gateway-multiplex.md`。
 
 ### 機制（`gateway/session.py`）
 

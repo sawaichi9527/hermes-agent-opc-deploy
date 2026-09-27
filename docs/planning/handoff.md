@@ -649,10 +649,57 @@ secretary / coordinator / researcher / writer / builder / runes-holder / aeon-bu
 - `sawaichi9527/hermes-agent-opc-deploy`（重灌來源；**M8 已完成**，雙版本 + 8 SOUL + 8 docs + setup scripts）
 - `r0b0tlab/hermes-concurrent-agents`（HCA，**已放棄** — 79 star alpha、pin 0.18.2）
 
+## 2026-09-27 session 17 — gateway migrate to default-profile multiplexer（9 profile 統一服務）
+
+### 背景
+deploy repo 文件（session-mechanism.md §1、cron-governance.md M3、setup-feishu-gateway.sh）記錄的是 **M3 單 profile gateway 架構**：secretary 以 `hermes-gateway-secretary.service` + systemd linger 常駐，default gateway 停用。但實際機上 2026-09-27 已改走 **default-profile multiplexer**，M3 架構過時。
+
+### 執行（已驗證）
+```bash
+hermes gateway migrate --multiplex
+```
+執行結果：
+- ✓ `default: gateway.multiplex_profiles: true`（`~/.hermes/config.yaml`）
+- ✓ secretary standalone gateway（pid 2045）stop + systemd user service uninstall
+- ✓ default gateway 經 systemd restart，verify 服務 9 profiles
+- ✓ 重啟 PC 後 `hermes-gateway.service` active（PID 10106），9 profile 全服務
+
+### 現行架構
+```text
+default-profile multiplexer（hermes-gateway.service, systemd user, PID 10106）
+  └─ 統一服務全部 9 profile：
+       default, aeon-builder, builder, coordinator,
+     opencode-researcher, researcher, runes-holder, secretary, writer
+```
+
+### 變更內容（全部完成並驗證）
+- **新增 doc**：`docs/editions/opc-personal/gateway-multiplex.md`（gateway 架構單一事實來源：演進、遷移過程、session 持久性未變、驗證方法、清理建議）。
+- **session-mechanism.md §1**：更新為 default multiplexer 服務；M3 獨立 gateway 描述標為歷史。
+- **cron-governance.md**：M3 單 profile gateway 段保留為歷史，新增「現行架構：multiplex」段；版本 v0.20.0 → v0.21.5+3435。
+- **skill-allocation.md**：feishu plugin 備註更新（現由 default multiplexer 服務）。
+- **README status log**：新增 gateway multiplex 條目。
+- **VERSION** 0.21.3 → 0.21.5；`git tag v0.21.5`（annotated）+ push origin main。
+
+### Session 持久性（未變）
+multiplex 與 M3 架構的 session 生命週期行為**完全相同**——變的只是 gateway 由誰執行：
+- **secretary = 唯一持久 session profile**（綁 Lark chat）。`/new` = `force_new`。
+- **coordinator / 所有 worker = oneshot**（`-z`，一任務一 session）。
+- **cron = `cron_<jobid>_<ts>` 新 session**。
+
+### 剩餘痕跡（可選清理）
+- `~/.config/systemd/user/hermes-gateway-secretary.service.d/` drop-in 目錄（`path-plur.conf` 等）仍殘留，**無害但可清理**：
+```bash
+rm -rf ~/.config/systemd/user/hermes-gateway-secretary.service.d
+systemctl --user daemon-reload
+```
+
+### 待辦
+- 若需要，把 drop-in 目錄清掉（目前保留，避免動 systemd state）。
+
 ## 下個 session 進入指引
 
-讀本 handoff → 藍圖 v4.1（自足）→ **M0–M8 全部完成；§9 #3/#4/#6 完成、#5（Runes 審批 UX）已接線完成（P3 v2 native wrapper）；C6 MoA turn cap、B4 NIM 可靠性 3-strike、#8(a) 舊 CLI deprecate、A1 清理、B5 標不處理全完成（2026-08-15）**。**hermes-runes-md-wiki 現行 main = v0.7.6-dev（PR #6/#7 merged）；runes-holder 一律經 runes-shield 層 native wrapper 操作**。**deploy repo 13 SOUL 已 refine（v0.20.1，commit `dde6c33` 已 push）且 K6 8 profile 已同步（2026-08-16，backup `.bak.20260816-033622`，ping PASS）**。**2026-08-16 session 5–7 完成：K6 Hermes v0.20.1（v2026.8.13）+ 18 支 skill symlink 分配；rtk-rewrite v1.2.3 (PyPI) + rtk binary v0.45.0；Web backend 本地化（捨 ddgs → 全域 firecrawl fallback + 搜尋 3 角色 search=SearXNG/extract=Firecrawl，Docker SearXNG v2026.8.14 / Firecrawl 2026-08-15）；lark-cli v1.0.87 整合（user OAuth 林卓翰 + bind secretary hermes app `cli_aaabd1f1bc38de18` + secretary/writer 26 skills）；session 8 任務交付檢查鍊（coordinator 交付鏈欄位 + secretary footer `[任務交付檢查鍊]`，commit `67981a5`）；session 9 修復 Lark 實測三大問題（profile 層 plugins 補 web-searxng/firecrawl + `/usr/local/bin/<profile>` wrappers 實現真實多 process 串接 + 報告限 `~/Downloads/` + Lark Drive/Base 雲端交付自動選型 + footer 強制，commit `ef98a4e`）；session 10 彈性單/多 agent 定案 + 複合任務硬規則 + secretary/writer `terminal.cwd=~/Downloads/`（commit `5d5a30e`）**。**此後進入正式日常使用 / 後續優化階段**。下次優先：#8(b) 可選 bridge（queue 顯示真實 forge-inbox 候選）、#8(c) indexes/links 實作、#17（SLO 定案，日常累積 tool-mediated 樣本）、#18（P2(d) 跨週複查 09-12）。候選方向：aeon-builder DGX 切換窗口協調（D12 手動觀察）、備份還原演練（#7 標記不處理）。**B5 Lark 秒回優化已標不處理**。Plur scope 紀律為持續遵守項（project:freelancer + promote + 英文關鍵字）。
+讀本 handoff → 藍圖 v4.1（自足）→ **M0–M8 全部完成；§9 #3/#4/#6 完成、#5（Runes 審批 UX）已接線完成（P3 v2 native wrapper）；C6 MoA turn cap、B4 NIM 可靠性 3-strike、#8(a) 舊 CLI deprecate、A1 清理、B5 標不處理全完成（2026-08-15）**。**hermes-runes-md-wiki 現行 main = v0.7.6-dev（PR #6/#7 merged）；runes-holder 一律經 runes-shield 層 native wrapper 操作**。**deploy repo 13 SOUL 已 refine（v0.20.1，commit `dde6c33` 已 push）且 K6 8 profile 已同步（2026-08-16，backup `.bak.20260816-033622`，ping PASS）**。**2026-08-16 session 5–7 完成：K6 Hermes v0.20.1（v2026.8.13）+ 18 支 skill symlink 分配；rtk-rewrite v1.2.3 (PyPI) + rtk binary v0.45.0；Web backend 本地化（捨 ddgs → 全域 firecrawl fallback + 搜尋 3 角色 search=SearXNG/extract=Firecrawl，Docker SearXNG v2026.8.14 / Firecrawl 2026-08-15）；lark-cli v1.0.87 整合（user OAuth 林卓翰 + bind secretary hermes app `cli_aaabd1f1bc38de18` + secretary/writer 26 skills）；session 8 任務交付檢查鍊（coordinator 交付鏈欄位 + secretary footer `[任務交付檢查鍊]`，commit `67981a5`）；session 9 修復 Lark 實測三大問題（profile 層 plugins 補 web-searxng/firecrawl + `/usr/local/bin/<profile>` wrappers 實現真實多 process 串接 + 報告限 `~/Downloads/` + Lark Drive/Base 雲端交付自動選型 + footer 強制，commit `ef98a4e`）；session 10 彈性單/多 agent 定案 + 複合任務硬規則 + secretary/writer `terminal.cwd=~/Downloads/`（commit `5d5a30e`）**。**此後進入正式日常使用 / 後續優化階段**。**2026-09-27 gateway 改走 default-profile multiplexer**（`hermes gateway migrate --multiplex` → `multiplex_profiles: true`），default multiplexer（`hermes-gateway.service`，systemd user）統一服務全部 9 profile（含 secretary）；M3 secretary 獨立 gateway service 已 stop+uninstall。重啟 PC 後 default gateway 自動拉起、9 profile 全服務。詳 `docs/editions/opc-personal/gateway-multiplex.md`，deploy repo tag **v0.21.5**。下次優先：#8(b) 可選 bridge（queue 顯示真實 forge-inbox 候選）、#8(c) indexes/links 實作、#17（SLO 定案，日常累積 tool-mediated 樣本）、#18（P2(d) 跨週複查 09-12）。候選方向：aeon-builder DGX 切換窗口協調（D12 手動觀察）、備份還原演練（#7 標記不處理）。**B5 Lark 秒回優化已標不處理**。Plur scope 紀律為持續遵守項（project:freelancer + promote + 英文關鍵字）。
 
-SSH 免密金鑰 `~/.ssh/id_k6_backup` 可直連 K6（eye@192.168.23.214）；secretary gateway = `hermes-gateway-secretary.service`（drop-in `path-plur.conf` 加 node PATH）；cron 2 jobs = `91d908e7d563`（定向情報推送，60m）/ `8dc524193079`（Forge Guardrails，1440m，thread_id 已清）；jobs.json = `~/.hermes/opc/jobs.json`；deploy repo 本機 clone = `D:\Workspace\projects\hermes-agent-opc-deploy`（已 push、working tree clean、tags `v0.20.0` + `v0.20.0-m8`）。
+SSH 免密金鑰 `~/.ssh/id_k6_backup` 可直連 K6（eye@192.168.23.214）；**gateway 現行架構 = default-profile multiplexer**（`hermes-gateway.service`，systemd user，`multiplex_profiles: true`），統一服務全部 9 profile（含 secretary）。M3 的 `hermes-gateway-secretary.service` + systemd linger 已於 2026-09-27 migrate 時 stop+uninstall；剩 `~/.config/systemd/user/hermes-gateway-secretary.service.d/` drop-in 可選清。cron 2 jobs = `91d908e7d563`（定向情報推送，**90m**）/ `8dc524193079`（Forge Guardrails，1440m，thread_id 已清）；jobs.json = `~/.hermes/opc/jobs.json`；deploy repo 本機 clone 見 README「接手指引」。
 
 > 重要變更提醒：secretary config 已設 `approvals.cron_mode: approve` + `web.backend: ddgs` + `web/ddgs` plugin enabled（backup 檔詳 §SSH 機器資訊）。cron 現可執行 terminal/web_search（L3 hardline 仍硬擋）。

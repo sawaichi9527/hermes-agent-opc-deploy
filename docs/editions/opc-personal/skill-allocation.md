@@ -29,7 +29,7 @@
 
 | Plugin | 版本 | 狀態 | 備註 |
 |---|---|---|---|
-| `platforms/feishu` | bundled 1.0.0 | enabled | secretary gateway 用（全域 + secretary config） |
+| `platforms/feishu` | bundled 1.0.0 | enabled | secretary gateway 用（全域 + secretary config）；現由 default multiplexer 服務（見 `gateway-multiplex.md`） |
 | `plur` | 0.17.2 | enabled | 全部 8 profile；`pip` 最新版 |
 | `web/ddgs` | bundled 1.0.0 | enabled | 全域 config 仍列出但**不再實際作為主要 backend**（web backend 本地化後保留作 legacy fallback） |
 | `web-searxng` | bundled 1.0.0 | enabled | 搜尋 3 角色 `web.search_backend`（K6 :8088） |
