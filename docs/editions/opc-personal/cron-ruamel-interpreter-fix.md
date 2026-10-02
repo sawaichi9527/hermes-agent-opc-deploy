@@ -1,8 +1,14 @@
 # Cron external worker ruamel crash（interpreter 修復）
 
-**日期：** 2026-09-28
+> ⚠️ **本檔已被取代。** session 20 的 venv-interpreter workaround（`0df6ea6e84`）
+> 只把 interpreter 改成 venv 3.11，但 `run_agent` 的 `hermes_bootstrap.prepare_launch()`
+> 仍會把該 worker `os.execv` re-exec 到受管理 store interpreter（3.14），store 3.14 缺
+> `ruamel.yaml` → 崩。真正的根因是「re-exec 換 interpreter」，不是 interpreter 選錯。
+> **正式修訂見 `cron-external-worker-interpreter-fix.md`（commit `069b677d46`）。**
+
+**日期：** 2026-09-28（v1，已被取代）
 **嚴重度：** 高（3/4 cron job 每小時崩，Lark 情報推送中斷 >1 天）
-**Patch commit（hermes-agent source）：** `0df6ea6e84`（本地，未 push upstream）
+**Patch commit（hermes-agent source）：** `0df6ea6e84`（本地，未 push upstream；已被 `069b677d46` 取代）
 **適用版本：** v0.21.5+（default-profile multiplex gateway）
 
 ## 症狀

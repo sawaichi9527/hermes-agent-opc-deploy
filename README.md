@@ -1,6 +1,6 @@
 # hermes-agent-opc-deploy
 
-**適用 hermes-agent **v0.21.5**（D27：README 標 + `VERSION` 檔 + `git tag v0.21.5`）。**最近更新：2026-09-28 cron external worker ruamel crash 修復（venv interpreter）。**
+**適用 hermes-agent **v0.21.5**（D27：README 標 + `VERSION` 檔 + `git tag v0.21.5`）。**最近更新：2026-10-01 cron external worker interpreter fix 正式修訂（重-exec 根因，取代 session 20 venv workaround；commit `069b677d46`）。**
 
 Hermes 原生 profile 客製化與部署指南 repo。本 repo 是 Freelancer 重灌的**單一事實來源**，同時提供 GENERIC edition 供一般人參考。
 
@@ -47,7 +47,8 @@ docs/editions/{generic,opc-personal}/   # edition 專屬文件：
   session-mechanism.md         # session 生命週期（secretary 持久 / worker oneshot）
   kanban-dispatch.md           # v0.21.3+ 多 profile 分派機制
   cron-governance.md           # cron 治理（D14–D21）
-  cron-ruamel-interpreter-fix.md # ★cron external worker ruamel crash 修復（venv interpreter，含 hermes update 後重放 diff）
+  cron-ruamel-interpreter-fix.md # ★cron external worker ruamel crash 修復（已取代，見下）
+  cron-external-worker-interpreter-fix.md # ★cron external worker interpreter fix 正式修訂（re-exec 根因，commit `069b677d46`，取代 venv workaround）
   plur-memory-layer.md         # Plur 跨角色記憶層
   runes-approval-ux.md         # Runes 審批 UX
   runes-governance-architecture.md  # 完整四層治理架構（多 profile + kanban + Plur + runes-holder）
