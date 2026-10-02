@@ -817,6 +817,45 @@ hermes config set approvals.timeout 3600
 - **source patch**：`~/.hermes/hermes-agent/cron/scheduler.py`（本地 commit `0df6ea6e84`，未 push upstream——sawaichi9527 無 NousResearch/hermes-agent 寫入權限）。
 - **經驗回寫 fork**：`hermes-agent-opc-deploy` repo commit `b96dba7`（新增 `docs/editions/opc-personal/cron-ruamel-interpreter-fix.md`，含完整 diff + 重放步驟），已 push origin main。
 
+## 2026-09-28 session 21 — routing 分界線檢討（v1 定案）
+
+### 背景
+檢討 secretary 的路由分界線。決定建立專門的「派誰」決策矩陣 skill，並確認既有 `opc-profile-routing` skill 是否要為 v0.21.5 適配。
+
+### 裁決：分界線 v1
+| 任務性質 | 路由 |
+|---|---|
+| 語氣/配合喜好、純問答、繁中後調整（唯一交付點） | `secretary (direct)` |
+| 查詢進行中任務狀態（讀取型，依使用者要求查 coordinator） | `secretary → coordinator` |
+| 調查型查證（外部事實 + hermes-agent 內部設定/原始碼/config 路徑追蹤） | `coordinator → researcher` |
+| >5 來源深度文療調研，或 researcher 第一輪出問題需重複調查 reroute | `coordinator → opencode-researcher` |
+| 實作/除錯/部署（改 source、patch、build、debug） | `coordinator → builder` |
+| 狀態檢查/設定變更/驗證/memory 維護/單檔微調 | `coordinator → builder` |
+| 重運算任務（拿不準重量→先 builder，builder 判斷需重運算再上提） | `coordinator → aeon-builder` |
+| Runes wiki/governance/forge/shield（一般寫檔→builder/writer） | `coordinator → runes-holder` |
+| 正式文件/報告/簡報 | `coordinator → writer` |
+| 複合（調研+產出） | `coordinator → researcher/writer` 鏈 |
+
+### 裁決：opc-profile-routing 不為 v0.21.5 適配
+查官方文件 + 本地 source git history，確認路由機制沒變：
+- CLI wrapper 仍在（`/usr/local/bin/coordinator` → `hermes -p coordinator`）
+- dispatcher 透過 `HERMES_KANBAN_TASK` env 注入 kanban_* 工具（coordinator-as-worker）
+- `max_in_progress_per_profile=1` 限流仍在；`_resolve_hermes_bin`（gateway/run.py）仍在
+- v0.21.3→v0.21.5 的 kanban 重構是「機械式重構」（commit message 明說 code unchanged、AST-neutral line joins），路由邏輯完全一樣
+- 官方文件 routing table（delegate_task / kanban / cron）仍在 `background-systems.md`，v0.21.5 沒引入新的多 profile 路由方式
+
+**結論**：`opc-profile-routing`（機制層：怎麼 spawn）不用動；新增 `task-routing-boundaries`（決策層：誰該派誰）。兩者互補。
+
+### 執行
+- 建立 skill `task-routing-boundaries`（autonomous-ai-agents/），含 When to Use / 觸發速查 / 分界線 v1 / 裁決順序 / 關鍵邊界 / 與既有 skill 關係。
+- memory 精簡：移除 line 9（Gateway ruamel 架構條目，細節已完整記錄在 repo docs `cron-ruamel-interpreter-fix.md`，memory 留指標即可）；新增路由分界線 v1 指標（指向新 skill）。memory 從 92% → 86%（1,913/2,200）。
+
+### 版本
+- 新增 skill：`task-routing-boundaries`（secretary profile skills，autonomous-ai-agents/）
+- memory：移除 Gateway ruamel 條目 + 新增路由分界線 v1 指標
+- README.md / handoff.md session 21 同步更新
+
+---
 ---
 
 ## 下個 session 進入指引
