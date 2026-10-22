@@ -54,6 +54,7 @@ docs/editions/{generic,opc-personal}/   # edition 專屬文件：
   runes-governance-architecture.md  # 完整四層治理架構（多 profile + kanban + Plur + runes-holder）
   skill-allocation.md          # skill/plugin 分配與 inventory
   gateway-multiplex-upgrade.md # ★升級經驗 v0.21.3→v0.21.5（worker spawn bug + memory 監控）
+  hermes-upgrade-verify.md     # ★v0.22.4 升級驗證記錄 + 可重複健康檢查序列（schema v32/multiplex/cron smoke test）
   soul-vs-agents.md            # SOUL/AGENTS 邊界
 docs/soul-token-audit.md       # 13 份 SOUL 模板 token 用量審計（2026-08-15 refine）
 scripts/                       # deploy / verify / setup 腳本
