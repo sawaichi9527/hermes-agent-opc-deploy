@@ -55,6 +55,7 @@ docs/editions/{generic,opc-personal}/   # edition 專屬文件：
   skill-allocation.md          # skill/plugin 分配與 inventory
   gateway-multiplex-upgrade.md # ★升級經驗 v0.21.3→v0.21.5（worker spawn bug + memory 監控）
   hermes-upgrade-verify.md     # ★v0.22.4 升級驗證記錄 + 可重複健康檢查序列（schema v32/multiplex/cron smoke test）
+  web-search-backend-local-searxng-firecrawl.md # ★本地 web 搜尋/提取後端（searXNG search + firecrawl extract）接 multiplexed gateway：frozen worker 不讀 .env、要進 os.environ（systemd set-environment）
   soul-vs-agents.md            # SOUL/AGENTS 邊界
 docs/soul-token-audit.md       # 13 份 SOUL 模板 token 用量審計（2026-08-15 refine）
 scripts/                       # deploy / verify / setup 腳本
