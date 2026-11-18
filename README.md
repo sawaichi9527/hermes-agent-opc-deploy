@@ -1,6 +1,6 @@
 # hermes-agent-opc-deploy
 
-**適用 hermes-agent **v0.21.5**（D27：README 標 + `VERSION` 檔 + `git tag v0.21.5`）。**最近更新：2026-10-01 cron external worker interpreter fix 正式修訂（重-exec 根因，取代 session 20 venv workaround；commit `069b677d46`）。**
+**適用 hermes-agent **v0.23.2**（D27：README 標 + `VERSION` 檔 + `git tag v0.23.2`；base content 承自 v0.21.x，v0.23.2 新增 kanban 併發政策）。**最近更新：2026-11-18 v0.23.2 併發限制對齊單執行緒本地後端（`kanban.max_in_progress_per_profile: 1`，見 `docs/editions/opc-personal/hermes-upgrade-v0232-concurrency.md`）。**
 
 Hermes 原生 profile 客製化與部署指南 repo。本 repo 是 Freelancer 重灌的**單一事實來源**，同時提供 GENERIC edition 供一般人參考。
 
@@ -16,7 +16,7 @@ Hermes 原生 profile 客製化與部署指南 repo。本 repo 是 Freelancer �
 4. **`docs/editions/opc-personal/session-mechanism.md`** — session 生命週期。
 5. **`scripts/`** — deploy / verify / setup 腳本（依 README 下方「OPC-PERSONAL setup 腳本」執行）。
 
-> ⚠️ 接手前先用 `git log --oneline -1` + `git describe --tags` 確認你 checkout 的 commit 與 tag。本 repo 最新 release = **v0.21.5**（gateway multiplex）。
+> ⚠️ 接手前先用 `git log --oneline -1` + `git describe --tags` 確認你 checkout 的 commit 與 tag。本 repo 最新 release = **v0.23.2**（kanban 併發限制 + gateway multiplex）。
 
 ## 雙版本（D23）
 
@@ -32,13 +32,13 @@ Hermes 原生 profile 客製化與部署指南 repo。本 repo 是 Freelancer �
 || 事實判斷分工 | 簡化三層（researcher / coordinator / user） | 完整五層（D22） |
 || secret 守則 | 共用 | 共用 |
 
-版本基準：本 repo 對應 hermes-agent **v0.21.5**（2026-09-24）。舊 v0.16/v0.17/v0.20.x 內容整批保留於 `archive/v0.16-v0.17/`（含 M1–M8 驗證史）。
+版本基準：本 repo **base content** 對應 hermes-agent **v0.21.x**（M1–M8 驗證史）；**runtime 已對齊到 v0.23.2**（2026-11-16 stable，`ae2a81ccc00e`）。舊 v0.16/v0.17/v0.20.x 內容整批保留於 `archive/v0.16-v0.17/`。v0.23.2 新增 kanban 併發限制政策（`max_in_progress_per_profile: 1`），詳 `docs/editions/opc-personal/hermes-upgrade-v0232-concurrency.md`。
 
 ## Repository layout
 
 ```text
 README.md
-VERSION                        # 0.21.5
+VERSION                        # 0.23.2
 docs/planning/handoff.md       # ★接手第一份：完整 session log + 進入指引 + SSH/repo 資訊
 docs/shared/                   # 共用文件（guarded-apply-contract、安全守則）
 docs/editions/{generic,opc-personal}/   # edition 專屬文件：
@@ -78,6 +78,7 @@ config/                        # shared defaults
 
 - **cron external worker ruamel crash 修復（2026-09-28）**：Default multiplex gateway 跑在 store interpreter（standalone python-3.14），其 site-packages 缺 `ruamel.yaml`。cron external worker 用 `sys.executable` 繼承 gateway interpreter → 每小時崩（3/4 job：定向情報推送 + 繁中过滤器 x2）。修法：`cron/scheduler.py` 加 `_cron_worker_interpreter()` 讀 `$HERMES_BIN` 推導 venv python3（跟 kanban dispatcher 同模式），重啟後全部恢復。
 ⚠️ **這是 hermes-agent source patch（git-tracked），`hermes update` 會蓋掉。** 重放方式見 `docs/editions/opc-personal/cron-ruamel-interpreter-fix.md`：`git checkout cron/scheduler.py && git apply /tmp/cron_ruamel_fix.patch` + gateway restart。Patch commit（hermes-agent 本機）= `0df6ea6e84`（未 push upstream，sawaichi9527 無 NousResearch/hermes-agent 寫入權限）。
+- **v0.23.2（2026-11-16）：kanban 併發限制對齊單執行緒本地後端**。本機 hermes-agent 由 v0.23.0 升到 v0.23.2（`ae2a81ccc00e`）。v0.23.2 預設 `kanban.max_in_progress_per_profile` = None（無 per-profile 上限）、全域 `max_in_progress` 被記憶體推導到 8，導致多 profile 併發壓垮本地 single-thread 後端（Strix Halo 395 + LM Studio + ornith-1.5-35b-a3b，llama.cpp 僅適合不併發）；實測 4 個 researcher 同時 running。v0.23.2 **無 per-assignee 粒度**（僅全域 `max_in_progress` + uniform `max_in_progress_per_profile`，`kanban_db_dispatch.py:2299`）。解法：在全域 `~/.hermes/config.yaml` 設 `kanban.max_in_progress_per_profile: 1`（**必須寫全域**——dispatcher 讀全域、不讀 secretary profile 檔；寫 profile 檔無效，已備份原檔 `config.yaml.bak-*`）。兩層架構：薄 profile（secretary/coordinator/researcher/writer/builder/runes-holder）共用本地單併發後端 → 限單併發；厚 profile（aeon-builder = DGX vLLM 遠端、opencode-researcher = opencode-go 雲端）走其他算力。重啟 gateway 實測 4 researcher → `running=1 / ready=3`（enforce 生效；board 與 worker scope 已清理）。完整診斷與驗證見 `docs/editions/opc-personal/hermes-upgrade-v0232-concurrency.md`。
 ## OPC-PERSONAL setup 腳本（執行）
 
 ```bash
@@ -103,7 +104,7 @@ bash scripts/verify-profile-templates.sh
 ## 重灌流程（從 repo）
 
 ```text
-1. 裝 hermes v0.21.5（官方 installer）
+1. 裝 hermes v0.23.2（官方 installer）
 2. git clone sawaichi9527/hermes-agent-opc-deploy
 3. bash scripts/m0-capability-check.sh                          # 端點/套件可達性
 4. bash scripts/verify-repo-layout.sh && verify-profile-templates.sh   # 驗 repo 本身
