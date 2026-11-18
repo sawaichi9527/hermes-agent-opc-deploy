@@ -98,6 +98,41 @@ done
 #    應 ~5min 內由 stale 觸發；若仍拖 ~15min = 設定未生效（寫錯檔或寫到全域）
 ```
 
+---
+
+## 7. Layer 1 unit test 驗證（mechanism 層 — **待長期觀察**）
+
+上面第 4 節只證「設定寫進 6 profile（config get = 300）」。**機制本身是否尊重這個值**，用
+[`probe-watchdog-stale-timeout.py`](https://github.com/sawaichi9527/ai-agent-field-notes/blob/main/tools/linux/probe-watchdog-stale-timeout.py）
+（在 field-notes repo `tools/linux/`）對活體 DUT 驗證。它**不重現真实 stall**，只證明修法依賴的兩件事：
+
+- **Test 1**（`test_local_endpoint_ttfb_default_uses_local_stale_ceiling`）：本地端點採用設定的
+  stale ceiling 當隱式 no-event TTFB 截止；遠端維持 120s。→ lever 生效。
+- **Test 2**（`test_ttfb_does_not_kill_when_events_flow`）：有正常吐 chunk 的串流超過 TTFB 截止也
+  **不會被 kill**。→ 300s ceiling 不誤殺正常全鏈。
+
+```bash
+# DUT: hermes-agent ae2a81ccc0 (v0.23.2)
+venv/bin/python tools/linux/probe-watchdog-stale-timeout.py --hermes-agent /home/eye/.hermes/hermes-agent
+```
+
+```
+=== Test 1: local endpoint uses the local stale ceiling ===
+  local endpoint   ttfb_timeout = 600.0  (expect 600.0) -> PASS
+  hosted endpoint  ttfb_timeout = 120.0  (expect 120.0) -> PASS
+=== Test 2: ttfb watchdog does NOT kill when events flow ===
+  return value is sentinel           -> PASS
+  no codex_ttfb_kill close           -> PASS (closes=['request_complete'])
+
+RESULT: ALL PASS        EXIT=0
+```
+
+**這補齊「lever 真的會觸發」一環**：沉默 stall 會在 ~300s（測試用 600 作替身）被偵測觸發，而正常
+串流安全。**但它只證 mechanism，未證 production**——實際 hang 是否真被壓到 ~5min 回收，仍需
+[第 5 節](#5-待觀察未標定完全解決) 的長期真實全鏈觀察。
+
+---
+
 > ⚠️ `hermes update` 不會動這些 profile config（是 repo/config 設定，非 source patch）。但若哪天改到 source（如 stale 偵測邏輯），仍需依對應 fix doc 重放。
 
 ---
