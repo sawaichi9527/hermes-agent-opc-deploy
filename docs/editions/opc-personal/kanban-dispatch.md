@@ -1,6 +1,6 @@
 # Kanban Board Dispatch（多 profile 分派機制）
 
-**適用 hermes-agent **v0.21.3**（2026-09-15）。** 取代舊版「直接 spawn wrapper」（`/usr/local/bin/<profile> -z ...`）的任務分派做法。
+**適用 hermes-agent **v0.23.2**（2026.9.24）。** 取代舊版「直接 spawn wrapper」（`/usr/local/bin/<profile> -z ...`）的任務分派做法。
 
 ## 1. 為什麼改走 board（根因）
 
@@ -18,11 +18,20 @@ Freelancer 環境有 **8 個 OPC worker profile**（coordinator / researcher / o
 
 ## 3. 版本陷阱（重要）
 
-- **v0.21.1**：`max_in_progress` **不 enforce**。4 個 researcher 同時 running。即使改走 board 也擋不住併發。
-- **v0.21.3（2026-09-14）**：`max_in_progress` **真正 enforce**。4 個 researcher → 只剩 1 running + 3 ready。巢狀 spawn 也受 `max_in_progress_per_profile` 限制（coordinator 派 3 個 researcher → 1 running + 2 ready）。
+**v0.23.2 重測通過（2026-11-19）**：`max_in_progress_per_profile=1` **已驗證真正 enforce**。建 5 個 researcher ready 任務，dispatcher 維持 running=1（未 enforce 則 running=5）。
+
+歷史版本敘述（僅作版本史參考）：
+- **v0.21.1**：`max_in_progress` **不 enforce**。4 個 researcher 同時 running。即使改走 board 也擋不住併發。（歷史敘述，未重測）
+- **v0.21.3（2026-09-14）**：`max_in_progress` **真正 enforce**。4 個 researcher → 只剩 1 running + 3 ready。巢狀 spawn 也受 `max_in_progress_per_profile` 限制（coordinator 派 3 個 researcher → 1 running + 2 ready）。（歷史敘述；v0.23.2 已重測通過，見首行）
 - 官方文件比本機版本新。**查文獻前先確認本機版本**：`hermes --version`。
 
 ## 4. 正式運作流程（secretary 為 board 入口，v0.21.3 落地）
+
+> **設定驗證（2026-11-19）**：以下 knob 仍在 `config.yaml` 的 `kanban:` 區段且已驗證，確認仍適用：
+> - `dispatch_interval_seconds: 60`（§4 tick 間隔）
+> - `max_in_progress_per_profile: 1`（§3/§5 併發上限）
+> - `dispatch_in_gateway: true`
+> - `dispatch_stale_timeout_seconds: 14400`（stale reap 閾值，4h）
 
 ### 入口指令
 ```bash
@@ -39,7 +48,7 @@ dispatcher 預設 **60s tick** 唤醒 coordinator-as-worker（帶 `kanban_*` 工
 coordinator 被 terminal 直叫時是「正常 chat profile」，**沒有 `kanban_*` 工具**（只有 dispatcher 派工才注入）。故 coordinator 自行改走 board 不通——**secretary 必須當入口**。
 
 ## 5. 觀察與驗證方法（決定性）
-建 N 個會「停留 running」的任務（用 sleep），觀察 dispatcher 是否把併發卡在 max_in_progress：
+建 N 個會「停留 running」的任務（用 sleep），观察 dispatcher 是否把併發卡在 max_in_progress：
 ```bash
 HM=/home/eye/.hermes/hermes-agent/venv/bin/hermes
 for i in a b c d; do
@@ -88,7 +97,7 @@ rm -rf ~/.hermes/profiles && cp -r $BK/profiles ~/.hermes/profiles
 
 此預檢已加入 job `91d908e7d563` prompt。它是輕量 terminal 呼叫，不消耗 kanban 配額、也不觸發 dispatcher。
 
-### 話題關注清單比對（情报員端）
+### 話題關注清單比對（情報員端）
 情報員掃描到候選項目時跑 `/home/eye/workspace/daily/watchlist_match.py --file /tmp/candidates.jsonl`：
 - **命中任一 topic keywords** → 直接深度研究並推送（優先於既有判定），寫 signal 檔給 secretary 走 board。
 - **未命中** → 走既有判定（major release / breaking change / security risk / real test result / version launch，或 hn_score ≥ 300）。
@@ -124,6 +133,47 @@ kanban board 分派只解決「誰來做、併發控制」，不直接處理「�
 - Plur：不把 raw conversation / secrets / full logs 寫進 engram（scope 紀律 + safety boundary）。
 - Runes：未批准提案不當 trusted memory；raw conversation / secrets 不複製進 wiki candidate。
 
+## 11. Reporting 邊界缺口（2026-11-19）
+
+**現象**：external cron worker process（如 job `91d908e7d563`）在調用 `kanban_complete` 之前就 exit → 對應 board 任務卡 `blocked`/`unknown`，**永遠不回收**（實測 t_a4b530c8 / t_ae0dc034 / t_f4ebbef7 卡 ~1179h，diagnostics 報 `stuck_in_blocked: age_hours≈1179`）。
+
+**根因（兩層狀態脫鉤）**：
+- **Cron 層**：`cron/scheduler_worker_failure.py::record_unknown_worker_outcome()` 把 execution 記 `unknown` + `_deliver_crash_failure()` + `mark_job_run()`，但**不 retire claim、不通知 kanban owner**。
+- **Kanban 層**：`hermes_cli/kanban_db_dispatch.py` 的 reap / heartbeat / `enforce_max_runtime()` 皆限 `status='running'` → `blocked`/`unknown` 任務沒有自動 reap 路徑。
+
+**結論**：external worker exit → cron 記 `unknown`、kanban 掉進 `blocked`，兩邊都沒有機制把它推到 terminal 狀態。
+
+**完整修復規格（Option A/B/C）**：見 `/home/eye/Downloads/opc-align-1-reporting-boundary-fix.md`。
+- **Option A（最小，推薦先做）**：Kanban reap loop 順道掃描 `blocked`/`unknown` 且 attach 的 external worker PID 已消失的任務，自動標 terminal（或回退 `ready`）——新增 `reap_orphaned_external_tasks()`，不碰 cron ledger。
+- **Option B（backstop）**：cron external worker 任務建檔時帶 `max_runtime_seconds`（如 1800），讓 `enforce_max_runtime()` 在預算內 kill 並推到 terminal。
+- **Option C（cron 層）**：`record_unknown_worker_outcome()` 記 `unknown` 後順帶把對應 kanban 任務標 `blocked→completed(superseded)` 或通知 creator（需 execution_id → task_id 映射）。
+
+**實作現況（2026-11-19，Option A 已落地）**：
+- 改 `hermes_cli/kanban_db_dispatch.py`：新增 `reap_abandoned_tasks()`，reclaim phase 在 `recompute_ready` 之後掃 `blocked`/`unknown` **且** `current_run_id IS NULL` **且**心跳老於 `ABANDONED_AFTER_SECONDS`（預設 3600s=1hr，或降到 45–50min）的任務 → 標 terminal `abandoned`（非 `done`）、關 run、寫 event。不計 `_record_task_failure`。
+- 判 hang vs 背景完成仍走本 skill「心跳 ≠ 卡死」段；活著但卡死（有 heartbeat）走 `enforce_max_runtime`，兩者不同柵桿。
+- host-specific 重打腳本 + 還原見 hermes-workspace `docs/kanban-abandoned-reap-patch.md`。
+- ⚠️ **改的是核心碼非 config，`hermes update` 會蓋掉** → 每次更新後照 `post-upgrade-checklist.md` 檢查此函式是否仍在。
+
+**邊界**：改 dispatcher/cron runtime 原始碼需使用者批准；本檔只记缺口與規格/現況，不實作。
+
+## 12. Hung-worker backstop：`enforce_max_runtime`（2026-11-19 已驗證）
+
+**為什麼需要**：dispatcher stale reap 抓不到「活著但卡死」的 coordinator（它一直 heartbeat，`hb_age < _STALE_HEARTBEAT_GAP=3600`）。唯一能抓 hung worker 的柵桿是 per-task `max_runtime_seconds`（與心跳無關，按總時長 kill）。
+
+**實測驗證（2026-11-19）**：建 researcher 任務 `--max-runtime 25` + body `sleep 90`。結果：
+```
+timed_out {'elapsed_seconds': 60, 'limit_seconds': 25}
+gave_up {'failures': 2, 'error': 'elapsed 60s > limit 25s', 'trigger_outcome': 'timed_out'}
+```
+worker 在超過 budget 後**一個 dispatcher tick 內被 kill**（status running→blocked），不再掛到 4h stale。機制確定管用。
+
+**Policy（生效中）**：coordinator-as-worker 用 `kanban_create` 派子任務時，一律帶 `--max-runtime`：
+- **單層子任務（single researcher/writer）**：`--max-runtime 1800`（30 min，約 normal p95 ~10min 的 3× 安全裕度）。
+- **多跳 chain（researcher→writer 等）**：`--max-runtime 3600`（1 hr）。
+- 值依 `measured_p95 × 1.5`，夾到 `[1800s, 18000s]`；若誤殺正常長任務再上调。
+
+**耐用層（待實作，需批准）**：目前 `max_runtime_seconds` 無全域 config 預設（`config_defaults.py` 為 None），靠 coordinator 每次手帶。若要「coordinator 忘記也照套」的備層，需在 source（`config_defaults.py` kanban 段）加 seeded default，走 repo `docs/editions/opc-personal/` patch 層（避免 `hermes update` 蓋掉）——此為 source 改動，需 builder + 使用者批准。
+
 ---
 
-*本文件為 v0.21.3 的 kanban board dispatch 單一事實來源。核心守則：secretary 是 board 入口、dispatcher enforce per_profile=1、cron 不走 board、繁中由 secretary 當閘門、Plur 自動注入 + deliberate recall 補充、Runes 按需 retrieval + 沉澱觸發。*
+*本文件為 v0.23.2 的 kanban board dispatch 單一事實來源。核心守則：secretary 是 board 入口、dispatcher enforce per_profile=1（v0.23.2 已重測通過）、cron 不走 board、繁中由 secretary 當閘門、Plur 自動注入 + deliberate recall 補充、Runes 按需 retrieval + 沉澱觸發。*
