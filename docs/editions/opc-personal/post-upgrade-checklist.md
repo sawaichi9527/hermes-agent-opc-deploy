@@ -33,7 +33,7 @@
 > 每個 named profile 只讀**自己的** `~/.hermes/profiles/<name>/config.yaml`（不合併全域）。
 > 改全域無效，必須逐檔。
 - [ ] 凡打到本地 ornith 後端（`192.168.23.217:1234`）的 profile，`agent.local_stream_stale_timeout`
-     應 = 300。涉及：secretary、coordinator、researcher、writer、runes-holder、builder。
+     應 = **900**（⚠️ **11-20 由 300 改回 900**；11-18 曾設 300，已被實測反轉——單槽後端排隊 TTFT 實測 400.8 s > 300 会误杀健康请求）。涉及：secretary、coordinator、researcher、writer、runes-holder、builder。
 - [ ] `load_config_readonly()` 依 mtime 快取、每次串流重讀 → **無需重啟**，下次請求即生效。
 
 ## 4. config_defaults.py seeded defaults（若曾實作）

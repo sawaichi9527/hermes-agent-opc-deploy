@@ -1,6 +1,9 @@
 # coordinator hung-worker — 本地解碼後端零輸出 stall（`local_stream_stale_timeout`）
 
 **適用 hermes-agent v0.23.2**（commit `ae2a81ccc00e`）｜記錄日期：2026-11-18
+> **⚠️ 決策已反轉（2026-11-20）：本文 11-18 的「900 → 300」**已被實測反轉回「**300 → 900**」。以下 11-18 分析保留為歷史背景，但**已套用的 `agent.local_stream_stale_timeout` 現值 = 900**。
+> **反轉原因**：300 s 對「單一冷請求」夠（實測 TTFT 195.5 s < 300），但後端是**嚴格單槽**——第二個 100k 请求排隊 TTFT 實測 **400.8 s > 300**，觸發跨回合熔斷器 `_consecutive_stale_streams` 累到 5→6，誤杀健康請求（Lark 端每則 0.5 s 拋 `6 consecutive stale attempts`，實際沒打到模型）。900 讓「排隊不再誤殺」，代價是「真卡死」回收拖到 ~45 min（900×3）、75 min 才熔斷——**重新打開了 11-18 要關的沉默視窗**。
+> **完整推導/風險/回滾**：hermes-workspace `docs/local-stream-stale-timeout-900-2026-11-20.md`。**實戰驗證**：反轉後首次全鏈破壞性任務（hermes-memory-postgres PG18→19 遷移）已跑通，見 hermes-workspace `docs/pg18-to-pg19-migration-completion-2026-11-20.md`。
 **背景**：coordinator 分派給 researcher/writer 的 kanban 任務在本機發生第 4 次 hung-worker。本文記錄從「orchestration 層」到**實測證實的本地解碼後端 stall** 的根因，以及已套用的修復（**待觀察，未標定完全解決**）。
 
 ---
